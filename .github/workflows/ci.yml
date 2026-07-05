@@ -1,0 +1,94 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  payment-policy:
+    name: Payment contract policy (ADR-009)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check payment contract + CSRF placement
+        run: |
+          violations=0
+          # ADR-009: internal-auth header + amount-as-number
+          if grep -rniE 'x-service-secret|SERVICE_SECRET' src; then
+            echo "::error::ADR-009: use x-internal-key / INTERNAL_SECRET (not x-service-secret / SERVICE_SECRET)"
+            violations=1
+          fi
+          if grep -rnE 'amount:[[:space:]]*z\.string' src | grep -qi payment; then
+            echo "::error::ADR-009: payment amount must be a number — no z.string() for amount in payment routes"
+            violations=1
+          fi
+          # P2: CSRF is middleware-only — no route-level CSRF validate-and-403
+          if grep -rnE 'csrfCookie !== csrfHeader|csrfCookie === csrfHeader|CSRF validation failed|CSRF token mismatch' src/app/api 2>/dev/null; then
+            echo "::error::CSRF must be enforced ONLY in middleware (P2). Remove route-level CSRF checks — they 403 legit Pi-Browser payments. (KB C-12 §11)"
+            violations=1
+          fi
+          [ "$violations" -eq 0 ] && echo "payment contract policy OK" || exit 1
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install --legacy-peer-deps
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
+
+  typecheck:
+    name: Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install --legacy-peer-deps
+      - name: Typecheck
+        run: npm run typecheck
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install --legacy-peer-deps
+      - name: Test
+        run: npm test
+
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    needs: [typecheck]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm install --legacy-peer-deps
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_PI_SANDBOX:      'true'
+          NEXT_PUBLIC_API_GATEWAY_URL: ${{ secrets.NEXT_PUBLIC_API_GATEWAY_URL || 'https://api-gateway-production-6a68.up.railway.app' }}
+          NEXT_PUBLIC_PI_APP_ID:       ${{ secrets.NEXT_PUBLIC_PI_APP_ID || 'test-app-id' }}

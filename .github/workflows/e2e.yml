@@ -1,0 +1,48 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    name: Playwright E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Install
+        run: npm install --legacy-peer-deps
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Build
+        run: npm run build
+        env:
+          NEXT_PUBLIC_API_GATEWAY_URL: 'http://localhost:8080'
+          NEXT_PUBLIC_PI_SANDBOX:      'true'
+          E2E_MODE:                    'true'
+
+      - name: Run E2E
+        run: npm run test:e2e
+        env:
+          CI:                          'true'
+          E2E_MODE:                    'true'
+          PLAYWRIGHT_BASE_URL:         'http://localhost:3000'
+          NEXT_PUBLIC_API_GATEWAY_URL: 'http://localhost:8080'
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
