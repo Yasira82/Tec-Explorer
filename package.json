@@ -21,7 +21,7 @@
     "@yasser172/tec-ui":       "^1.1.0",
     "axios":                   "^1.13.5",
     "jose":                    "^5.9.6",
-    "next":                    "15.5.12",
+    "next":                    "16.2.10",
     "react":                   "18.2.0",
     "react-dom":               "18.2.0",
     "socket.io-client":        "^4.7.0",
