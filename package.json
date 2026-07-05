@@ -19,7 +19,7 @@
     "@yasser172/tec-auth":     "^1.0.0",
     "@yasser172/tec-sdk":      "^1.2.2",
     "@yasser172/tec-ui":       "^1.1.0",
-    "axios":                   "^1.13.5",
+    "axios":                   "^1.18.1",
     "jose":                    "^5.9.6",
     "next":                    "15.5.12",
     "react":                   "18.2.0",
