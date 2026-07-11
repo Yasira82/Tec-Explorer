@@ -1,15 +1,66 @@
-# TEC Domain App Template — Claude Code Instructions
+# TEC Explorer — Claude Code Instructions
 
-## What This Repo Is
+> ⚡ **SESSION START:** اقرأ `knowledge-base/C-02___CURRENT_STATE_.md` + **app charter
+> `knowledge-base/C-108___EXPLORER_INSTITUTIONAL_CHARTER.md`** من `yasira82/tec-knowledge-base` (branch: `main`).
 
-The **golden starter template** for a new app in the TEC Federated Platform.
-It ships a correct, Portal-ready skeleton: Hub SSO, dual-mode Pi payments,
-CSRF, legal pages, and CI policy guards. Clone it, run the "New app setup"
-checklist below, and you have a compliant app — no missing pieces.
+## What This App Is
 
-**Reference of record:** `yasira82/tec-knowledge-base` — especially
-`C-12_Dual_Mode_Payment.md` (payment + anti-regression) and
-`audits/PORTAL_SUBMISSION_RUNBOOK_*.md`.
+**Economic Discovery Infrastructure** for the TEC Federated Platform (C-108). Explorer
+makes the Pi economy discoverable — surfacing **Pi-accepting businesses, services, and
+opportunities** by location, intent, and relationship context. It answers:
+
+```
+"Who near me accepts Pi — and can I trust them?"
+```
+
+Explorer bridges supply and demand: discovery → transaction → trust signal →
+relationship → retention. It is the merchant-acquisition + real-world bridge for Pi.
+
+Built from `tec-template-base` (Next.js 15 frontend).
+
+**Current Phase: Explorer V0/V1 — Scaffold + Discovery MVP.** Identity / domain / slug /
+legal + themed discovery home (search · category · trust-first ranking over a curated
+**read-only sample** directory) + **Explorer Business Pro** payment surface (the Pi
+Portal "Process a Transaction" gate) + a `/business/[id]` detail page. A real listing
+index is Phase 1+ (tec-identity-service business profiles + a search backend). Not yet deployed.
+
+---
+
+## Pi App Identity
+
+| Field | Value |
+|-------|-------|
+| **App** | TEC Explorer |
+| **Domain** | `https://explorer.tecosystem.app` |
+| **Pi App ID** | ⏳ TBD — register at Pi Developer Portal · then Vercel `NEXT_PUBLIC_PI_APP_ID` |
+| **APP_SOURCE slug** | `explorer` (payment-service resolves `PI_API_KEY_EXPLORER`) |
+| **PI_SANDBOX** | `false` (Mainnet) |
+
+---
+
+## Explorer-Specific Rules (C-108)
+
+### The discovery boundary — Explorer indexes + ranks; it does NOT own truth
+Explorer **OWNS**: the business listing index, location-aware search + ranking,
+category browsing, trust-weighted discovery, and opportunity listings. Explorer does
+**NOT OWN**:
+- **Business verification** → `tec-kyc-service` (Explorer presents the "Verified" badge, never mints it).
+- **Trust scores** → Connection (C-107) — Explorer *ranks with* trust, never *computes* it.
+- **Payments** → `tec-payment-service` — the user transacts AT the business, never inside Explorer (§4).
+- **Business content truth** → the business self-declares; Explorer indexes public info only.
+
+### Location privacy (C-108 §6)
+Location is used for **search only — never stored**. Explicit consent before accessing
+device location; manual city/area search is the fallback. No personal user data or
+search history stored; analytics are anonymized aggregate only.
+
+### Listing integrity
+Self-declaration requires `tec_user` auth. "Verified Business" requires KYC. Public
+business info only. Fail closed (P6): identity from the session cookie, never the body.
+
+**Reference of record:** `yasira82/tec-knowledge-base` —
+`C-108___EXPLORER_INSTITUTIONAL_CHARTER.md` (charter) + `C-12_Dual_Mode_Payment.md`
+(payment anti-regression) + `C-123` (session/cookies) + `C-107` (Connection trust).
 
 ---
 

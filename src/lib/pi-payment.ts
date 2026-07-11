@@ -30,7 +30,7 @@ export interface PaymentResult {
 }
 
 // TODO(new app): set your app slug.
-const APP_SOURCE = 'app';
+const APP_SOURCE = 'explorer';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 

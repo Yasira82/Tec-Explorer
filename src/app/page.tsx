@@ -7,9 +7,9 @@ import { TEC_COLORS }              from '@yasser172/tec-ui';
 
 // ── تعديل حسب الـ domain ──────────────────────────────────
 const HUB_URL    = process.env.NEXT_PUBLIC_HUB_URL    ?? 'https://hub.tecosystem.app';
-const APP_URL    = process.env.NEXT_PUBLIC_APP_URL    ?? 'https://app.tecosystem.app';
-const APP_NAME   = process.env.NEXT_PUBLIC_APP_NAME   ?? 'TEC App';
-const APP_EMOJI  = process.env.NEXT_PUBLIC_APP_EMOJI  ?? '🔷';
+const APP_URL    = process.env.NEXT_PUBLIC_APP_URL    ?? 'https://explorer.tecosystem.app';
+const APP_NAME   = process.env.NEXT_PUBLIC_APP_NAME   ?? 'TEC Explorer';
+const APP_EMOJI  = process.env.NEXT_PUBLIC_APP_EMOJI  ?? '🧭';
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = usePiAuth();
@@ -38,8 +38,11 @@ export default function HomePage() {
         <div style={{ fontSize: 24, fontWeight: 900, color: TEC_COLORS.gold, marginBottom: 8 }}>
           {APP_NAME}
         </div>
-        <div style={{ fontSize: 13, color: TEC_COLORS.subtext, marginBottom: 32 }}>
-          TEC ECOSYSTEM
+        <div style={{ fontSize: 13, color: TEC_COLORS.subtext, marginBottom: 6 }}>
+          TEC ECOSYSTEM · DISCOVERY
+        </div>
+        <div style={{ fontSize: 13, color: TEC_COLORS.subtext, marginBottom: 32, maxWidth: 300, lineHeight: 1.5 }}>
+          Discover Pi-accepting businesses, services, and opportunities near you.
         </div>
         <button
           onClick={handleLogin}
