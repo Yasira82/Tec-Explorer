@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 // TODO(new app): set these three for your app — required for Pi Portal submission.
-const APP     = 'TEC App';
-const DOMAIN  = 'your-app.tecosystem.app';
+const APP     = 'TEC Explorer';
+const DOMAIN  = 'explorer.tecosystem.app';
 const UPDATED = '21 June 2026';
 
 export const metadata: Metadata = {
