@@ -10,7 +10,7 @@ import { z } from 'zod';
 const GW = process.env.API_GATEWAY_URL ?? '';
 
 // TODO(new app): set your app slug — tags the payment in tec-payment-service.
-const APP_SOURCE = 'app';
+const APP_SOURCE = 'explorer';
 
 const CreateSchema = z.object({
   amount:   z.coerce.number().positive(),
