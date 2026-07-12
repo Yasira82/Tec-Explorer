@@ -15,7 +15,7 @@
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
-    "@sentry/nextjs":          "^8.0.0",
+    "@sentry/nextjs":          "^10.65.0",
     "@yasser172/tec-auth":     "^1.0.0",
     "@yasser172/tec-sdk":      "^1.2.2",
     "@yasser172/tec-ui":       "^1.1.0",
