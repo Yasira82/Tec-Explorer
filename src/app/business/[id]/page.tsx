@@ -7,10 +7,14 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { getListing, DIRECTORY, CATEGORY_META } from '@/lib/explorer/directory';
+import { resolveBusiness } from '@/lib/explorer/server';
 
+// Pre-render the curated sample handles; allow live-only backend handles to render
+// on demand (the search module is the index of record — C-108 §5).
 export function generateStaticParams() {
   return DIRECTORY.map((l) => ({ id: l.id }));
 }
+export const dynamicParams = true;
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
@@ -27,7 +31,9 @@ export default async function BusinessPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  const l = getListing(id);
+  // Resolve from the live Explorer backend (search module); fall back to the
+  // curated sample so the page never 500s (C-108 discovery is always available).
+  const { listing: l } = await resolveBusiness(id);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
@@ -104,7 +110,7 @@ export default async function BusinessPage(
         )}
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
-          This is a read-only sample listing. Explorer indexes public, self-declared
+          This is a read-only listing. Explorer indexes public, self-declared
           business info and presents it — it never mints verification (→ tec-kyc-service),
           computes trust (→ Connection), or processes payments (→ tec-payment-service).
         </p>
