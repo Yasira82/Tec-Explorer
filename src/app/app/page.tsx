@@ -11,13 +11,14 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ExplorerPro } from './components/ExplorerPro';
+import { ListingPanel } from './components/ListingPanel';
 import {
   DIRECTORY, CATEGORIES, CATEGORY_META, searchDirectory,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
 
 export default function ExplorerHome() {
-  const { user, isLoading } = usePiAuth();
+  const { user, isLoading, isAuthenticated } = usePiAuth();
   const name = user?.piUsername ? `@${user.piUsername}` : 'there';
 
   const [query,    setQuery]    = useState('');
@@ -102,6 +103,9 @@ export default function ExplorerHome() {
 
         {/* Explorer Business Pro — real Pi U2A payment (service subscription). */}
         <ExplorerPro />
+
+        {/* Self-listing (C-108) — list + edit your own business (signed-in only). */}
+        <ListingPanel isAuth={isAuthenticated} />
 
         {/* Results */}
         <section style={{ marginTop: 26 }}>
