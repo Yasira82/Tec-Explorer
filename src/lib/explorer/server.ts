@@ -52,3 +52,68 @@ export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
   }
   return { listing: getListing(id), source: 'sample' };
 }
+
+// ── WRITE PATH — self-listing (C-108) ─────────────────────────────────────────
+// A business owner self-lists their business into the discovery index and edits it.
+// Writes forward the caller's verified JWT as `Authorization: Bearer` so the backend
+// derives the owner from the token (never the body — P6). Explorer never self-mints
+// verification; a new listing is always UNVERIFIED (KYC's to set). Ranking stays
+// Analytics' job. Reads of discovery stay public.
+const authHeaders = (token: string): Record<string, string> => ({
+  ...gwHeaders(),
+  Authorization: `Bearer ${token}`,
+});
+
+export interface ListingWriteResult {
+  ok: boolean;
+  status: number;
+  listing?: Listing;
+  error?: string;
+}
+
+async function writeCall(
+  path: string, token: string, method: 'POST' | 'PATCH', body: unknown,
+): Promise<ListingWriteResult> {
+  if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
+  try {
+    const res = await fetch(`${GW}${path}`, {
+      method, headers: authHeaders(token), body: JSON.stringify(body), cache: 'no-store',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok && data?.data?.business) {
+      return { ok: true, status: res.status, listing: listingFromBackend(data.data.business) };
+    }
+    return { ok: false, status: res.status, error: String(data?.message ?? data?.error ?? 'Request failed') };
+  } catch (err) {
+    return { ok: false, status: 503, error: (err as Error).message };
+  }
+}
+
+/** The caller's OWN listings (identity from the forwarded JWT, P6). */
+export async function listOwnListings(token: string): Promise<{ ok: boolean; status: number; listings: Listing[]; error?: string }> {
+  if (!GW) return { ok: false, status: 503, listings: [], error: 'Gateway not configured' };
+  try {
+    const res = await fetch(`${GW}/api/identity/explorer/my/listings`, {
+      headers: authHeaders(token), cache: 'no-store',
+    });
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const rows = (data?.data?.listings ?? []) as Record<string, unknown>[];
+      return { ok: true, status: res.status, listings: rows.map(listingFromBackend) };
+    }
+    return { ok: false, status: res.status, listings: [], error: String(data?.message ?? data?.error ?? 'Request failed') };
+  } catch (err) {
+    return { ok: false, status: 503, listings: [], error: (err as Error).message };
+  }
+}
+
+/** Self-list a business (starts UNVERIFIED — never self-minted, C-108 §4). */
+export const createListingBackend = (
+  token: string, body: { name: string; category: string; area: string; summary: string; tags?: string[] },
+) => writeCall('/api/identity/explorer/business', token, 'POST', body);
+
+/** Edit the caller's OWN listing (owner-scope enforced by the backend, P6). */
+export const updateListingBackend = (
+  token: string, handle: string,
+  body: { name?: string; category?: string; area?: string; summary?: string; tags?: string[]; pi_accepted?: boolean },
+) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
