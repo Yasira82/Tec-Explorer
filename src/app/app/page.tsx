@@ -13,7 +13,7 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ExplorerPro } from './components/ExplorerPro';
 import { ListingPanel } from './components/ListingPanel';
 import {
-  DIRECTORY, CATEGORIES, CATEGORY_META, searchDirectory,
+  CATEGORIES, CATEGORY_META,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
 
@@ -23,12 +23,16 @@ export default function ExplorerHome() {
 
   const [query,    setQuery]    = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
-  const [listings, setListings] = useState<Listing[]>(DIRECTORY);
-  const [source,   setSource]   = useState<'sample' | 'live'>('sample');
+  const [listings, setListings] = useState<Listing[]>([]);
+  // Real data end-to-end (C-135 §4): live results or an honest empty/error state —
+  // never a fabricated directory on screen.
+  const [status,   setStatus]   = useState<'loading' | 'ready' | 'error'>('loading');
+  const [reload,   setReload]   = useState(0);
 
-  // Fetch from the BFF (serves the sample today; a real index later). Debounced.
+  // Fetch from the BFF (the real Explorer index via the gateway). Debounced.
   useEffect(() => {
     let alive = true;
+    setStatus('loading');
     const t = setTimeout(async () => {
       try {
         const qs = new URLSearchParams();
@@ -36,16 +40,21 @@ export default function ExplorerHome() {
         if (category !== 'all') qs.set('category', category);
         const res  = await fetch(`/api/bff/explorer/search?${qs.toString()}`, { credentials: 'include' });
         const data = await res.json().catch(() => null);
-        if (!alive || !data || !Array.isArray(data.results)) return;
-        setListings(data.results as Listing[]);
-        setSource(data.source === 'live' ? 'live' : 'sample');
+        if (!alive) return;
+        if (data && data.source === 'live' && Array.isArray(data.results)) {
+          setListings(data.results as Listing[]);
+          setStatus('ready');
+        } else {
+          // backend unavailable — honest state, no fabricated listings
+          setListings([]);
+          setStatus('error');
+        }
       } catch {
-        // Fail-safe: rank locally so discovery is never blank.
-        if (alive) setListings(searchDirectory({ query, category }));
+        if (alive) { setListings([]); setStatus('error'); }
       }
     }, 180);
     return () => { alive = false; clearTimeout(t); };
-  }, [query, category]);
+  }, [query, category, reload]);
 
   const count = listings.length;
   const verifiedCount = useMemo(() => listings.filter((l) => l.verification === 'verified').length, [listings]);
@@ -111,14 +120,30 @@ export default function ExplorerHome() {
         <section style={{ marginTop: 26 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
             <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>
-              {count} result{count === 1 ? '' : 's'}
+              {status === 'ready' ? `${count} result${count === 1 ? '' : 's'}` : 'Discover'}
             </h2>
-            <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
-              {source === 'live' ? 'live index' : 'sample directory'} · {verifiedCount} verified
-            </span>
+            {status === 'ready' && count > 0 && (
+              <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
+                live · {verifiedCount} verified
+              </span>
+            )}
           </div>
           <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
-            {listings.map((l) => (
+            {status === 'loading' && [0, 1, 2].map((i) => (
+              <div key={i} style={{ ...card, height: 78, opacity: 0.4 }} aria-hidden />
+            ))}
+
+            {status === 'error' && (
+              <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                <div>Couldn&apos;t load the directory right now.</div>
+                <button
+                  onClick={() => setReload((r) => r + 1)}
+                  style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#0a0800', background: `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
+                >↻ Retry</button>
+              </div>
+            )}
+
+            {status === 'ready' && listings.map((l) => (
               <Link key={l.id} href={`/business/${l.id}`} style={card}>
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
@@ -134,9 +159,12 @@ export default function ExplorerHome() {
                 <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
               </Link>
             ))}
-            {count === 0 && (
+
+            {status === 'ready' && count === 0 && (
               <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-                No matches. Try a different term or category.
+                {query.trim() || category !== 'all'
+                  ? 'No matches. Try a different term or category.'
+                  : 'No Pi businesses are listed here yet. Be the first — list your business above.'}
               </div>
             )}
           </div>
