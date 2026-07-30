@@ -6,34 +6,28 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import { getListing, DIRECTORY, CATEGORY_META } from '@/lib/explorer/directory';
+import { CATEGORY_META } from '@/lib/explorer/directory';
 import { resolveBusiness } from '@/lib/explorer/server';
 
-// Pre-render the curated sample handles; allow live-only backend handles to render
-// on demand (the search module is the index of record — C-108 §5).
+// The live search module is the index of record (C-108 §5) — every business page
+// renders on demand from it; nothing is pre-baked from a curated sample.
 export function generateStaticParams() {
-  return DIRECTORY.map((l) => ({ id: l.id }));
+  return [];
 }
 export const dynamicParams = true;
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ id: string }> },
-): Promise<Metadata> {
-  const { id } = await params;
-  const l = getListing(id);
-  return {
-    title:       l ? `${l.name} — TEC Explorer` : 'TEC Explorer — Business',
-    description: l ? `${l.name}: ${l.summary}` : 'Discover Pi-accepting businesses on TEC Explorer.',
-  };
-}
+export const metadata: Metadata = {
+  title:       'TEC Explorer — Business',
+  description: 'Discover Pi-accepting businesses on TEC Explorer.',
+};
 
 export default async function BusinessPage(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
-  // Resolve from the live Explorer backend (search module); fall back to the
-  // curated sample so the page never 500s (C-108 discovery is always available).
-  const { listing: l } = await resolveBusiness(id);
+  // Resolve from the live Explorer backend (search module) — real data only; an
+  // unreachable backend yields an honest "couldn't load", never a sample (C-135 §4).
+  const { listing: l, source } = await resolveBusiness(id);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
@@ -42,12 +36,19 @@ export default async function BusinessPage(
   const inner: React.CSSProperties = { maxWidth: 680, margin: '0 auto' };
 
   if (!l) {
+    const unavailable = source === 'unavailable';
     return (
       <main style={wrap}>
         <div style={inner}>
           <Link href="/app" style={{ fontSize: 13, color: TEC_COLORS.gold, textDecoration: 'none' }}>← Discover</Link>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>Listing not found</h1>
-          <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>No business with id <code>{id}</code> in this directory.</p>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>
+            {unavailable ? "Couldn't load this listing" : 'Listing not found'}
+          </h1>
+          <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>
+            {unavailable
+              ? 'The directory is unavailable right now. Please try again shortly.'
+              : <>No business with id <code>{id}</code> is listed here.</>}
+          </p>
         </div>
       </main>
     );
