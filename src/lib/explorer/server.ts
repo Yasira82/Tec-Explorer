@@ -1,10 +1,11 @@
-import { getListing, type Category, type Listing } from './directory';
+import { type Category, type Listing } from './directory';
 
 // Server-only Explorer backend access (C-108). Calls the real Explorer search
 // module (identity-service) via the gateway with the inter-service key, and maps
-// the backend row to the frontend Listing shape. Everything here degrades to the
-// curated static directory so the app is never blank / never 500s. NEW-A: the
-// gateway URL is server-only (API_GATEWAY_URL) — never shipped to the client.
+// the backend row to the frontend Listing shape. Real data end-to-end (C-135 §4):
+// an unreachable backend resolves to `unavailable` (no listing) — it never shows a
+// fabricated business from a curated directory. NEW-A: the gateway URL is
+// server-only (API_GATEWAY_URL) — never shipped to the client.
 const GW = process.env.API_GATEWAY_URL ?? '';
 
 const gwHeaders = () => ({
@@ -30,12 +31,13 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
 
 export interface ResolvedBusiness {
   listing: Listing | null;
-  source:  'live' | 'sample';
+  source:  'live' | 'unavailable';
 }
 
-// One business by handle — live backend first, curated sample as fallback. A live
-// 404 is authoritative (listing: null, source: 'live'); an unreachable backend
-// falls back to the sample directory (source: 'sample').
+// One business by handle from the live backend. A live 404 is authoritative
+// (listing: null, source: 'live' → "not found"); an unreachable backend resolves
+// to (listing: null, source: 'unavailable' → "couldn't load"). Never a fabricated
+// listing from a curated directory (C-135 §4).
 export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
   if (GW) {
     try {
@@ -48,9 +50,9 @@ export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
         if (b) return { listing: listingFromBackend(b as Record<string, unknown>), source: 'live' };
       }
       if (res.status === 404) return { listing: null, source: 'live' };
-    } catch { /* fall through to the curated static directory */ }
+    } catch { /* unreachable → unavailable below */ }
   }
-  return { listing: getListing(id), source: 'sample' };
+  return { listing: null, source: 'unavailable' };
 }
 
 // ── WRITE PATH — self-listing (C-108) ─────────────────────────────────────────
