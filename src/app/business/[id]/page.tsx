@@ -11,10 +11,11 @@ import { resolveBusiness } from '@/lib/explorer/server';
 
 // The live search module is the index of record (C-108 §5) — every business page
 // renders on demand from it; nothing is pre-baked from a curated sample.
-export function generateStaticParams() {
-  return [];
-}
-export const dynamicParams = true;
+// force-dynamic (and NO generateStaticParams) is REQUIRED: this page does a fresh
+// (no-store) backend fetch, so any static prerendering throws "Page changed from
+// static to dynamic at runtime" → 500 on every /business/[id]. This is the exact
+// production incident this fixes.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title:       'TEC Explorer — Business',
