@@ -40,6 +40,24 @@ export function ExplorerPro() {
   const [status,  setStatus]  = useState<Status>('idle');
   const [message, setMessage] = useState('');
 
+  // Reflect the real subscription (activated by commerce-service when a Pro payment
+  // completes). Pro ONLY while the period is live — no auto-renewal / no downgrade job.
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  useEffect(() => {
+    fetch('/api/bff/subscription', { credentials: 'include', cache: 'no-store' })
+      .then((r) => r.json()).catch(() => ({}))
+      .then((j: Record<string, unknown>) => {
+        const d = (j?.data ?? j ?? {}) as Record<string, unknown>;
+        const s = ((d?.subscription ?? d) ?? {}) as Record<string, unknown>;
+        const end  = typeof s.current_period_end === 'string' ? new Date(s.current_period_end) : null;
+        const live = s.isActive !== false && !(s.isExpired === true || (end !== null && end.getTime() < Date.now()));
+        const plan = String(s.plan ?? '').toUpperCase();
+        setIsSubscribed(live && (plan === 'PRO' || plan === 'ENTERPRISE'));
+      })
+      .catch(() => {});
+  }, []);
+
+
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if ((window as { __TEC_PI_READY?: boolean }).__TEC_PI_READY) { setPiReady(true); return; }
@@ -100,6 +118,17 @@ export function ExplorerPro() {
     padding:      20,
     marginTop:    24,
   };
+
+  if (isSubscribed) {
+    return (
+      <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 16, padding: 20, marginTop: 24 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>★ You’re on Pro</div>
+        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6 }}>
+          Your subscription is active. Thanks for supporting TEC.
+        </div>
+      </div>
+    );
+  }
 
   if (status === 'success') {
     return (
