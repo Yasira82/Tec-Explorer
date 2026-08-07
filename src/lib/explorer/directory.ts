@@ -26,6 +26,7 @@ export interface Listing {
   // Indicative only — the real trust score is owned by Connection (C-107).
   trustHint:   string;
   tags:        string[];
+  featured?:   boolean;              // Explorer Pro — a paid visibility boost (C-108 §7)
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; label: string }> = {

@@ -95,6 +95,15 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
             {CATEGORY_META[listing.category].label} · {listing.area} · {listing.piAccepted ? 'π accepted' : 'Pi soon'}
           </div>
           <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{listing.summary}</div>
+          {listing.featured ? (
+            <div style={{ marginTop: 10, fontSize: 12, color: TEC_COLORS.gold, fontWeight: 700 }}>
+              ⭐ Featured — your listing ranks higher in discovery (Explorer Pro).
+            </div>
+          ) : (
+            <div style={{ marginTop: 10, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+              Go <strong style={{ color: TEC_COLORS.gold }}>Pro</strong> to feature your listing — rank higher so more Pi users find you.
+            </div>
+          )}
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>Edit listing</button>
             {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>Verification is issued by KYC — Explorer never self-verifies (C-108).</span>}

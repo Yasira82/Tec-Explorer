@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CATEGORIES } from '@/lib/explorer/directory';
-import { listOwnListings, createListingBackend } from '@/lib/explorer/server';
+import {
+  listOwnListings, createListingBackend, resolveProStatus, syncFeatured,
+} from '@/lib/explorer/server';
 
 // TEC Explorer — self-listing (C-108).
 //   GET  → the caller's OWN listings (identity from the session JWT, P6).
@@ -13,8 +15,18 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get('tec_access_token')?.value;
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   const r = await listOwnListings(token);
-  if (r.ok) return NextResponse.json({ listings: r.listings });
-  return NextResponse.json({ error: r.error }, { status: r.status || 502 });
+  if (!r.ok) return NextResponse.json({ error: r.error }, { status: r.status || 502 });
+
+  // Re-sync FEATURED to the owner's LIVE Pro status on each visit (C-108 §7): Pro →
+  // featured, lapsed Pro → cleared. Explorer never stores subscription truth (P5) — it
+  // reads commerce and reflects it. Fail-safe: a sync failure never blocks the listing.
+  const { isPro, untilIso } = await resolveProStatus(token);
+  const first = r.listings[0];
+  if (first && first.featured !== isPro) {
+    const ok = await syncFeatured(token, isPro, untilIso);
+    if (ok) r.listings = r.listings.map((l) => ({ ...l, featured: isPro }));
+  }
+  return NextResponse.json({ listings: r.listings, isPro });
 }
 
 export async function POST(req: NextRequest) {

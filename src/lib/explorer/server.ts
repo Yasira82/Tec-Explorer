@@ -26,6 +26,7 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     verification: String(b.verification ?? '').toLowerCase() === 'verified' ? 'verified' : 'unverified',
     trustHint:    String(b.trust_hint ?? ''),
     tags:         Array.isArray(b.tags) ? (b.tags as string[]) : [],
+    featured:     Boolean(b.featured),
   };
 }
 
@@ -119,3 +120,41 @@ export const updateListingBackend = (
   token: string, handle: string,
   body: { name?: string; category?: string; area?: string; summary?: string; tags?: string[]; pi_accepted?: boolean },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
+
+// ── Explorer Pro → FEATURED sync (C-108 §7) ───────────────────────────────────
+// Explorer never sells Pro nor stores subscription truth (P5/C-47). The subscription
+// is commerce-owned; we READ the caller's live status and tell Explorer to set/clear
+// `featured` on their listing so the paid visibility boost reflects the real plan.
+
+/** The caller's live subscription (Pro?) + period end — read from commerce (the owner). */
+export async function resolveProStatus(token: string): Promise<{ isPro: boolean; untilIso?: string }> {
+  if (!GW) return { isPro: false };
+  try {
+    const res = await fetch(`${GW}/api/commerce/subscriptions/status`, {
+      headers: authHeaders(token), cache: 'no-store',
+    });
+    if (!res.ok) return { isPro: false };
+    const d = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+    const s = (d.data ?? d) as Record<string, unknown>;
+    const plan = String(s.plan ?? s.tier ?? '').toUpperCase();
+    const active   = s.isActive === true || s.active === true || (plan !== '' && plan !== 'FREE');
+    const expired  = s.isExpired === true;
+    const end      = s.current_period_end ?? s.currentPeriodEnd ?? s.expires_at;
+    const notExpired = !expired && (!end || new Date(String(end)).getTime() > Date.now());
+    const isPro = active && notExpired && plan !== 'FREE' && plan !== '';
+    return { isPro, untilIso: end ? String(end) : undefined };
+  } catch { return { isPro: false }; }
+}
+
+/** Set/clear the caller's FEATURED placement to match their live Pro status. Fail-safe. */
+export async function syncFeatured(token: string, featured: boolean, untilIso?: string): Promise<boolean> {
+  if (!GW) return false;
+  try {
+    const res = await fetch(`${GW}/api/identity/explorer/featured`, {
+      method: 'PATCH', headers: authHeaders(token),
+      body: JSON.stringify({ featured, untilIso: featured ? untilIso : undefined }),
+      cache: 'no-store',
+    });
+    return res.ok;
+  } catch { return false; }
+}
