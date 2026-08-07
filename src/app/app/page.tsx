@@ -155,6 +155,7 @@ export default function ExplorerHome() {
                 </div>
                 <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
                   {CATEGORY_META[l.category].label} · {l.area} · {l.piAccepted ? 'π accepted' : 'Pi soon'}
+                  {l.featured && <span style={{ marginLeft: 6, color: TEC_COLORS.gold, fontWeight: 800 }}>· ⭐ Featured</span>}
                 </div>
                 <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
               </Link>

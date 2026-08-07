@@ -134,8 +134,9 @@ export function ExplorerPro() {
     return (
       <div style={{ ...card, borderColor: `${TEC_COLORS.success}66` }}>
         <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.success }}>✅ Business Pro active</div>
-        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6 }}>
-          Payment received. Your listing gets premium visibility in discovery 🧭.
+        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>
+          Payment received. Your listing is now <strong style={{ color: TEC_COLORS.gold }}>⭐ Featured</strong> —
+          it ranks higher in discovery so more Pi users find you. (Open “Your listing” to see the badge.)
         </div>
       </div>
     );
@@ -152,9 +153,11 @@ export function ExplorerPro() {
         </div>
       </div>
       <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 8, lineHeight: 1.5 }}>
-        For businesses — premium profile, sponsored discovery placement, and listing
-        analytics. A service subscription: Explorer never processes your customers’
-        payments — those happen at your business via tec-payment-service (C-108 §4).
+        <strong style={{ color: TEC_COLORS.text }}>⭐ Featured placement</strong> — your listing ranks
+        higher in discovery so more Pi users find you. (Visibility only — never a shortcut to the
+        “Verified” badge, which is KYC-earned; a verified business always ranks above an unverified
+        one.) A service subscription: Explorer never processes your customers’ payments — those happen
+        at your business via tec-payment-service (C-108 §4).
       </div>
 
       <button
