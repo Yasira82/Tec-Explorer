@@ -135,7 +135,10 @@ export async function resolveProStatus(token: string): Promise<{ isPro: boolean;
     });
     if (!res.ok) return { isPro: false };
     const d = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-    const s = (d.data ?? d) as Record<string, unknown>;
+    const root = (d.data ?? d) as Record<string, unknown>;
+    // commerce returns { data: { subscription: {...} } } — unwrap the subscription
+    // (a flat shape is also tolerated). Missing this returned FREE for real Pro users.
+    const s = ((root.subscription ?? root) ?? {}) as Record<string, unknown>;
     const plan = String(s.plan ?? s.tier ?? '').toUpperCase();
     const active   = s.isActive === true || s.active === true || (plan !== '' && plan !== 'FREE');
     const expired  = s.isExpired === true;
