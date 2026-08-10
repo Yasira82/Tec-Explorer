@@ -58,6 +58,24 @@ describe('GET /api/bff/explorer/listings (my listings)', () => {
     const [, init] = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, RequestInit & { headers: Record<string, string> }];
     expect(init.headers.Authorization).toBe('Bearer jwt-1');
   });
+
+  it('syncs FEATURED on for a live Pro owner (unwraps { data: { subscription } })', async () => {
+    // (1) my listings — unfeatured · (2) commerce subscription = PRO (REAL nested shape) ·
+    // (3) syncFeatured PATCH ok. The prior bug read s.plan on { data: { subscription } }
+    // (undefined → FREE) so featured never lit for real Pro users.
+    global.fetch = vi.fn()
+      .mockResolvedValueOnce(okJson({ listings: [backendBiz({ featured: false })] }))
+      .mockResolvedValueOnce(okJson({ subscription: { plan: 'PRO', isActive: true, isExpired: false } }))
+      .mockResolvedValueOnce(okJson({ ok: true }));
+    const { GET } = await import('@/app/api/bff/explorer/listings/route');
+    const res  = await GET(makeReq({ method: 'GET', cookies: { tec_access_token: 'jwt-1' } }));
+    const data = await res.json();
+    expect(res.status).toBe(200);
+    expect(data.listings[0].featured).toBe(true);
+    const patched = (global.fetch as ReturnType<typeof vi.fn>).mock.calls
+      .some(([u]) => String(u).endsWith('/api/identity/explorer/featured'));
+    expect(patched).toBe(true);
+  });
 });
 
 describe('POST /api/bff/explorer/listings (self-list)', () => {
