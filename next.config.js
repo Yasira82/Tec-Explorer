@@ -59,4 +59,32 @@ const nextConfig = {
   },
 };
 
+// --- TEC-TESTNET-VERIFY (Pi Testnet domain verification, per-host validation key) ---
+// Mainnet custom domain (<app>.tecosystem.app) keeps public/validation-key.txt (Mainnet
+// key). The paired Testnet app is served on the *.vercel.app URL (same Vercel deployment),
+// so that host is rewritten to a Testnet-only key file. Pi does an EXACT-content match,
+// so each host must serve exactly its own single key.
+nextConfig.rewrites = async () => ({
+  beforeFiles: [
+    {
+      source: '/validation-key.txt',
+      has: [{ type: 'host', value: '.*\\.vercel\\.app(:\\d+)?' }],
+      destination: '/validation-key-testnet.txt',
+    },
+  ],
+  afterFiles: [],
+  fallback: [],
+});
+
+const __tecOrigHeaders =
+  typeof nextConfig.headers === 'function' ? nextConfig.headers.bind(nextConfig) : null;
+nextConfig.headers = async () => {
+  const base = __tecOrigHeaders ? await __tecOrigHeaders() : [];
+  return [
+    ...base,
+    { source: '/validation-key.txt', headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }] },
+  ];
+};
+// --- end TEC-TESTNET-VERIFY ---
+
 module.exports = nextConfig;
