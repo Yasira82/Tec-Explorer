@@ -86,19 +86,19 @@ export default async function BusinessPage(
           <div style={factCard}>
             <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>💠 Pi payments</div>
             <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
-              {l.piAccepted ? 'Accepts Pi. You pay AT the business via tec-payment-service — not in Explorer (C-108 §4).' : 'Pi acceptance coming soon.'}
+              {l.piAccepted? 'Accepts Pi. You pay AT the business via tec-payment-service — not in Explorer.': 'Pi acceptance coming soon.'}
             </div>
           </div>
           <div style={factCard}>
             <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>🛡️ Verification</div>
             <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
-              {verified ? 'KYC-verified via tec-kyc-service. Explorer presents this badge — it never mints it.' : 'Not yet KYC-verified. Explorer never self-certifies a business.'}
+              {verified? 'KYC-verified via tec-kyc-service. Explorer presents this badge — it never mints it.': 'Not yet KYC-verified. Explorer never self-certifies a business.'}
             </div>
           </div>
           <div style={factCard}>
             <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>🤝 Trust</div>
             <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
-              {l.trustHint} — the real trust score is owned by Connection (C-107), not Explorer.
+              {l.trustHint} — the real trust score is owned by Connection, not Explorer.
             </div>
           </div>
         </div>

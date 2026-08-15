@@ -82,7 +82,7 @@ export default function ExplorerHome() {
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             Find Pi-accepting businesses, services, and opportunities near you —
             ranked trust-first. Explorer indexes and presents; verification comes
-            from KYC and trust from Connection (C-108).
+            from KYC and trust from Connection.
           </p>
         </header>
 
