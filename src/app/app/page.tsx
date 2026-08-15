@@ -172,10 +172,9 @@ export default function ExplorerHome() {
         </section>
 
         <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-          Explorer indexes public, self-declared business info and presents it. It never
-          mints verification (→ tec-kyc-service), computes trust (→ Connection, C-107),
-          processes merchant payments (→ tec-payment-service), or stores your location
-          (used for search only, C-108 §6).
+          Explorer helps you discover public, self-declared businesses. It doesn&apos;t
+          verify them, score their trust, or handle payments — those happen at the
+          business. Your location is used for search only and never stored.
         </p>
       </div>
     </main>

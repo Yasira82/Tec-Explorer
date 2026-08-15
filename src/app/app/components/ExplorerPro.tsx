@@ -169,7 +169,7 @@ export function ExplorerPro() {
         higher in discovery so more Pi users find you. (Visibility only — never a shortcut to the
         “Verified” badge, which is KYC-earned; a verified business always ranks above an unverified
         one.) A service subscription: Explorer never processes your customers’ payments — those happen
-        at your business via tec-payment-service.
+        at your business.
       </div>
 
       <button

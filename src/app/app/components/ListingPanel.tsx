@@ -138,7 +138,7 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Area <span style={{ opacity: 0.6 }}>(short label — never a precise address, C-108 §6)</span></span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Area <span style={{ opacity: 0.6 }}>(a general area — never your exact address)</span></span>
           <input value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} required minLength={2} maxLength={60} placeholder="e.g. City Center / Remote" style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
