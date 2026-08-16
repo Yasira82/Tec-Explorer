@@ -9,6 +9,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
+import { useMe } from '@/lib-client/hooks/useMe';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ExplorerPro } from './components/ExplorerPro';
 import { ListingPanel } from './components/ListingPanel';
@@ -19,7 +20,9 @@ import {
 
 export default function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
-  const name = user?.piUsername ? `@${user.piUsername}` : '';
+  const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
+  const piName = me.username ?? user?.piUsername ?? null;
+  const name = piName ? `@${piName}` : '';
 
   const [query,    setQuery]    = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
