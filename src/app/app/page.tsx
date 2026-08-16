@@ -19,7 +19,7 @@ import {
 
 export default function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
-  const name = user?.piUsername ? `@${user.piUsername}` : 'there';
+  const name = user?.piUsername ? `@${user.piUsername}` : '';
 
   const [query,    setQuery]    = useState('');
   const [category, setCategory] = useState<Category | 'all'>('all');
@@ -77,7 +77,7 @@ export default function ExplorerHome() {
         <header>
           <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>TEC Explorer · Discovery</div>
           <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>
-            {isLoading ? 'Discover the Pi economy' : `Discover, ${name}`}
+            {isLoading || !name ? 'Discover the Pi economy' : `Discover, ${name}`}
           </h1>
           <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>
             Find Pi-accepting businesses, services, and opportunities near you —
