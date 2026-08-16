@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
+import { LocaleProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
   title:       'TEC Explorer — Discover the Pi economy',
@@ -58,7 +59,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body>{children}</body>
+      <body><LocaleProvider>{children}</LocaleProvider></body>
     </html>
   );
 }
