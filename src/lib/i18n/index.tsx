@@ -17,18 +17,25 @@ interface LocaleContextValue {
 const LocaleContext = createContext<LocaleContextValue | undefined>(undefined);
 const translations  = { en, ar };
 
+function applyDir(locale: Locale) {
+  if (typeof document === 'undefined') return;
+  document.documentElement.setAttribute('dir', locale === 'ar' ? 'rtl' : 'ltr');
+  document.documentElement.setAttribute('lang', locale);
+}
+
 export function LocaleProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>('en');
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem('tec_locale') as Locale;
-      if (saved === 'en' || saved === 'ar') setLocaleState(saved);
+      if (saved === 'en' || saved === 'ar') { setLocaleState(saved); applyDir(saved); }
     } catch { /* ignore */ }
   }, []);
 
   const setLocale = (newLocale: Locale) => {
     setLocaleState(newLocale);
+    applyDir(newLocale);
     try { localStorage.setItem('tec_locale', newLocale); } catch { /* ignore */ }
   };
 

@@ -21,12 +21,12 @@ export interface Listing {
   // (C-108 §6: location is used for search, never persisted).
   area:        string;
   summary:     string;
-  piAccepted:  boolean;              // required to be indexed (C-108 §5)
+  piAccepted: boolean; // required to be indexed
   verification: VerificationStatus;  // from tec-kyc-service (presented, not minted)
   // Indicative only — the real trust score is owned by Connection (C-107).
   trustHint:   string;
   tags:        string[];
-  featured?:   boolean;              // Explorer Pro — a paid visibility boost (C-108 §7)
+  featured?: boolean; // Explorer Pro — a paid visibility boost
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; label: string }> = {

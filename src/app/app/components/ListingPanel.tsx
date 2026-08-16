@@ -106,7 +106,7 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
           )}
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>Edit listing</button>
-            {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>Verification is issued by KYC — Explorer never self-verifies (C-108).</span>}
+            {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>Verification is issued by KYC — Explorer never self-verifies.</span>}
           </div>
         </div>
       </section>
@@ -122,7 +122,7 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
       </h2>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
         Put your Pi-accepting business on the discovery map. New listings start
-        <strong style={{ color: TEC_COLORS.text }}> Unverified</strong> — verification is issued by KYC (C-108 §4).
+        <strong style={{ color: TEC_COLORS.text }}> Unverified</strong> — verification is issued by KYC.
       </p>
       <form onSubmit={save} style={{ ...card, display: 'grid', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -138,7 +138,7 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Area <span style={{ opacity: 0.6 }}>(short label — never a precise address, C-108 §6)</span></span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Area <span style={{ opacity: 0.6 }}>(a general area — never your exact address)</span></span>
           <input value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} required minLength={2} maxLength={60} placeholder="e.g. City Center / Remote" style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>

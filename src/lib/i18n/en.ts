@@ -22,4 +22,20 @@ export const en = {
     appsTitle: 'TEC Ecosystem',
     appsCount: '24 Apps',
   },
+  explorer: {
+    brand:       'TEC Explorer · Discovery',
+    discover:    'Discover the Pi economy',
+    discoverName:'Discover, {name}',
+    subtitle:    'Find Pi-accepting businesses, services, and opportunities near you — ranked trust-first. Explorer indexes and presents; verification comes from KYC and trust from Connection.',
+    nav: { discover: 'Discover', listing: 'My Business', pro: 'Pro', settings: 'Settings' },
+    searchPlaceholder: 'Search businesses, services, opportunities…',
+    all: 'All',
+    settings: {
+      profile: 'Profile', planFree: 'Free', planPro: 'Pro',
+      connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
+      about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
+      builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',
+    },
+  },
 };
