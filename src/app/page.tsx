@@ -28,7 +28,7 @@ export default function HomePage() {
   return (
     <div style={{
       minHeight:      '100vh',
-      background:     '#020205',
+      background:     '#050816',
       display:        'flex',
       alignItems:     'center',
       justifyContent: 'center',

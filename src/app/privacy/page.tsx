@@ -11,11 +11,11 @@ export const metadata: Metadata = {
   description: `Privacy Policy for ${APP} (${DOMAIN}).`,
 };
 
-const wrap = { maxWidth: 820, margin: '0 auto', padding: '48px 22px', color: '#e7e7ea', background: '#020205', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', lineHeight: 1.75 } as const;
-const h1   = { color: '#d4af37', fontSize: 30, marginBottom: 4 } as const;
-const h2   = { color: '#d4af37', fontSize: 19, marginTop: 30, marginBottom: 6 } as const;
+const wrap = { maxWidth: 820, margin: '0 auto', padding: '48px 22px', color: '#e7e7ea', background: '#050816', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', lineHeight: 1.75 } as const;
+const h1   = { color: '#FBB44A', fontSize: 30, marginBottom: 4 } as const;
+const h2   = { color: '#FBB44A', fontSize: 19, marginTop: 30, marginBottom: 6 } as const;
 const meta = { opacity: 0.65, fontSize: 14, marginBottom: 8 } as const;
-const link = { color: '#d4af37' } as const;
+const link = { color: '#FBB44A' } as const;
 
 export default function PrivacyPage() {
   return (

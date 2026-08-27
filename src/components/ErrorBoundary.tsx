@@ -31,7 +31,7 @@ export class ErrorBoundary extends Component<Props, State> {
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div style={{ minHeight: '100vh', background: '#020205', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ minHeight: '100vh', background: '#050816', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ textAlign: 'center', maxWidth: 320 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
@@ -42,7 +42,7 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
             <button
               onClick={() => { this.setState({ hasError: false, error: undefined }); window.location.reload(); }}
-              style={{ padding: '12px 24px', background: 'linear-gradient(135deg,#d4af37,#b8882a)', border: 'none', borderRadius: 12, color: '#0a0800', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+              style={{ padding: '12px 24px', background: 'linear-gradient(135deg,#FBB44A,#E8962A)', border: 'none', borderRadius: 12, color: '#0a0800', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
               Try Again
             </button>
           </div>
