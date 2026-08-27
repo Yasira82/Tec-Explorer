@@ -94,7 +94,7 @@ export async function GET(req: NextRequest) {
 <noscript><meta http-equiv="refresh" content="0;url=${redirect.replace(/"/g, '')}"></noscript>
 </head>
 <body style="margin:0;background:#050816;color:#FBB44A;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh">
-<div style="text-align:center"><div style="font-size:28px;font-weight:900">🧭 TEC Explorer</div>
+<div style="text-align:center"><div style="font-size:28px;font-weight:900">🧭 TEC EXPLORER</div>
 <div style="font-size:13px;color:#6b6b7a;margin-top:8px">Signing you in…</div></div>
 <script>
 (function () {
