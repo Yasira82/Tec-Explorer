@@ -50,7 +50,7 @@ function Pills<T extends string>({ value, options, onChange }: { value: T; optio
             style={{
               padding: '7px 14px', borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 700,
               border: `1px solid ${active ? TEC_COLORS.gold : TEC_COLORS.border}`,
-              background: active ? 'rgba(251,191,36,0.12)' : 'transparent',
+              background: active ? 'rgba(251,180,74,0.12)' : 'transparent',
               color: active ? TEC_COLORS.gold : TEC_COLORS.subtext,
             }}>
             {o.label}

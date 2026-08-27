@@ -1,5 +1,10 @@
+/* These values MUST match the package's TEC_COLORS. The app paints from
+   BOTH sources — TEC_COLORS.* in inline styles and var(--tec-*) here — so
+   when only the package moves, one screen carries two near-blacks and two
+   golds. Verified on Tec-Zone before this sweep: the running page painted
+   #050816 and #020205 at the same time. */
 /* ═══════════════════════════════════════════════════════
-   TEC Design Tokens v1.1
+   TEC Design Tokens — aligned to @yasser172/tec-ui v3.0.0
    Foundation layer — all apps inherit from here
 ═══════════════════════════════════════════════════════ */
 
@@ -10,29 +15,29 @@
    (theme-color meta in layout tints the browser bar.) */
 html {
   color-scheme: dark;
-  background: #020205; /* var(--tec-bg) */
+  background: #050816; /* var(--tec-bg) */
 }
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: #020205; /* var(--tec-bg) */
+  background: #050816; /* var(--tec-bg) */
 }
 
 :root {
   /* ── Colors ─────────────────────────────────────────── */
-  --tec-bg:          #020205;
-  --tec-surface-1:   #0a0a12;
-  --tec-surface-2:   #0d0d18;
-  --tec-surface-3:   #12121e;
+  --tec-bg:          #050816;
+  --tec-surface-1:   #0B1020;
+  --tec-surface-2:   #111627;
+  --tec-surface-3:   #1A2033;
   --tec-border:      rgba(255,255,255,0.06);
-  --tec-border-gold: rgba(212,175,55,0.2);
+  --tec-border-gold: rgba(251,180,74,0.2);
 
-  --tec-gold:        #d4af37;
-  --tec-gold-dim:    rgba(212,175,55,0.15);
-  --tec-gold-glow:   rgba(212,175,55,0.08);
+  --tec-gold:        #FBB44A;
+  --tec-gold-dim:    rgba(251,180,74,0.15);
+  --tec-gold-glow:   rgba(251,180,74,0.08);
 
-  --tec-green:       #10b981;
+  --tec-green:       #22C55E;
   --tec-green-dim:   rgba(16,185,129,0.12);
   --tec-blue:        #3b82f6;
   --tec-blue-dim:    rgba(59,130,246,0.12);
@@ -78,7 +83,7 @@ html, body {
   --shadow-sm:   0 1px 3px rgba(0,0,0,0.4);
   --shadow-md:   0 4px 16px rgba(0,0,0,0.5);
   --shadow-lg:   0 8px 32px rgba(0,0,0,0.6);
-  --shadow-gold: 0 0 40px rgba(212,175,55,0.12);
+  --shadow-gold: 0 0 40px rgba(251,180,74,0.12);
 
   /* ── Transitions ─────────────────────────────────────── */
   --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
@@ -100,9 +105,9 @@ html, body {
 /* ── Theme: dark (default) ───────────────────────────── */
 [data-theme='dark'],
 :root {
-  --tec-bg:        #020205;
-  --tec-surface-1: #0a0a12;
-  --tec-surface-2: #0d0d18;
+  --tec-bg:        #050816;
+  --tec-surface-1: #0B1020;
+  --tec-surface-2: #111627;
   --tec-text-1:    rgba(255,255,255,0.92);
   --tec-text-2:    rgba(255,255,255,0.55);
   --tec-text-3:    rgba(255,255,255,0.28);
