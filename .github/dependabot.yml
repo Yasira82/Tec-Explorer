@@ -5,14 +5,26 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
-    groups:
-      dev-dependencies:
-        dependency-type: "development"
     commit-message:
       prefix: "chore(deps)"
+    # Major version bumps are coordinated MANUALLY across the platform — it pins
+    # Next 15, React 18, and @sentry/nextjs v8 (KB: v10 rejected). Letting
+    # Dependabot open next→16 / react→19 / sentry→10 / zod→4 just breaks CI on
+    # every new skeleton. Ignore ALL majors; propose only minor/patch.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # One grouped PR for all minor+patch (prod + dev) instead of a swarm.
+    groups:
+      all-minor-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     commit-message:
       prefix: "chore(ci)"
+    groups:
+      github-actions:
+        patterns: ["*"]
