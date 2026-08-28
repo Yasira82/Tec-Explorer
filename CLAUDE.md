@@ -22,7 +22,7 @@ Built from `tec-template-base` (Next.js 15 frontend).
 legal + themed discovery home (search · category · trust-first ranking over a curated
 **read-only sample** directory) + **Explorer Business Pro** payment surface (the Pi
 Portal "Process a Transaction" gate) + a `/business/[id]` detail page. A real listing
-index is Phase 1+ (tec-identity-service business profiles + a search backend). Not yet deployed.
+index is Phase 1+ (tec-identity-service business profiles + a search backend). Deployed (Mainnet) · Pi App ID registered · env set · payment live.
 
 ---
 
@@ -32,7 +32,7 @@ index is Phase 1+ (tec-identity-service business profiles + a search backend). N
 |-------|-------|
 | **App** | TEC Explorer |
 | **Domain** | `https://explorer.tecosystem.app` |
-| **Pi App ID** | ⏳ TBD — register at Pi Developer Portal · then Vercel `NEXT_PUBLIC_PI_APP_ID` |
+| **Pi App ID** | ✅ Registered (Mainnet) · Vercel `NEXT_PUBLIC_PI_APP_ID` |
 | **APP_SOURCE slug** | `explorer` (payment-service resolves `PI_API_KEY_EXPLORER`) |
 | **PI_SANDBOX** | `false` (Mainnet) |
 
