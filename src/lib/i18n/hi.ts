@@ -192,6 +192,11 @@ export const hi = {
     removing:       'हटाया जा रहा है…',
     removeFailed:   'व्यवसाय हटाया नहीं जा सका।',
     removedOk:      'व्यवसाय हटा दिया गया।',
+    pickOnMap:        '🗺️ नक्शे पर चुनें',
+    pickOnMapHint:    'अपनी दुकान की जगह पर टैप करें, या पिन खींचें। सटीकता के लिए ज़ूम करें।',
+    geoUseMapInstead: 'इसके बजाय नक्शे पर चुनें — यह बिना अनुमति के काम करता है।',
+    pasteCoords:      'या निर्देशांक पेस्ट करें (Google Maps से)',
+    coordsUnreadable: 'उससे निर्देशांक नहीं पढ़े जा सके।',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

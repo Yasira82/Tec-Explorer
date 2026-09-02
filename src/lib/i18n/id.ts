@@ -192,6 +192,11 @@ export const id = {
     removing:       'Menghapus…',
     removeFailed:   'Tidak dapat menghapus bisnis.',
     removedOk:      'Bisnis dihapus.',
+    pickOnMap:        '🗺️ Pilih di peta',
+    pickOnMapHint:    'Ketuk lokasi toko Anda, atau seret pin. Perbesar untuk akurasi.',
+    geoUseMapInstead: 'Pilih saja di peta — cara ini tidak memerlukan izin.',
+    pasteCoords:      'Atau tempel koordinat (dari Google Maps)',
+    coordsUnreadable: 'Tidak dapat membaca pasangan koordinat dari itu.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

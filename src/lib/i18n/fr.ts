@@ -192,6 +192,11 @@ export const fr = {
     removing:       'Retrait…',
     removeFailed:   'Impossible de retirer l’entreprise.',
     removedOk:      'Entreprise retirée.',
+    pickOnMap:        '🗺️ Choisir sur la carte',
+    pickOnMapHint:    'Touchez l’emplacement de votre commerce, ou déplacez le repère. Zoomez pour plus de précision.',
+    geoUseMapInstead: 'Choisissez-le sur la carte — cela fonctionne sans autorisation.',
+    pasteCoords:      'Ou collez les coordonnées (depuis Google Maps)',
+    coordsUnreadable: 'Impossible de lire des coordonnées là-dedans.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

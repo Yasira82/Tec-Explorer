@@ -192,6 +192,11 @@ export const ar = {
     removing:       'بيتشال…',
     removeFailed:   'مقدرناش نشيل النشاط.',
     removedOk:      'النشاط اتشال.',
+    pickOnMap:        '🗺️ حدّد على الخريطة',
+    pickOnMapHint:    'دوس على مكان محلك، أو اسحب الدبوس. قرّب عشان الدقة.',
+    geoUseMapInstead: 'حدّده على الخريطة بدل كده — بتشتغل من غير إذن.',
+    pasteCoords:      'أو الصق الإحداثيات (من Google Maps)',
+    coordsUnreadable: 'مقدرناش نقرا إحداثيات من ده.',
     settings: {
       profile: 'الملف الشخصي', planFree: 'مجاني', planPro: 'Pro',
       connectedPi: 'متصل بـ Pi', notSignedIn: 'غير مسجّل الدخول', member: 'عضو TEC',

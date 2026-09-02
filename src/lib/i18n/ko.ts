@@ -192,6 +192,11 @@ export const ko = {
     removing:       '삭제 중…',
     removeFailed:   '사업체를 삭제하지 못했습니다.',
     removedOk:      '사업체가 삭제되었습니다.',
+    pickOnMap:        '🗺️ 지도에서 선택',
+    pickOnMapHint:    '가게 위치를 탭하거나 핀을 드래그하세요. 확대하면 더 정확합니다.',
+    geoUseMapInstead: '대신 지도에서 선택하세요 — 권한 없이 작동합니다.',
+    pasteCoords:      '또는 좌표 붙여넣기 (Google 지도에서)',
+    coordsUnreadable: '좌표를 읽을 수 없습니다.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

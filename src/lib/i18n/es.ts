@@ -192,6 +192,11 @@ export const es = {
     removing:       'Eliminando…',
     removeFailed:   'No se pudo eliminar el negocio.',
     removedOk:      'Negocio eliminado.',
+    pickOnMap:        '🗺️ Elegir en el mapa',
+    pickOnMapHint:    'Toca dónde está tu negocio, o arrastra el pin. Amplía para más precisión.',
+    geoUseMapInstead: 'Elígelo en el mapa — funciona sin permiso.',
+    pasteCoords:      'O pega las coordenadas (de Google Maps)',
+    coordsUnreadable: 'No se pudo leer un par de coordenadas de eso.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

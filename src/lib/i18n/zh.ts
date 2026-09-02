@@ -192,6 +192,11 @@ export const zh = {
     removing:       '正在移除…',
     removeFailed:   '无法移除该商家。',
     removedOk:      '商家已移除。',
+    pickOnMap:        '🗺️ 在地图上选择',
+    pickOnMapHint:    '点按您店铺的位置，或拖动图钉。放大以提高精度。',
+    geoUseMapInstead: '改用地图选择——无需授权即可使用。',
+    pasteCoords:      '或粘贴坐标（来自 Google 地图）',
+    coordsUnreadable: '无法从中读取坐标。',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

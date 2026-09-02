@@ -192,6 +192,11 @@ export const ur = {
     removing:       'ہٹایا جا رہا ہے…',
     removeFailed:   'کاروبار نہیں ہٹایا جا سکا۔',
     removedOk:      'کاروبار ہٹا دیا گیا۔',
+    pickOnMap:        '🗺️ نقشے پر منتخب کریں',
+    pickOnMapHint:    'اپنی دکان کی جگہ پر ٹیپ کریں، یا پن کو گھسیٹیں۔ درستی کے لیے زوم کریں۔',
+    geoUseMapInstead: 'اس کے بجائے نقشے پر منتخب کریں — یہ اجازت کے بغیر کام کرتا ہے۔',
+    pasteCoords:      'یا کوآرڈینیٹس چسپاں کریں (Google Maps سے)',
+    coordsUnreadable: 'اس سے کوآرڈینیٹ نہیں پڑھے جا سکے۔',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

@@ -192,6 +192,11 @@ export const vi = {
     removing:       'Đang gỡ…',
     removeFailed:   'Không thể gỡ doanh nghiệp.',
     removedOk:      'Đã gỡ doanh nghiệp.',
+    pickOnMap:        '🗺️ Chọn trên bản đồ',
+    pickOnMapHint:    'Chạm vào vị trí cửa hàng, hoặc kéo ghim. Phóng to để chính xác hơn.',
+    geoUseMapInstead: 'Hãy chọn trên bản đồ — cách này không cần quyền.',
+    pasteCoords:      'Hoặc dán tọa độ (từ Google Maps)',
+    coordsUnreadable: 'Không đọc được cặp tọa độ từ nội dung đó.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

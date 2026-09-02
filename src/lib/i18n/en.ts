@@ -192,6 +192,11 @@ export const en = {
     removing:       'Removing…',
     removeFailed:   'Could not remove the listing.',
     removedOk:      'Listing removed.',
+    pickOnMap:        '🗺️ Pick on map',
+    pickOnMapHint:    'Tap where your shop is, or drag the pin. Zoom in for accuracy.',
+    geoUseMapInstead: 'Pick it on the map instead — it works without permission.',
+    pasteCoords:      'Or paste coordinates (from Google Maps)',
+    coordsUnreadable: 'Could not read a coordinate pair from that.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

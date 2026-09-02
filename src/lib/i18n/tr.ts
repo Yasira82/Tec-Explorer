@@ -192,6 +192,11 @@ export const tr = {
     removing:       'Kaldırılıyor…',
     removeFailed:   'İşletme kaldırılamadı.',
     removedOk:      'İşletme kaldırıldı.',
+    pickOnMap:        '🗺️ Haritadan seç',
+    pickOnMapHint:    'İşletmenizin yerine dokunun veya iğneyi sürükleyin. Doğruluk için yakınlaştırın.',
+    geoUseMapInstead: 'Bunun yerine haritadan seçin — izin gerektirmez.',
+    pasteCoords:      'Veya koordinatları yapıştırın (Google Haritalar’dan)',
+    coordsUnreadable: 'Bundan bir koordinat çifti okunamadı.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

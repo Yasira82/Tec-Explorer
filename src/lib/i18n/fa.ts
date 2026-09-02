@@ -192,6 +192,11 @@ export const fa = {
     removing:       'در حال حذف…',
     removeFailed:   'حذف کسب‌وکار ممکن نشد.',
     removedOk:      'کسب‌وکار حذف شد.',
+    pickOnMap:        '🗺️ انتخاب روی نقشه',
+    pickOnMapHint:    'روی محل کسب‌وکارتان بزنید، یا سنجاق را بکشید. برای دقت بیشتر بزرگ‌نمایی کنید.',
+    geoUseMapInstead: 'به جایش روی نقشه انتخاب کنید — بدون اجازه کار می‌کند.',
+    pasteCoords:      'یا مختصات را بچسبانید (از Google Maps)',
+    coordsUnreadable: 'نتوانستیم مختصاتی از آن بخوانیم.',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
