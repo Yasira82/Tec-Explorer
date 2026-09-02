@@ -1,4 +1,5 @@
 import { type Category, type Listing } from './directory';
+import { reportError } from '@/lib/observability/reportError';
 
 // Server-only Explorer backend access (C-108). Calls the real Explorer search
 // module (identity-service) via the gateway with the inter-service key, and maps
@@ -73,7 +74,11 @@ export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
         if (b) return { listing: listingFromBackend(b as Record<string, unknown>), source: 'live' };
       }
       if (res.status === 404) return { listing: null, source: 'live' };
-    } catch { /* unreachable → unavailable below */ }
+    } catch (err) {
+      // The page shows an honest "couldn't load". This makes the same fact
+      // visible to us — an unreachable gateway is an outage, not a quiet null.
+      reportError(err, { where: 'resolveBusiness', id });
+    }
   }
   return { listing: null, source: 'unavailable' };
 }

@@ -1,4 +1,5 @@
 import 'server-only';
+import { reportError } from '@/lib/observability/reportError';
 
 // Shop photos (C-108), server side.
 //
@@ -62,5 +63,11 @@ export async function resolvePhotoBytes(handle: string): Promise<PhotoBytes | nu
     if (!contentType.startsWith('image/')) return null;
 
     return { body: await res.arrayBuffer(), contentType };
-  } catch { return null; }
+  } catch (err) {
+    // Null so the listing still renders without its image — a business page
+    // must never fail because a photo could not be loaded. Reported, because
+    // "photos stopped working" is otherwise invisible until someone says so.
+    reportError(err, { where: 'resolvePhotoBytes', handle });
+    return null;
+  }
 }

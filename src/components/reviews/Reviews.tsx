@@ -22,6 +22,8 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
 import { useTranslation } from '@/lib/i18n';
+import { ReportButton } from '@/components/report/ReportButton';
+import { reportError } from '@/lib/observability/reportError';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -66,7 +68,12 @@ export function Reviews({ handle, ownerUsername }: {
       const res = await fetch(`/api/bff/explorer/reviews?handle=${encodeURIComponent(handle)}`, { cache: 'no-store' });
       const data = await res.json().catch(() => null);
       if (data) { setReviews(data.reviews ?? []); setSummary(data.summary ?? summary); }
-    } catch { /* the section simply shows nothing rather than an error nobody can act on */ }
+    } catch (err) {
+      // The SECTION still degrades quietly — a reader cannot act on a review
+      // fetch failing. But it is no longer invisible to us: a silent catch is
+      // how "reviews stopped loading for everyone" goes unnoticed (C-96).
+      reportError(err, { where: 'Reviews.load', handle });
+    }
     finally { setLoaded(true); }
     // `summary` is only a fallback value here; depending on it would reload on
     // every fetch.
@@ -95,7 +102,10 @@ export function Reviews({ handle, ownerUsername }: {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setError(data.error ?? x.reviewFailed); return; }
       await load();
-    } catch { setError(x.networkError); }
+    } catch (err) {
+      reportError(err, { where: 'Reviews.submit', handle });
+      setError(x.networkError);
+    }
     finally { setBusy(false); }
   }
 
@@ -105,7 +115,10 @@ export function Reviews({ handle, ownerUsername }: {
       await fetch(`/api/bff/explorer/reviews?handle=${encodeURIComponent(handle)}`, { method: 'DELETE' });
       setRating(0); setBody('');
       await load();
-    } catch { setError(x.networkError); }
+    } catch (err) {
+      reportError(err, { where: 'Reviews.remove', handle });
+      setError(x.networkError);
+    }
     finally { setBusy(false); }
   }
 
@@ -214,6 +227,10 @@ export function Reviews({ handle, ownerUsername }: {
                   {r.body}
                 </p>
               )}
+              {/* Not offered on your own review — the API refuses it, and an
+                  option that is shown and then refused teaches people to
+                  distrust the whole menu. */}
+              <ReportButton targetKind="review" targetId={r.id} canReport={r.author !== myName} />
             </div>
           );
         })}

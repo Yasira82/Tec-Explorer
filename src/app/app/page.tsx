@@ -21,6 +21,7 @@ import {
   type Category, type Listing,
 } from '@/lib/explorer/directory';
 import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
+import { reportError } from '@/lib/observability/reportError';
 
 // Leaflet touches `window` at module scope, so this cannot be server-rendered —
 // a plain import breaks the BUILD, not just the render.
@@ -81,7 +82,11 @@ export default function ExplorerHome() {
           setListings([]);
           setStatus('error');
         }
-      } catch {
+      } catch (err) {
+        // The screen already says "couldn't load the directory" and offers a
+        // retry. This is the other half: without it, the day search breaks for
+        // everyone we find out from a screenshot (C-96).
+        reportError(err, { where: 'Discover.search', query, category });
         if (alive) { setListings([]); setStatus('error'); }
       }
     }, 180);

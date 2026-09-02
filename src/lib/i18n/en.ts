@@ -160,6 +160,25 @@ export const en = {
     networkError:   'Network error — please try again.',
     createFirst:    'Create your listing first, then add a photo.',
 
+    // ── Reporting ──────────────────────────────────────────────────────────
+    report:        'Report',
+    reportTitle:   'Report this content',
+    reportSend:    'Send report',
+    reportSending: 'Sending…',
+    reportSent:    'Your report has been received. Someone will review it — nothing is removed automatically.',
+    reportFailed:  'Could not send your report. Try again.',
+    reportNotePlaceholder: 'Anything that helps the review (optional)',
+    reportPrivacyNote: 'The author will not be told who reported them.',
+    reportReasons: {
+      scam:           'Scam',
+      spam:           'Spam',
+      offensive:      'Offensive',
+      not_a_business: 'Not a real business',
+      wrong_info:     'Wrong information',
+      impersonation:  'Impersonation',
+      other:          'Something else',
+    },
+
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

@@ -21,6 +21,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
+import { reportError } from '@/lib/observability/reportError';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -50,7 +51,8 @@ export function FollowOwner({ username, headline, verified }: {
         body: JSON.stringify({ username }),
       });
       setState(res.ok ? 'done' : 'failed');
-    } catch {
+    } catch (err) {
+      reportError(err, { where: 'FollowOwner.follow' });
       setState('failed');
     }
   }, [username]);
@@ -96,7 +98,12 @@ export function FollowOwner({ username, headline, verified }: {
         if (!res.ok) return;
         const { following } = (await res.json().catch(() => ({}))) as { following?: string[] };
         if ((following ?? []).some((f) => norm(f) === norm(username))) setState('done');
-      } catch { /* the button simply stays offered */ }
+      } catch (err) {
+        // The button stays offered — the POST is idempotent upstream, so the
+        // worst case is a no-op. Reported anyway: this failing for everyone
+        // means the pre-check is dead and nobody would notice (C-96).
+        reportError(err, { where: 'FollowOwner.alreadyFollowing' });
+      }
     })();
   }, [isLoading, isAuthenticated, user?.piUsername, username, follow]);
 

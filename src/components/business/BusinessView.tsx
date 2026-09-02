@@ -17,6 +17,7 @@ import { CATEGORY_META, safeWebsite, telHref, mappable, type Listing } from '@/l
 import { FollowOwner } from '@/components/connect/FollowOwner';
 import { BusinessMapCard } from '@/components/map/BusinessMapCard';
 import { Reviews } from '@/components/reviews/Reviews';
+import { ReportButton } from '@/components/report/ReportButton';
 import type { OwnerProfile } from '@/lib/explorer/server';
 
 export function BusinessView({ listing: l, owner }: {
@@ -192,7 +193,12 @@ export function BusinessView({ listing: l, owner }: {
           </div>
         )}
 
-        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '22px 0 0', lineHeight: 1.5 }}>
+        {/* Quiet, at the bottom, after everything useful. A prominent report
+            control on every card invites reports the way a big red switch
+            invites pressing. */}
+        <ReportButton targetKind="listing" targetId={l.id} />
+
+        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '12px 0 0', lineHeight: 1.5 }}>
           {x.disclaimer}
         </p>
       </div>

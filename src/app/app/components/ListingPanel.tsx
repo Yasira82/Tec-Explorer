@@ -13,6 +13,7 @@ import { useTranslation } from '@/lib/i18n';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
+import { reportError } from '@/lib/observability/reportError';
 
 type Draft = {
   name: string; category: Category; area: string; summary: string; tags: string;
@@ -80,7 +81,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       if (!res.ok) { setPhotoError(data.message ?? x.photoFailed); return; }
       setListing(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
-    } catch { setPhotoError(x.networkError); }
+    } catch (err) {
+      reportError(err, { where: 'ListingPanel.uploadPhoto' });
+      setPhotoError(x.networkError);
+    }
     finally { setPhotoBusy(false); }
   }
 
@@ -92,7 +96,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       if (!res.ok) { setPhotoError(data.error ?? x.photoRemoveFailed); return; }
       setListing(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
-    } catch { setPhotoError(x.networkError); }
+    } catch (err) {
+      reportError(err, { where: 'ListingPanel.removePhoto' });
+      setPhotoError(x.networkError);
+    }
     finally { setPhotoBusy(false); }
   }
 
@@ -132,7 +139,12 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       const data = await res.json().catch(() => ({}));
       const own = (data.listings as Listing[])?.[0] ?? null;
       setListing(own);
-    } catch { /* keep empty */ }
+    } catch (err) {
+      // The panel still renders the create form — a merchant with no listing
+      // and a merchant whose listing failed to load look the same to them, but
+      // they must not look the same to us.
+      reportError(err, { where: 'ListingPanel.load' });
+    }
     finally { setLoaded(true); }
   }
 
@@ -190,7 +202,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       }
       setListing(data.listing as Listing);
       setEditing(false);
-    } catch { setError(x.networkError); }
+    } catch (err) {
+      reportError(err, { where: 'ListingPanel.save' });
+      setError(x.networkError);
+    }
     finally { setBusy(false); }
   }
 

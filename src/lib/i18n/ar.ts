@@ -160,6 +160,25 @@ export const ar = {
     networkError:   'خطأ في الشبكة — حاول تاني.',
     createFirst:    'اعمل إعلانك الأول، وبعدين ضيف صورة.',
 
+    // ── Reporting ──────────────────────────────────────────────────────────
+    report:        'إبلاغ',
+    reportTitle:   'إبلاغ عن المحتوى ده',
+    reportSend:    'إرسال البلاغ',
+    reportSending: 'جاري الإرسال…',
+    reportSent:    'وصلنا بلاغك. حد من الفريق هيراجعه — مش بيتشال تلقائياً.',
+    reportFailed:  'تعذّر إرسال البلاغ. حاول تاني.',
+    reportNotePlaceholder: 'تفاصيل تساعد المراجعة (اختياري)',
+    reportPrivacyNote: 'صاحب المحتوى مش هيعرف مين بلّغ.',
+    reportReasons: {
+      scam:           'نصب',
+      spam:           'سبام',
+      offensive:      'محتوى مسيء',
+      not_a_business: 'مش نشاط حقيقي',
+      wrong_info:     'بيانات غلط',
+      impersonation:  'انتحال صفة',
+      other:          'سبب آخر',
+    },
+
     settings: {
       profile: 'الملف الشخصي', planFree: 'مجاني', planPro: 'Pro',
       connectedPi: 'متصل بـ Pi', notSignedIn: 'غير مسجّل الدخول', member: 'عضو TEC',
