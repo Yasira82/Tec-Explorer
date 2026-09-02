@@ -52,6 +52,17 @@ export interface Listing {
   hours?:   string;
   phone?:   string;
   website?: string;
+  /**
+   * Where the shop is, as the merchant published it. A pair or neither — half a
+   * coordinate is not a place (the backend enforces this; nothing here should
+   * assume it holds for an old row, hence the `mappable` filter before drawing).
+   *
+   * This is the BUSINESS's location. The searcher's own position is never
+   * stored, never sent, and never appears in this type — it lives only in the
+   * browser (C-108 §6, src/lib-client/geo.ts).
+   */
+  lat?: number;
+  lng?: number;
 }
 
 /**

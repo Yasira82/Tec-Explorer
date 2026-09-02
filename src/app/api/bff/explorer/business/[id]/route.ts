@@ -57,6 +57,13 @@ export async function PATCH(
   if (body?.hours   !== undefined)     patch.hours   = String(body.hours);
   if (body?.phone   !== undefined)     patch.phone   = String(body.phone);
   if (body?.website !== undefined)     patch.website = String(body.website);
+  // Location travels as a PAIR, forwarded only when the request mentions it.
+  // The backend clears both on anything invalid — nothing here tries to be
+  // clever about half a coordinate.
+  if (body?.lat !== undefined || body?.lng !== undefined) {
+    patch.lat = body?.lat ?? null;
+    patch.lng = body?.lng ?? null;
+  }
 
   const r = await updateListingBackend(token, id, patch);
   if (r.ok) return NextResponse.json({ business: r.listing });

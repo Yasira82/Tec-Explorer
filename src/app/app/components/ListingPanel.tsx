@@ -15,11 +15,13 @@ import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/ex
 type Draft = {
   name: string; category: Category; area: string; summary: string; tags: string;
   address: string; hours: string; phone: string; website: string;
+  /** The shop's pin. Null when the merchant has not set one, or cleared it. */
+  lat: number | null; lng: number | null;
 };
 
 const emptyDraft: Draft = {
   name: '', category: 'services', area: '', summary: '', tags: '',
-  address: '', hours: '', phone: '', website: '',
+  address: '', hours: '', phone: '', website: '', lat: null, lng: null,
 };
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
@@ -30,6 +32,7 @@ const toDraft = (l: Listing): Draft => ({
   // four, so '' consistently means "cleared" — the backend distinguishes that
   // from "not sent" and only the latter leaves a column untouched.
   address: l.address ?? '', hours: l.hours ?? '', phone: l.phone ?? '', website: l.website ?? '',
+  lat: l.lat ?? null, lng: l.lng ?? null,
 });
 const tagsArray = (s: string) => s.split(',').map((t) => t.trim()).filter(Boolean);
 
@@ -48,6 +51,37 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   const [draft, setDraft]     = useState<Draft>(emptyDraft);
   const [busy, setBusy]       = useState(false);
   const [error, setError]     = useState<string | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  /**
+   * Capture the shop's position from the device, once, on request.
+   *
+   * High accuracy IS asked for here, unlike the visitor-facing "near me": this
+   * value is written down and shown to strangers as where to go, so a 300 m
+   * error is a customer at the wrong corner. It is worth the wait for a
+   * one-time action the merchant deliberately took.
+   */
+  function pickHere() {
+    if (typeof navigator === 'undefined' || !navigator.geolocation) {
+      setGeoError('This browser can\u2019t share a location. You can leave the pin empty.');
+      return;
+    }
+    setLocating(true); setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        setDraft((d) => ({ ...d, lat: p.coords.latitude, lng: p.coords.longitude }));
+        setLocating(false);
+      },
+      (err) => {
+        setLocating(false);
+        setGeoError(err.code === err.PERMISSION_DENIED
+          ? 'Location is blocked for this site. Allow it in your browser settings, or leave the pin empty.'
+          : 'Couldn\u2019t get a location just now. You can try again or leave the pin empty.');
+      },
+      { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
+    );
+  }
 
   async function load() {
     try {
@@ -102,6 +136,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       name: draft.name, category: draft.category, area: draft.area,
       summary: draft.summary, tags: tagsArray(draft.tags),
       address: draft.address, hours: draft.hours, phone: draft.phone, website: draft.website,
+      lat: draft.lat, lng: draft.lng,
     };
     try {
       const res = await fetch(
@@ -165,6 +200,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               ['🕒 Hours',   listing.hours],
               ['📞 Phone',   listing.phone],
               ['🌐 Website', listing.website],
+              ['🗺️ Map pin', listing.lat !== undefined && listing.lng !== undefined ? 'set' : undefined],
             ] as const).map(([label, value]) => (
               <span
                 key={label}
@@ -177,6 +213,12 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               >{value ? `✓ ${label}` : `+ ${label}`}</span>
             ))}
           </div>
+          {listing.lat === undefined && (
+            <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+              You are not on the map yet. Open Edit and tap “Use my current location”
+              while you are at the business.
+            </div>
+          )}
           {!listing.address && !listing.phone && !listing.website && (
             <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
               People can find you but not reach you. Add an address, phone, or website
@@ -257,6 +299,42 @@ export function ListingPanel({ isAuth, authLoading = false }: {
           <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Website</span>
           <input value={draft.website} onChange={(e) => setDraft({ ...draft, website: e.target.value })} maxLength={200} placeholder="yourshop.com" style={input} dir="ltr" />
         </label>
+
+        {/* The pin. Captured by standing in the shop and tapping, rather than
+            typed: nobody knows their own coordinates, and asking a merchant to
+            find them is asking them to skip this field. Typing them is still
+            possible for anyone who has them.
+
+            This is the merchant's OWN location, published about their OWN
+            premises — the opposite party from the searcher whose location
+            C-108 §6 says is never stored. */}
+        <div style={{ display: 'grid', gap: 6 }}>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>
+            Map pin <span style={{ opacity: 0.6 }}>(so customers can find you on the map)</span>
+          </span>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <button type="button" onClick={pickHere} disabled={locating} style={ghostBtn}>
+              {locating ? 'Locating…' : draft.lat !== null ? '📍 Update pin' : '📍 Use my current location'}
+            </button>
+            {draft.lat !== null && draft.lng !== null && (
+              <>
+                <span style={{ fontSize: 11.5, color: TEC_COLORS.gold }} dir="ltr">
+                  {draft.lat.toFixed(5)}, {draft.lng.toFixed(5)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDraft({ ...draft, lat: null, lng: null })}
+                  style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
+                >Remove</button>
+              </>
+            )}
+          </div>
+          {geoError && <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{geoError}</div>}
+          <div style={{ fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+            Tap this while you are at the business. Without a pin your listing still
+            appears in search — just not on the map.
+          </div>
+        </div>
         {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={busy || draft.name.trim().length < 2} style={primaryBtn(busy || draft.name.trim().length < 2)}>

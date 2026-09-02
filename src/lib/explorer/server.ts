@@ -39,6 +39,12 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     hours:        b.hours   ? String(b.hours)   : undefined,
     phone:        b.phone   ? String(b.phone)   : undefined,
     website:      b.website ? String(b.website) : undefined,
+    // Map position, as published by the merchant. Coerced through Number and
+    // dropped unless BOTH are finite — a lone latitude would draw a pin in the
+    // wrong country, so a half-pair is treated as no pin at all.
+    ...(Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lng))
+      ? { lat: Number(b.lat), lng: Number(b.lng) }
+      : {}),
   };
 }
 
@@ -128,6 +134,7 @@ export const createListingBackend = (
   body: {
     name: string; category: string; area: string; summary: string; tags?: string[];
     address?: string; hours?: string; phone?: string; website?: string;
+    lat?: number | null; lng?: number | null;
   },
 ) => writeCall('/api/identity/explorer/business', token, 'POST', body);
 
@@ -138,6 +145,7 @@ export const updateListingBackend = (
     name?: string; category?: string; area?: string; summary?: string;
     tags?: string[]; pi_accepted?: boolean;
     address?: string; hours?: string; phone?: string; website?: string;
+    lat?: number | null; lng?: number | null;
   },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
 

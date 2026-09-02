@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
     name, category, area, summary, tags,
     address: optional(body?.address), hours: optional(body?.hours),
     phone:   optional(body?.phone),   website: optional(body?.website),
+    lat: body?.lat ?? null, lng: body?.lng ?? null,
   });
   if (r.ok) return NextResponse.json({ listing: r.listing }, { status: 201 });
   return NextResponse.json({ error: r.error }, { status: r.status || 502 });

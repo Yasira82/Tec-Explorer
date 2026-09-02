@@ -9,6 +9,8 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { CATEGORY_META, safeWebsite, telHref } from '@/lib/explorer/directory';
 import { resolveBusiness, resolveOwnerProfile } from '@/lib/explorer/server';
 import { FollowOwner } from '@/components/connect/FollowOwner';
+import { mappable } from '@/components/map/BusinessMap';
+import { BusinessMapCard } from '@/components/map/BusinessMapCard';
 
 // The live search module is the index of record (C-108 §5) — every business page
 // renders on demand from it; nothing is pre-baked from a curated sample.
@@ -69,6 +71,10 @@ export default async function BusinessPage(
   // would execute; null simply means the row renders without that line.
   const website = safeWebsite(l.website);
   const tel     = telHref(l.phone);
+  // A pin only if the merchant published a complete pair. `mappable` is the same
+  // filter the discovery map uses, so one page can never draw a position the
+  // other rejects.
+  const pin     = mappable([l])[0] ?? null;
 
   const factCard: React.CSSProperties = {
     background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
@@ -106,7 +112,7 @@ export default async function BusinessPage(
             Rendered only when there is something to render: an empty "Contact"
             heading is worse than no heading, because it reads as broken rather
             than as absent. */}
-        {(l.address || l.hours || website || tel) && (
+        {(l.address || l.hours || website || tel || pin) && (
           <section style={{ ...factCard, marginTop: 20, display: 'grid', gap: 12 }}>
             <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: TEC_COLORS.subtext }}>
               Visit &amp; contact
@@ -127,6 +133,11 @@ export default async function BusinessPage(
             )}
 
             {l.hours && <Fact icon="🕒" label="Hours"><span dir="auto">{l.hours}</span></Fact>}
+
+            {/* The address in words answers "where", the pin answers "where,
+                exactly". Shown only when the merchant set one — an empty map is
+                worse than no map. */}
+            {pin && <BusinessMapCard listing={pin} />}
 
             {tel && (
               <Fact icon="📞" label="Phone">
