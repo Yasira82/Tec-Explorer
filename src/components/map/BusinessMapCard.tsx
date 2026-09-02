@@ -7,7 +7,7 @@
 // can legally hold the option — it exists for that rule and nothing else.
 import dynamic from 'next/dynamic';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import type { MappableListing } from './BusinessMap';
+import type { MappableListing } from '@/lib/explorer/directory';
 
 const BusinessMap = dynamic(() => import('./BusinessMap'), {
   ssr: false,

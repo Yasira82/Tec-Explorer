@@ -2,8 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { distanceKm, formatDistance } from '@/lib-client/geo';
-import { mappable } from '@/components/map/BusinessMap';
-import type { Listing } from '@/lib/explorer/directory';
+import { mappable, type Listing } from '@/lib/explorer/directory';
 
 // "Who near me accepts Pi?" — the question C-108 says Explorer exists to answer.
 //
@@ -121,5 +120,45 @@ describe("the searcher's position never leaves the browser", () => {
   it('the checks can actually fail', () => {
     expect("qs.set('lat', String(p.lat))").toMatch(/qs\.set\(\s*['"](lat|lng)['"]/);
     expect('await fetch("/x")').toMatch(/\bfetch\s*\(/);
+  });
+});
+
+describe('server components never call a function from a client module', () => {
+  // THE PRODUCTION CRASH THIS EXISTS TO PREVENT.
+  //
+  // `mappable` used to be exported from BusinessMap.tsx, which is `'use client'`.
+  // When a SERVER component imports from one of those, Next replaces every
+  // export with a client REFERENCE — a marker, not the function. Calling it
+  // throws at request time.
+  //
+  // Nothing caught it: typecheck sees a function, lint sees an import, and the
+  // page is force-dynamic so there is no prerender at build. It shipped green
+  // and every /business/<id> returned a 500.
+  //
+  // A component import is fine — that is the whole point of the boundary. A
+  // plain VALUE import into a server file is the bug.
+  const serverPages = ['app/business/[id]/page.tsx'];
+  const clientModules = [
+    '@/components/map/BusinessMap',
+    '@/lib-client/geo',
+  ];
+
+  it.each(serverPages)('%s imports no values from a client module', (page) => {
+    const code = strip(src(page));
+    expect(code).not.toMatch(/^'use client'/m);   // it really is a server file
+    for (const mod of clientModules) {
+      expect(code).not.toContain(`from '${mod}'`);
+    }
+  });
+
+  it('mappable lives in a module with no client boundary', () => {
+    // So both sides can call it, which is what a pure filter should be anyway.
+    expect(strip(src('lib/explorer/directory.ts'))).not.toMatch(/^'use client'/m);
+    expect(src('lib/explorer/directory.ts')).toContain('export const mappable');
+  });
+
+  it('the check can actually fail', () => {
+    expect("import { mappable } from '@/components/map/BusinessMap';")
+      .toContain("from '@/components/map/BusinessMap'");
   });
 });

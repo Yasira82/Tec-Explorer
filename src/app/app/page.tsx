@@ -17,10 +17,9 @@ import { ListingPanel } from './components/ListingPanel';
 import { BottomNav, type ExpTab } from './components/BottomNav';
 import { SettingsView } from './components/SettingsView';
 import {
-  CATEGORIES, CATEGORY_META,
+  CATEGORIES, CATEGORY_META, mappable,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
-import { mappable } from '@/components/map/BusinessMap';
 import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
 
 // Leaflet touches `window` at module scope, so this cannot be server-rendered —

@@ -6,10 +6,9 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import { CATEGORY_META, safeWebsite, telHref } from '@/lib/explorer/directory';
+import { CATEGORY_META, safeWebsite, telHref, mappable } from '@/lib/explorer/directory';
 import { resolveBusiness, resolveOwnerProfile } from '@/lib/explorer/server';
 import { FollowOwner } from '@/components/connect/FollowOwner';
-import { mappable } from '@/components/map/BusinessMap';
 import { BusinessMapCard } from '@/components/map/BusinessMapCard';
 import { Reviews } from '@/components/reviews/Reviews';
 
