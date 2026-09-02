@@ -27,6 +27,11 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     trustHint:    String(b.trust_hint ?? ''),
     tags:         Array.isArray(b.tags) ? (b.tags as string[]) : [],
     featured:     Boolean(b.featured),
+    // Carried through so the page can offer TEC Connect. It is NOT rendered on
+    // its own: `resolveOwnerProfile` gates it on the person having PUBLISHED a
+    // Connection profile, because listing a shop is not consent to having your
+    // personal handle printed beside it (C-107 §4).
+    owner:        b.owner ? String(b.owner) : undefined,
   };
 }
 
@@ -160,4 +165,58 @@ export async function syncFeatured(token: string, featured: boolean, untilIso?: 
     });
     return res.ok;
   } catch { return false; }
+}
+
+// ── TEC Connect (C-107 §14.3) — the person behind a listing ─────────────────
+//
+// The Follow button in Explorer talks to Explorer's OWN BFF, which talks to the
+// gateway from the server. It must NEVER be a browser call to
+// connection.tecosystem.app: that is a different origin, so it is a third-party
+// credentialed request — the exact case C-123 documents Pi Browser breaking
+// (Partitioned cookies; Set-Cookie dropped on XHR and on 3xx). Built that way it
+// works in Chrome and fails in Pi Browser, which is the worst kind of failure
+// because it passes every test.
+
+/** What Explorer may say about the person who listed a business. */
+export interface OwnerProfile {
+  username: string;
+  headline: string;
+  verified: boolean;
+}
+
+/**
+ * The owner of a listing, but ONLY when that person has PUBLISHED a Connection
+ * profile.
+ *
+ * A Pi username is a personal identifier. Someone who self-listed a shop agreed
+ * to list the shop — they did not agree to have their handle printed on a public
+ * page beside it. Publishing a Connection profile IS the opt-in to being
+ * discoverable as a person (C-107 §4, sovereignty), so that is the gate: no
+ * published profile → no handle, no Follow button, nothing.
+ *
+ * Returns null on ANY doubt — no owner recorded, no published profile, an
+ * unreachable backend. Fail closed (P6): the page simply does not offer to
+ * follow anyone.
+ */
+export async function resolveOwnerProfile(owner: string | null | undefined): Promise<OwnerProfile | null> {
+  const handle = (owner ?? '').trim().replace(/^@+/, '');
+  if (!GW || !handle) return null;
+  try {
+    const res = await fetch(
+      `${GW}/api/identity/connection/profile/${encodeURIComponent(handle)}`,
+      { headers: gwHeaders(), cache: 'no-store' },
+    );
+    // 404 is the published-profile gate answering "no". It is the expected
+    // answer for most listings, not an error.
+    if (!res.ok) return null;
+    const p = (await res.json().catch(() => ({})))?.data?.profile;
+    if (!p?.username) return null;
+    return {
+      username: String(p.username),
+      headline: String(p.headline ?? ''),
+      verified: Boolean(p.verified ?? false),
+    };
+  } catch {
+    return null;
+  }
 }

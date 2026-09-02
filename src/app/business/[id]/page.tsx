@@ -7,7 +7,8 @@ import Link from 'next/link';
 import type { Metadata } from 'next';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { CATEGORY_META } from '@/lib/explorer/directory';
-import { resolveBusiness } from '@/lib/explorer/server';
+import { resolveBusiness, resolveOwnerProfile } from '@/lib/explorer/server';
+import { FollowOwner } from '@/components/connect/FollowOwner';
 
 // The live search module is the index of record (C-108 §5) — every business page
 // renders on demand from it; nothing is pre-baked from a curated sample.
@@ -29,6 +30,11 @@ export default async function BusinessPage(
   // Resolve from the live Explorer backend (search module) — real data only; an
   // unreachable backend yields an honest "couldn't load", never a sample (C-135 §4).
   const { listing: l, source } = await resolveBusiness(id);
+  // TEC Connect (C-107 §14.3). Null unless this listing has an owner AND that
+  // person has PUBLISHED a Connection profile — listing a shop is not consent to
+  // having your personal handle printed beside it. Fails closed to null, so the
+  // page simply does not offer to follow anyone.
+  const owner = await resolveOwnerProfile(l?.owner);
 
   const wrap: React.CSSProperties = {
     minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
@@ -102,6 +108,14 @@ export default async function BusinessPage(
             </div>
           </div>
         </div>
+
+        {/* The person behind the listing, and one tap to follow them.
+            This is the whole idea: nobody is told to "open Connection". The
+            request goes to EXPLORER'S own BFF and the server calls the gateway
+            — never a browser call across origins, which Pi Browser breaks. */}
+        {owner && (
+          <FollowOwner username={owner.username} headline={owner.headline} verified={owner.verified} />
+        )}
 
         {l.tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>

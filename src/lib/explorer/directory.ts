@@ -27,6 +27,15 @@ export interface Listing {
   trustHint:   string;
   tags:        string[];
   featured?: boolean; // Explorer Pro — a paid visibility boost
+  /**
+   * Pi username of whoever self-listed this, when there is one.
+   *
+   * Never rendered directly. The page shows it only through
+   * `resolveOwnerProfile`, which requires that person to have PUBLISHED a
+   * Connection profile — listing a shop is not consent to having your personal
+   * handle printed beside it (C-107 §4).
+   */
+  owner?: string;
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; label: string }> = {
