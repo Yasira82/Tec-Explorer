@@ -137,6 +137,10 @@ describe('server components never call a function from a client module', () => {
   //
   // A component import is fine — that is the whole point of the boundary. A
   // plain VALUE import into a server file is the bug.
+  // The page is now a thin server shell that fetches and delegates; its
+  // presentation lives in a client component (BusinessView) so it can be
+  // translated. Both halves are still checked: the shell must import no client
+  // VALUES, and mappable must remain callable from either side.
   const serverPages = ['app/business/[id]/page.tsx'];
   const clientModules = [
     '@/components/map/BusinessMap',

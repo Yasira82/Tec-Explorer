@@ -51,7 +51,7 @@ const strip = (s: string) => s
 
 describe('the photo key never reaches a browser', () => {
   const mapper = strip(src('lib/explorer/server.ts'));
-  const page   = strip(src('app/business/[id]/page.tsx'));
+  const page   = strip(src('components/business/BusinessView.tsx'));
 
   it('the listing mapper exposes only whether a photo exists', () => {
     // A storage key is a path. A client has no use for one and every reason not
@@ -112,15 +112,16 @@ describe('reviews are read publicly and written as the session', () => {
 
   it('never renders a missing average as a zero rating', () => {
     // Zero is a rating — the worst one — and showing it for "nobody has
-    // reviewed this" would libel every new shop.
+    // reviewed this" would libel every new shop. The BRANCH is what matters;
+    // the words themselves moved into the locale files.
     expect(ui).toContain('summary.average !== null');
-    expect(ui).toContain('No reviews yet');
+    expect(ui).toContain('x.noReviews');
   });
 
   it('states the evidence on every review, not only the strong ones', () => {
     // A badge on some and nothing on the rest leaves the reader guessing what
     // the absence means.
-    expect(ui).toContain('Verified purchase');
-    expect(ui).toContain('Signed in with Pi');
+    expect(ui).toContain('x.verifiedPurchase');
+    expect(ui).toContain('x.signedInWithPi');
   });
 });

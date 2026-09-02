@@ -20,6 +20,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
+import { useTranslation } from '@/lib/i18n';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -30,6 +31,8 @@ export function FollowOwner({ username, headline, verified }: {
   headline: string;
   verified: boolean;
 }) {
+  const { t } = useTranslation();
+  const x = t.explorer;
   const { isAuthenticated, isLoading, user } = usePiAuth();
   const [state, setState] = useState<State>('idle');
   // Auth resolves asynchronously and the effect re-runs; without this a single
@@ -110,11 +113,10 @@ export function FollowOwner({ username, headline, verified }: {
   };
 
   const label =
-    state === 'done'   ? '✓ Following'
-    : state === 'self' ? 'This is you'
+    state === 'done'   ? x.following
+    : state === 'self' ? x.thisIsYou
     : state === 'busy' ? '…'
-    : isLoading || isAuthenticated ? `Follow @${username}`
-    : `Follow @${username} with Pi`;
+    : (isLoading || isAuthenticated ? x.follow : x.followWithPi).replace('{name}', username);
 
   const inert = state === 'done' || state === 'self' || state === 'busy';
 
@@ -124,7 +126,7 @@ export function FollowOwner({ username, headline, verified }: {
       background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.border}`,
     }}>
       <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: TEC_COLORS.subtext }}>
-        Run by
+        {x.runBy}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
         {/* <bdi>: a Latin handle inside an RTL paragraph would render as
@@ -139,7 +141,7 @@ export function FollowOwner({ username, headline, verified }: {
               background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
               borderRadius: 999, padding: '2px 8px',
             }}
-          >✓ Verified</span>
+          >{x.verifiedShort}</span>
         )}
       </div>
       {headline && (
@@ -164,12 +166,12 @@ export function FollowOwner({ username, headline, verified }: {
 
       {state === 'failed' && (
         <p style={{ fontSize: 12.5, color: TEC_COLORS.error, margin: '10px 0 0' }}>
-          Could not follow. Try again.
+          {x.followFailed}
         </p>
       )}
 
       <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
-        Following is handled by TEC Connection — you do not need to open it.
+        {x.followNote}
       </p>
     </section>
   );

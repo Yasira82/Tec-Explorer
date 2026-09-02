@@ -21,6 +21,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
+import { useTranslation } from '@/lib/i18n';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -43,6 +44,8 @@ export function Reviews({ handle, ownerUsername }: {
   /** The listing's owner, so a merchant is not offered a form the API refuses. */
   ownerUsername?: string;
 }) {
+  const { t } = useTranslation();
+  const x = t.explorer;
   const { isAuthenticated } = usePiAuth();
   // Pi Browser hides tec_user from client JS (C-123 §3), so the server-resolved
   // answer is the one that works on the platform this ships to.
@@ -90,9 +93,9 @@ export function Reviews({ handle, ownerUsername }: {
         body: JSON.stringify({ rating, body }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setError(data.error ?? 'Could not save your review.'); return; }
+      if (!res.ok) { setError(data.error ?? x.reviewFailed); return; }
       await load();
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(x.networkError); }
     finally { setBusy(false); }
   }
 
@@ -102,7 +105,7 @@ export function Reviews({ handle, ownerUsername }: {
       await fetch(`/api/bff/explorer/reviews?handle=${encodeURIComponent(handle)}`, { method: 'DELETE' });
       setRating(0); setBody('');
       await load();
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(x.networkError); }
     finally { setBusy(false); }
   }
 
@@ -116,16 +119,16 @@ export function Reviews({ handle, ownerUsername }: {
   return (
     <section style={{ marginTop: 18 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>Reviews</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{x.reviews}</h2>
         {/* `average === null` is "nobody has reviewed this", NOT a score of
             zero. Rendering 0 for a new shop would libel it. */}
         {summary.average !== null ? (
           <span style={{ fontSize: 13, color: TEC_COLORS.subtext }}>
             <strong style={{ color: TEC_COLORS.gold }}>{summary.average.toFixed(1)}</strong>
-            {' '}from {summary.count} {summary.count === 1 ? 'review' : 'reviews'}
+            {' '}{x.fromNReviews.replace('{n}', String(summary.count))}
           </span>
         ) : (
-          <span style={{ fontSize: 12.5, color: TEC_COLORS.subtext }}>No reviews yet</span>
+          <span style={{ fontSize: 12.5, color: TEC_COLORS.subtext }}>{x.noReviews}</span>
         )}
       </div>
 
@@ -133,18 +136,17 @@ export function Reviews({ handle, ownerUsername }: {
       <div style={{ ...card, marginTop: 10 }}>
         {isOwner ? (
           <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: 0, lineHeight: 1.5 }}>
-            This is your business — reviews come from your customers.
+            {x.ownBusiness}
           </p>
         ) : !signedIn ? (
           <>
             <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: '0 0 10px', lineHeight: 1.5 }}>
-              Been here? Sign in with Pi to leave a review. One review per account, so
-              a rating cannot be stacked by one person.
+              {x.reviewPitch}
             </p>
             <button
               onClick={() => ssoRedirect(HUB_URL, `${window.location.origin}${window.location.pathname}`)}
               style={primary(false)}
-            >Sign in with Pi</button>
+            >{x.signIn}</button>
           </>
         ) : (
           <>
@@ -162,7 +164,7 @@ export function Reviews({ handle, ownerUsername }: {
             </div>
             <textarea
               value={body} onChange={(e) => setBody(e.target.value)} maxLength={600} rows={3}
-              dir="auto" placeholder="What was it like? (optional)"
+              dir="auto" placeholder={x.reviewPlaceholder}
               style={{
                 width: '100%', boxSizing: 'border-box', marginTop: 10, padding: '9px 11px',
                 background: TEC_COLORS.bg, color: TEC_COLORS.text, resize: 'vertical',
@@ -173,10 +175,10 @@ export function Reviews({ handle, ownerUsername }: {
             {error && <div style={{ fontSize: 12.5, color: '#EF4444', marginTop: 8 }}>{error}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
               <button onClick={() => void submit()} disabled={busy || rating < 1} style={primary(busy || rating < 1)}>
-                {busy ? 'Saving…' : mine ? 'Update my review' : 'Post review'}
+                {busy ? x.reviewSaving : mine ? x.updateReview : x.postReview}
               </button>
               {mine && (
-                <button onClick={() => void remove()} disabled={busy} style={ghost}>Delete mine</button>
+                <button onClick={() => void remove()} disabled={busy} style={ghost}>{x.deleteMine}</button>
               )}
             </div>
           </>
@@ -205,7 +207,7 @@ export function Reviews({ handle, ownerUsername }: {
                 background: verified ? 'rgba(34,197,94,0.10)' : 'transparent',
                 border: `1px solid ${verified ? 'rgba(34,197,94,0.25)' : `${TEC_COLORS.subtext}44`}`,
               }}>
-                {verified ? '✓ Verified purchase' : 'Signed in with Pi'}
+                {verified ? x.verifiedPurchase : x.signedInWithPi}
               </div>
               {r.body && (
                 <p dir="auto" style={{ fontSize: 13, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.55 }}>
@@ -218,9 +220,7 @@ export function Reviews({ handle, ownerUsername }: {
       </div>
 
       <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
-        Reviews are written by Pi accounts, one each. A Pi payment made at the counter
-        does not pass through TEC, so most visits cannot be confirmed here — each review
-        says what is known about it, and nothing more.
+        {x.reviewsNote}
       </p>
     </section>
   );

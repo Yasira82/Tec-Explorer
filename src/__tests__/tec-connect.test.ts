@@ -103,8 +103,10 @@ describe('the owner handle is gated on a published Connection profile', () => {
   it('resolves the owner through the gate, never straight from the listing', () => {
     // `l.owner` must not reach the screen on its own: listing a shop is not
     // consent to having your personal handle printed beside it.
-    expect(page).toContain('resolveOwnerProfile(l?.owner)');
-    expect(page).toMatch(/\{owner && \(/);
+    // The gate runs on the SERVER (page.tsx), because it needs the internal
+    // key; the result is rendered in the client view. Both halves are checked.
+    expect(page).toContain('resolveOwnerProfile(listing?.owner)');
+    expect(code('components/business/BusinessView.tsx')).toMatch(/\{owner && \(/);
   });
 
   it('returns null on any doubt', () => {

@@ -9,6 +9,7 @@
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ssoRedirect } from '@yasser172/tec-auth';
+import { useTranslation } from '@/lib/i18n';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
@@ -46,6 +47,8 @@ export function ListingPanel({ isAuth, authLoading = false }: {
    */
   authLoading?: boolean;
 }) {
+  const { t } = useTranslation();
+  const x = t.explorer;
   const [listing, setListing] = useState<Listing | null>(null);
   const [loaded, setLoaded]   = useState(false);
   const [editing, setEditing] = useState(false);
@@ -74,10 +77,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
         body: file,
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setPhotoError(data.message ?? 'Could not upload that photo.'); return; }
+      if (!res.ok) { setPhotoError(data.message ?? x.photoFailed); return; }
       setListing(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
-    } catch { setPhotoError('Network error — please try again.'); }
+    } catch { setPhotoError(x.networkError); }
     finally { setPhotoBusy(false); }
   }
 
@@ -86,10 +89,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     try {
       const res = await fetch('/api/bff/explorer/photo', { method: 'DELETE' });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { setPhotoError(data.error ?? 'Could not remove the photo.'); return; }
+      if (!res.ok) { setPhotoError(data.error ?? x.photoRemoveFailed); return; }
       setListing(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
-    } catch { setPhotoError('Network error — please try again.'); }
+    } catch { setPhotoError(x.networkError); }
     finally { setPhotoBusy(false); }
   }
 
@@ -103,7 +106,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
    */
   function pickHere() {
     if (typeof navigator === 'undefined' || !navigator.geolocation) {
-      setGeoError('This browser can\u2019t share a location. You can leave the pin empty.');
+      setGeoError(x.geoNoSupport);
       return;
     }
     setLocating(true); setGeoError(null);
@@ -115,8 +118,8 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       (err) => {
         setLocating(false);
         setGeoError(err.code === err.PERMISSION_DENIED
-          ? 'Location is blocked for this site. Allow it in your browser settings, or leave the pin empty.'
-          : 'Couldn\u2019t get a location just now. You can try again or leave the pin empty.');
+          ? x.geoBlocked
+          : x.geoFailed);
       },
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
@@ -140,7 +143,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   if (authLoading || (isAuth && !loaded)) {
     return (
       <section style={{ marginTop: 24 }}>
-        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>Loading your listing…</p>
+        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>{x.loadingListing}</p>
       </section>
     );
   }
@@ -151,17 +154,15 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     return (
       <section style={{ marginTop: 24 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
-          List your business
+          {x.listPitchTitle}
         </h2>
         <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.55 }}>
-          Put your Pi-accepting business on the discovery map so people searching for
-          somewhere to spend Pi can find you. Sign in with Pi to create your listing —
-          it is tied to your Pi account, so only you can edit it.
+          {x.listPitchBody}
         </p>
         <button
           onClick={() => ssoRedirect(HUB_URL, `${window.location.origin}/app`)}
           style={primaryBtn(false)}
-        >Sign in with Pi</button>
+        >{x.signIn}</button>
       </section>
     );
   }
@@ -184,12 +185,12 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(res.status === 409 ? 'You already have a listing.' : (data.error ?? 'Could not save.'));
+        setError(res.status === 409 ? x.alreadyListed : (data.error ?? x.couldNotSave));
         return;
       }
       setListing(data.listing as Listing);
       setEditing(false);
-    } catch { setError('Network error — please try again.'); }
+    } catch { setError(x.networkError); }
     finally { setBusy(false); }
   }
 
@@ -206,14 +207,14 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     const v = listing.verification === 'verified';
     return (
       <section style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>Your listing</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>{x.yourListing}</h2>
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
               {CATEGORY_META[listing.category].icon} {listing.name}
             </span>
             <span style={{ fontSize: 10, fontWeight: 800, color: v ? TEC_COLORS.gold : TEC_COLORS.subtext, border: `1px solid ${(v ? TEC_COLORS.gold : TEC_COLORS.subtext)}55`, borderRadius: 999, padding: '2px 8px' }}>
-              {v ? '✅ Verified' : 'Unverified'}
+              {v ? x.verifiedTag : x.unverifiedTag}
             </span>
           </div>
           <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
@@ -222,11 +223,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
           <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{listing.summary}</div>
           {listing.featured ? (
             <div style={{ marginTop: 10, fontSize: 12, color: TEC_COLORS.gold, fontWeight: 700 }}>
-              ⭐ Featured — your listing ranks higher in discovery (Explorer Pro).
+              {x.featured}
             </div>
           ) : (
             <div style={{ marginTop: 10, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
-              Go <strong style={{ color: TEC_COLORS.gold }}>Pro</strong> to feature your listing — rank higher so more Pi users find you.
+              {x.goProHint.split('{pro}')[0]}
+              <strong style={{ color: TEC_COLORS.gold }}>Pro</strong>
+              {x.goProHint.split('{pro}')[1]}
             </div>
           )}
           {/* The shop photo. On the summary card rather than in the edit form
@@ -245,7 +248,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             )}
             <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
               <label style={{ ...ghostBtn, display: 'inline-block' }}>
-                {photoBusy ? 'Working…' : listing.hasPhoto ? 'Change photo' : '📷 Add a photo'}
+                {photoBusy ? x.photoWorking : listing.hasPhoto ? x.changePhoto : x.addPhoto}
                 <input
                   type="file"
                   accept={PHOTO_MIME.join(',')}
@@ -265,14 +268,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
                 <button
                   type="button" onClick={() => void removePhoto()} disabled={photoBusy}
                   style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
-                >Remove photo</button>
+                >{x.removePhoto}</button>
               )}
             </div>
             {photoError && <div style={{ marginTop: 6, fontSize: 11.5, color: '#EF4444' }}>{photoError}</div>}
             {!listing.hasPhoto && !photoError && (
               <div style={{ marginTop: 6, fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
-                A listing with a photo of the place gets opened far more often than a
-                line of text. JPEG, PNG or WebP, up to {Math.round(PHOTO_MAX_BYTES / 1024 / 1024)}MB.
+                {x.photoHint.replace('{mb}', String(Math.round(PHOTO_MAX_BYTES / 1024 / 1024)))}
               </div>
             )}
           </div>
@@ -283,12 +285,12 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               looks complete to the person who wrote it. */}
           <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {([
-              ['📍 Address', listing.address],
-              ['🕒 Hours',   listing.hours],
-              ['📞 Phone',   listing.phone],
-              ['🌐 Website', listing.website],
-              ['🗺️ Map pin', listing.lat !== undefined && listing.lng !== undefined ? 'set' : undefined],
-              ['📷 Photo',   listing.hasPhoto ? 'set' : undefined],
+              [x.checklistAddress, listing.address],
+              [x.checklistHours,   listing.hours],
+              [x.checklistPhone,   listing.phone],
+              [x.checklistWebsite, listing.website],
+              [x.checklistPin,     listing.lat !== undefined && listing.lng !== undefined ? 'set' : undefined],
+              [x.checklistPhoto,   listing.hasPhoto ? 'set' : undefined],
             ] as const).map(([label, value]) => (
               <span
                 key={label}
@@ -303,20 +305,18 @@ export function ListingPanel({ isAuth, authLoading = false }: {
           </div>
           {listing.lat === undefined && (
             <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
-              You are not on the map yet. Open Edit and tap “Use my current location”
-              while you are at the business.
+              {x.notOnMapWarn}
             </div>
           )}
           {!listing.address && !listing.phone && !listing.website && (
             <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
-              People can find you but not reach you. Add an address, phone, or website
-              so a search turns into a visit.
+              {x.reachableWarn}
             </div>
           )}
 
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>Edit listing</button>
-            {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>Verification is issued by KYC — Explorer never self-verifies.</span>}
+            <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>{x.editListing}</button>
+            {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>{x.kycNote}</span>}
           </div>
         </div>
       </section>
@@ -328,35 +328,36 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   return (
     <section style={{ marginTop: 24 }}>
       <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
-        {isEdit ? 'Edit your listing' : 'List your business'}
+        {isEdit ? x.editTitle : x.createTitle}
       </h2>
       <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
-        Put your Pi-accepting business on the discovery map. New listings start
-        <strong style={{ color: TEC_COLORS.text }}> Unverified</strong> — verification is issued by KYC.
+        {x.createHint.split('{unverified}')[0]}
+        <strong style={{ color: TEC_COLORS.text }}>{x.unverifiedTag}</strong>
+        {x.createHint.split('{unverified}')[1]}
       </p>
       <form onSubmit={save} style={{ ...card, display: 'grid', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Name</span>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldName}</span>
             <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} required minLength={2} maxLength={80} placeholder="e.g. Pi Corner Café" style={input} />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Category</span>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldCategory}</span>
             <select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as Category })} style={input}>
               {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_META[c].icon} {CATEGORY_META[c].label}</option>)}
             </select>
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Area <span style={{ opacity: 0.6 }}>(a general area — never your exact address)</span></span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldArea} <span style={{ opacity: 0.6 }}>{x.fieldAreaHint}</span></span>
           <input value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} required minLength={2} maxLength={60} placeholder="e.g. City Center / Remote" style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Summary</span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldSummary}</span>
           <input value={draft.summary} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} required minLength={2} maxLength={160} placeholder="What you offer, paid in Pi." style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Tags <span style={{ opacity: 0.6 }}>(comma-separated, optional)</span></span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldTags} <span style={{ opacity: 0.6 }}>{x.fieldTagsHint}</span></span>
           <input value={draft.tags} onChange={(e) => setDraft({ ...draft, tags: e.target.value })} maxLength={120} placeholder="coffee, wifi, brunch" style={input} />
         </label>
 
@@ -364,27 +365,27 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             name in a list into a visit — a listing without it can be found and
             not acted on. Unlike `Area` above, these are yours to publish. */}
         <div style={{ borderTop: `1px solid ${TEC_COLORS.gold}22`, paddingTop: 10, marginTop: 2 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 700, color: TEC_COLORS.text }}>How customers reach you</div>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: TEC_COLORS.text }}>{x.reachTitle}</div>
           <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginTop: 2, lineHeight: 1.5 }}>
-            All optional — but a listing people can&apos;t reach is a listing they can&apos;t visit.
+            {x.reachHint}
           </div>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Address <span style={{ opacity: 0.6 }}>(shown publicly, with a directions link)</span></span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldAddress} <span style={{ opacity: 0.6 }}>{x.fieldAddressHint}</span></span>
           <input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} maxLength={160} placeholder="12 Nile St, Maadi" style={input} />
         </label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Hours</span>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldHours}</span>
             <input value={draft.hours} onChange={(e) => setDraft({ ...draft, hours: e.target.value })} maxLength={120} placeholder="Sat–Thu 9am–11pm" style={input} />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Phone</span>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldPhone}</span>
             <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} type="tel" maxLength={32} placeholder="+20 100 123 4567" style={input} dir="ltr" />
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Website</span>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldWebsite}</span>
           <input value={draft.website} onChange={(e) => setDraft({ ...draft, website: e.target.value })} maxLength={200} placeholder="yourshop.com" style={input} dir="ltr" />
         </label>
 
@@ -398,11 +399,11 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             C-108 §6 says is never stored. */}
         <div style={{ display: 'grid', gap: 6 }}>
           <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>
-            Map pin <span style={{ opacity: 0.6 }}>(so customers can find you on the map)</span>
+            {x.fieldMapPin} <span style={{ opacity: 0.6 }}>{x.fieldMapPinHint}</span>
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button type="button" onClick={pickHere} disabled={locating} style={ghostBtn}>
-              {locating ? 'Locating…' : draft.lat !== null ? '📍 Update pin' : '📍 Use my current location'}
+              {locating ? x.locating : draft.lat !== null ? x.updatePin : x.useMyLocation}
             </button>
             {draft.lat !== null && draft.lng !== null && (
               <>
@@ -413,22 +414,21 @@ export function ListingPanel({ isAuth, authLoading = false }: {
                   type="button"
                   onClick={() => setDraft({ ...draft, lat: null, lng: null })}
                   style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
-                >Remove</button>
+                >{x.removePin}</button>
               </>
             )}
           </div>
           {geoError && <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{geoError}</div>}
           <div style={{ fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
-            Tap this while you are at the business. Without a pin your listing still
-            appears in search — just not on the map.
+            {x.pinHint}
           </div>
         </div>
         {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={busy || draft.name.trim().length < 2} style={primaryBtn(busy || draft.name.trim().length < 2)}>
-            {busy ? 'Saving…' : isEdit ? 'Save changes' : 'List my business'}
+            {busy ? x.saving : isEdit ? x.saveChanges : x.createListing}
           </button>
-          {isEdit && <button type="button" onClick={() => { setEditing(false); setError(null); }} style={ghostBtn}>Cancel</button>}
+          {isEdit && <button type="button" onClick={() => { setEditing(false); setError(null); }} style={ghostBtn}>{x.cancel}</button>}
         </div>
       </form>
     </section>
