@@ -82,7 +82,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
         className: '',
         html: `<div style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
                  background:${C.surface};border:2px solid ${ring};font-size:15px;
-                 box-shadow:0 2px 8px rgba(0,0,0,.45)">${emoji}</div>`,
+                 box-shadow:var(--shadow-md)">${emoji}</div>`,
         iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -16],
       });
 

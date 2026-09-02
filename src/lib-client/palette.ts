@@ -112,6 +112,22 @@ export const successA = (alpha: number): string =>
   `rgba(var(--tec-green-rgb), ${round(alpha)})`;
 
 /**
+ * The page background at partial opacity — a frosted bar over content.
+ *
+ * The bottom nav is the reason this exists. It was a hardcoded
+ * `rgba(5,8,22,0.92)`, which is not a hex literal and so slipped past both the
+ * sweep and the first version of the guard test. The bar stayed dark while the
+ * ink on it flipped to black, and every inactive tab became invisible on a
+ * light page — visible only when you tapped it and it turned gold.
+ */
+export const bgA = (alpha: number): string =>
+  `rgba(var(--tec-bg-rgb), ${round(alpha)})`;
+
+/** Error red at partial opacity. Status — does not flip with the theme. */
+export const errorA = (alpha: number): string =>
+  `rgba(var(--tec-red-rgb), ${round(alpha)})`;
+
+/**
  * Clamp to 0–1 and trim the tail.
  *
  * The sweep from `}22` to `goldA(0.133)` divided each old hex pair by 255, so

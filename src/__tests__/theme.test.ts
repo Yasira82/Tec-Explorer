@@ -149,3 +149,95 @@ describe('"system" stays a live choice, not a snapshot', () => {
     expect(theme).toMatch(/catch[\s\S]{0,120}return 'system'/);
   });
 });
+
+// ── The hole this suite had, and the bug that found it ──────────────────────
+//
+// The first version checked for `${C.x}NN`, for `var(--tec-…)NN`, and for
+// TEC_COLORS imports. The bottom nav was a hardcoded `rgba(5,8,22,0.92)` —
+// none of those patterns — so it sailed through, and on a light page the bar
+// stayed black while the inactive tab icons, drawn from an ink token, flipped
+// to black. Every tab was invisible until you tapped it and it turned gold.
+//
+// A guard that only knows the shapes of the bugs already found is a guard that
+// finds each bug once. These check for a RAW COLOUR of any shape.
+describe('no component paints a raw colour', () => {
+  /**
+   * The two places a literal is CORRECT, each for a different reason.
+   *
+   * Listed by file rather than by value, so adding one is a visible decision in
+   * a diff — the same shape as TEMPLATE_FILES in the silent-failures guard.
+   *
+   *   · sso-callback — plain HTML served BEFORE any stylesheet loads. It cannot
+   *     read a CSS variable at all, so its colours are hex by necessity. This
+   *     is a platform-wide rule, not a local shortcut: the KB says explicitly
+   *     not to "fix" this file or `next/og` into var(), because Satori and a
+   *     pre-stylesheet document both resolve no custom properties.
+   *   · layout — the two `theme-color` metas. A <meta> content attribute is not
+   *     CSS; it takes a literal, and there are already two of them, one per
+   *     scheme, which is the whole point.
+   */
+  const EXEMPT_FILES = [
+    'app/api/auth/sso-callback/route.ts',
+    'app/layout.tsx',
+  ];
+
+  const files = paintedFiles()
+    .filter((f) => !f.endsWith('lib-client/palette.ts'))
+    .filter((f) => !EXEMPT_FILES.some((e) => f.endsWith(e)));
+
+  /**
+   * Colours that are correct to hardcode.
+   *
+   * `#0a0800` and the ink-on-a-solid-object family are fixed in both themes by
+   * design — but they have TOKENS now (`C.onGold`), so nothing needs the
+   * literal. This list is empty on purpose: if a real exception turns up, it is
+   * added here in a diff someone can see, rather than by widening the pattern.
+   */
+  const ALLOWED_LITERALS: string[] = [];
+
+  it('no `rgba()` with literal channels — use bgA / inkA / goldA / successA / errorA', () => {
+    const offenders: string[] = [];
+    for (const f of files) {
+      const code = strip(src(f.slice(4)));
+      for (const m of code.matchAll(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+/g)) {
+        offenders.push(`${f}: ${m[0]}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('no `#rrggbb` literal in a component', () => {
+    const offenders: string[] = [];
+    for (const f of files) {
+      const code = strip(src(f.slice(4)));
+      for (const m of code.matchAll(/#[0-9a-fA-F]{6}\b/g)) {
+        if (ALLOWED_LITERALS.includes(m[0])) continue;
+        offenders.push(`${f}: ${m[0]}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('both checks can actually fail', () => {
+    expect(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+/.test("background: 'rgba(5,8,22,0.92)'")).toBe(true);
+    expect(/#[0-9a-fA-F]{6}\b/.test("color: '#050816'")).toBe(true);
+    // …and must NOT fire on the token form that replaced them.
+    expect(/rgba\(\s*\d+\s*,\s*\d+\s*,\s*\d+/.test('rgba(var(--tec-bg-rgb), 0.92)')).toBe(false);
+  });
+});
+
+describe('a translucent surface follows the theme too', () => {
+  it('the page background publishes channels', () => {
+    // A frosted bar cannot use `var(--tec-bg)` — it needs an alpha — so without
+    // channels it will be hardcoded again by whoever builds the next one.
+    expect(css).toContain('--tec-bg-rgb');
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    expect(light).toMatch(/--tec-bg-rgb:\s*244, 243, 241/);
+  });
+
+  it('the bottom nav paints from them', () => {
+    const nav = strip(src('app/app/components/BottomNav.tsx'));
+    expect(nav).toContain('bgA(');
+    expect(nav).not.toContain('rgba(5,8,22');
+  });
+});

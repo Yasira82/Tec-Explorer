@@ -34,7 +34,7 @@ const BusinessMap = dynamic(() => import('@/components/map/BusinessMap'), {
     // same thing in every language instead.
     <div style={{
       height: 340, borderRadius: 12, display: 'grid', placeItems: 'center',
-      background: '#0B1020', border: '1px solid #FBB44A22', color: '#8A93A6', fontSize: 13,
+      background: C.surface, border: `1px solid ${goldA(0.13)}`, color: C.subtext, fontSize: 13,
     }}>🗺️ ···</div>
   ),
 });

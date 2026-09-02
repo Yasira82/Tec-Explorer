@@ -23,7 +23,7 @@ import { useMe } from '@/lib-client/hooks/useMe';
 import { useTranslation } from '@/lib/i18n';
 import { ReportButton } from '@/components/report/ReportButton';
 import { reportError } from '@/lib/observability/reportError';
-import { C, goldA, inkA } from '@/lib-client/palette';
+import { C, goldA, inkA, successA } from '@/lib-client/palette';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -217,8 +217,8 @@ export function Reviews({ handle, ownerUsername }: {
                 display: 'inline-block', marginTop: 6, fontSize: 10.5, fontWeight: 700,
                 borderRadius: 999, padding: '2px 8px',
                 color: verified ? C.success : C.subtext,
-                background: verified ? 'rgba(34,197,94,0.10)' : 'transparent',
-                border: `1px solid ${verified ? 'rgba(34,197,94,0.25)' : `${inkA(0.267)}`}`,
+                background: verified ? successA(0.10) : 'transparent',
+                border: `1px solid ${verified ? successA(0.25) : `${inkA(0.267)}`}`,
               }}>
                 {verified ? x.verifiedPurchase : x.signedInWithPi}
               </div>

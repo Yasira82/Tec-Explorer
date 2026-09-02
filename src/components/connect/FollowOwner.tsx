@@ -21,7 +21,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
 import { reportError } from '@/lib/observability/reportError';
-import { C } from '@/lib-client/palette';
+import { C, successA } from '@/lib-client/palette';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -145,7 +145,7 @@ export function FollowOwner({ username, headline, verified }: {
             title="Verified — presented from Zone / KYC, never minted by Explorer"
             style={{
               fontSize: 10.5, fontWeight: 700, color: C.success,
-              background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
+              background: successA(0.10), border: '1px solid ${successA(0.25)}',
               borderRadius: 999, padding: '2px 8px',
             }}
           >{x.verifiedShort}</span>

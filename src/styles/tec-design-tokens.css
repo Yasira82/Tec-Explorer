@@ -34,6 +34,11 @@ html, body {
 :root {
   /* ── Colors ─────────────────────────────────────────── */
   --tec-bg:          #050816;
+  /* Page-background channels, so a TRANSLUCENT surface (the frosted bottom bar)
+     can follow the theme. Without this the bar was a hardcoded
+     `rgba(5,8,22,0.92)` — it stayed dark while the ink above it flipped to
+     black, and the tab icons became invisible on a light page. */
+  --tec-bg-rgb:      5, 8, 22;
   --tec-surface-1:   #0B1020;
   --tec-surface-2:   #111627;
   --tec-surface-3:   #1A2033;
@@ -67,6 +72,7 @@ html, body {
   --tec-blue:        #3b82f6;
   --tec-blue-dim:    rgba(59,130,246,0.12);
   --tec-red:         #ef4444;
+  --tec-red-rgb:     239, 68, 68;
   --tec-purple:      #8b5cf6;
 
   --tec-text-1:      rgba(255,255,255,0.92);
@@ -154,6 +160,7 @@ html, body {
 /* ── Theme: dark (the default) ───────────────────────── */
 [data-theme='dark'] {
   --tec-bg:        #050816;
+  --tec-bg-rgb:    5, 8, 22;
   --tec-surface-1: #0B1020;
   --tec-surface-2: #111627;
   --tec-surface-3: #1A2033;
@@ -175,6 +182,7 @@ html, body {
    decision, so it lives here and nowhere else. */
 [data-theme='light'] {
   --tec-bg:        #f4f3f1;
+  --tec-bg-rgb:    244, 243, 241;
   --tec-surface-1: #ffffff;
   --tec-surface-2: #f2f2f5;
   --tec-surface-3: #e8e8ee;
@@ -199,6 +207,7 @@ html, body {
 @media (prefers-color-scheme: light) {
   :root:not([data-theme]) {
     --tec-bg:        #f4f3f1;
+    --tec-bg-rgb:    244, 243, 241;
     --tec-surface-1: #ffffff;
     --tec-surface-2: #f2f2f5;
     --tec-surface-3: #e8e8ee;

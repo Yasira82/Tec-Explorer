@@ -8,7 +8,7 @@ import { usePiAuth } from '@yasser172/tec-auth';
 import { useTranslation, LOCALES, type Locale } from '@/lib/i18n';
 import { THEME_ORDER, readTheme, saveTheme, type ThemeChoice } from '@/lib-client/theme';
 import { useMe } from '@/lib-client/hooks/useMe';
-import { C, goldA } from '@/lib-client/palette';
+import { C, goldA, successA, errorA } from '@/lib-client/palette';
 
 const cardStyle = {
   background: C.surface, border: `1px solid ${C.border}`, borderRadius: 16,
@@ -120,8 +120,8 @@ export function SettingsView() {
             {signedIn && (
               <span style={{
                 display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700,
-                color: C.success, background: 'rgba(34,197,94,0.10)',
-                border: '1px solid rgba(34,197,94,0.25)', borderRadius: 999, padding: '3px 10px',
+                color: C.success, background: successA(0.10),
+                border: '1px solid ${successA(0.25)}', borderRadius: 999, padding: '3px 10px',
               }}>● {s.connectedPi}</span>
             )}
           </div>
@@ -182,7 +182,7 @@ export function SettingsView() {
           onClick={() => { void logout(); }}
           style={{
             width: '100%', marginTop: 16, padding: '14px', cursor: 'pointer',
-            background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.28)',
+            background: errorA(0.06), border: '1px solid ${errorA(0.28)}',
             borderRadius: 14, color: C.error, fontSize: 15, fontWeight: 800,
           }}>
           {s.logout}
