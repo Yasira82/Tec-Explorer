@@ -13,7 +13,7 @@
 import { useEffect, useRef } from 'react';
 import { CATEGORY_META, type MappableListing } from '@/lib/explorer/directory';
 import type { Position } from '@/lib-client/geo';
-import { TEC_COLORS } from '@yasser172/tec-ui';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 /**
  * Escape text before it goes into a Leaflet popup.
@@ -81,7 +81,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
       const icon = (emoji: string, ring: string) => L.divIcon({
         className: '',
         html: `<div style="width:30px;height:30px;border-radius:50%;display:grid;place-items:center;
-                 background:${TEC_COLORS.surface};border:2px solid ${ring};font-size:15px;
+                 background:${C.surface};border:2px solid ${ring};font-size:15px;
                  box-shadow:0 2px 8px rgba(0,0,0,.45)">${emoji}</div>`,
         iconSize: [30, 30], iconAnchor: [15, 15], popupAnchor: [0, -16],
       });
@@ -90,7 +90,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
         const meta = CATEGORY_META[l.category];
         const verified = l.verification === 'verified';
         const m = L.marker([l.lat, l.lng], {
-          icon: icon(meta?.icon ?? '📍', verified ? TEC_COLORS.gold : `${TEC_COLORS.subtext}88`),
+          icon: icon(meta?.icon ?? '📍', verified ? C.gold : `${inkA(0.533)}`),
           title: l.name,
         }).addTo(layer);
 
@@ -108,7 +108,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
 
       if (me) {
         L.circleMarker([me.lat, me.lng], {
-          radius: 7, color: '#3B82F6', fillColor: '#3B82F6', fillOpacity: 0.9, weight: 2,
+          radius: 7, color: C.info, fillColor: C.info, fillOpacity: 0.9, weight: 2,
         }).addTo(layer).bindPopup('You are here');
       }
 
@@ -130,7 +130,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
       // to zero and shows nothing at all.
       style={{
         height: 340, width: '100%', borderRadius: 12, overflow: 'hidden',
-        border: `1px solid ${TEC_COLORS.gold}22`, background: TEC_COLORS.surface,
+        border: `1px solid ${goldA(0.133)}`, background: C.surface,
       }}
     />
   );

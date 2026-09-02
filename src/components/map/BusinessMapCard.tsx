@@ -6,8 +6,8 @@
 // Next 15, and the business page is one. This wrapper is the smallest thing that
 // can legally hold the option — it exists for that rule and nothing else.
 import dynamic from 'next/dynamic';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import type { MappableListing } from '@/lib/explorer/directory';
+import { C, goldA } from '@/lib-client/palette';
 
 const BusinessMap = dynamic(() => import('./BusinessMap'), {
   ssr: false,
@@ -18,8 +18,8 @@ const BusinessMap = dynamic(() => import('./BusinessMap'), {
     // same thing in every language instead.
     <div style={{
       height: 340, borderRadius: 12, display: 'grid', placeItems: 'center',
-      background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
-      color: TEC_COLORS.subtext, fontSize: 13,
+      background: C.surface, border: `1px solid ${goldA(0.133)}`,
+      color: C.subtext, fontSize: 13,
     }}>🗺️ ···</div>
   ),
 });

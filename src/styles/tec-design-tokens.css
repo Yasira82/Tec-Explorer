@@ -8,20 +8,27 @@
    Foundation layer — all apps inherit from here
 ═══════════════════════════════════════════════════════ */
 
-/* Full-bleed dark shell — kill every source of the "white frame" around the
-   dark app in Pi Browser:
-   - html/body default margin + white background,
-   - the browser's white UA canvas revealed on overscroll (color-scheme: dark).
-   (theme-color meta in layout tints the browser bar.) */
+/* Full-bleed shell — kills every source of the "white frame" around the app in
+   Pi Browser: html/body default margin, and the browser's own UA canvas revealed
+   on overscroll.
+
+   `color-scheme` is NOT set here any more. It is stamped on <html> by the boot
+   script (lib-client/theme.ts) before first paint, because it has to follow the
+   reader's stored choice — pinning it to `dark` in CSS made light mode paint a
+   dark scrollbar and dark form controls, which is how a theme ends up looking
+   half-finished.
+
+   `background` is now a TOKEN, not #050816. That literal was what kept the page
+   dark no matter what the theme blocks below said. */
 html {
-  color-scheme: dark;
-  background: #050816; /* var(--tec-bg) */
+  background: var(--tec-bg);
 }
 html, body {
   margin: 0;
   padding: 0;
   min-height: 100%;
-  background: #050816; /* var(--tec-bg) */
+  background: var(--tec-bg);
+  color: var(--tec-text-1);
 }
 
 :root {
@@ -34,10 +41,28 @@ html, body {
   --tec-border-gold: rgba(251,180,74,0.2);
 
   --tec-gold:        #FBB44A;
+  --tec-gold-dark:   #E8962A;
+  --tec-gold-light:  #FDCF7A;
+  /* The brand hue as CHANNELS.
+
+     Roughly fifty places in this app needed gold or ink at some alpha, and they
+     got it by appending two hex digits to a hex string: `${TEC_COLORS.gold}33`.
+     That trick is a large part of why the whole app was stuck dark — a hex
+     literal in an inline style cannot follow a theme — and it cannot simply be
+     pointed at a variable, because `var(--tec-gold)33` is invalid CSS that
+     raises NO error: the border just silently stops painting.
+
+     One token per alpha would be absurd. One token for the channels lets every
+     `rgba(var(--tec-gold-rgb), .2)` follow the theme instead. */
+  --tec-gold-rgb:    251, 180, 74;
   --tec-gold-dim:    rgba(251,180,74,0.15);
   --tec-gold-glow:   rgba(251,180,74,0.08);
+  /* Ink that sits ON the gold gradient. Fixed in both themes: the button is a
+     solid amber object, so its label does not follow the page. */
+  --tec-on-gold:     #0a0800;
 
   --tec-green:       #22C55E;
+  --tec-green-rgb:   34, 197, 94;
   --tec-green-dim:   rgba(16,185,129,0.12);
   --tec-blue:        #3b82f6;
   --tec-blue-dim:    rgba(59,130,246,0.12);
@@ -47,6 +72,12 @@ html, body {
   --tec-text-1:      rgba(255,255,255,0.92);
   --tec-text-2:      rgba(255,255,255,0.55);
   --tec-text-3:      rgba(255,255,255,0.28);
+  /* Ink channels, for the same reason as --tec-gold-rgb above: the secondary
+     ink was alpha-appended in ~20 places to draw hairlines and chips. */
+  --tec-text-rgb:    255, 255, 255;
+  /* A faint wash over the page. Every `rgba(255,255,255,0.05)` chip vanishes the
+     moment the page turns light, so the wash is a token that flips with it. */
+  --tec-fill-soft:   rgba(255,255,255,0.05);
 
   /* ── Spacing (4px base) ─────────────────────────────── */
   --sp-1:  4px;
@@ -102,27 +133,90 @@ html, body {
   --z-toast:   400;
 }
 
-/* ── Theme: dark (default) ───────────────────────────── */
-[data-theme='dark'],
-:root {
+/* ═══════════════════════════════════════════════════════
+   THREE STATES, not two.
+
+   "system" is a real choice and it is the DEFAULT: it means the app follows the
+   phone at all times, rather than freezing whatever the phone happened to be on
+   at first launch. It is expressed by the ABSENCE of the attribute, so the media
+   query below keeps tracking live.
+
+   Order matters. The media query is scoped to `:root:not([data-theme])`, so a
+   reader who explicitly picked dark on a light phone keeps dark — an unscoped
+   `@media (prefers-color-scheme: light)` would silently overrule their choice,
+   and they would have no way to tell the setting was being ignored.
+
+   This block used to exist with nothing able to reach it: the light values were
+   written, no code ever set `data-theme`, and every component painted from hex
+   literals anyway. Light mode existed on paper only.
+═══════════════════════════════════════════════════════ */
+
+/* ── Theme: dark (the default) ───────────────────────── */
+[data-theme='dark'] {
   --tec-bg:        #050816;
   --tec-surface-1: #0B1020;
   --tec-surface-2: #111627;
+  --tec-surface-3: #1A2033;
+  --tec-border:    rgba(255,255,255,0.06);
   --tec-text-1:    rgba(255,255,255,0.92);
   --tec-text-2:    rgba(255,255,255,0.55);
   --tec-text-3:    rgba(255,255,255,0.28);
+  --tec-text-rgb:  255, 255, 255;
+  --tec-fill-soft: rgba(255,255,255,0.05);
+  --tec-gold:      #FBB44A;
+  --tec-gold-rgb:  251, 180, 74;
 }
 
-/* ── Theme: light (ready for future) ────────────────── */
+/* ── Theme: light ────────────────────────────────────── */
+/* The amber DEEPENS on white. #FBB44A is sampled from the Pi splash mark and
+   carries a dark page; on white it is a pale wash that fails both as a text
+   colour and as a border. #FEA500 is Pi's own "Welcome to Pi" headline amber —
+   the same brand, measured on a light ground. Which one is in play is a THEME
+   decision, so it lives here and nowhere else. */
 [data-theme='light'] {
-  --tec-bg:        #f8f8fc;
+  --tec-bg:        #f4f3f1;
   --tec-surface-1: #ffffff;
-  --tec-surface-2: #f2f2f8;
-  --tec-surface-3: #e8e8f0;
-  --tec-border:    rgba(0,0,0,0.08);
-  --tec-text-1:    rgba(0,0,0,0.92);
-  --tec-text-2:    rgba(0,0,0,0.55);
-  --tec-text-3:    rgba(0,0,0,0.28);
+  --tec-surface-2: #f2f2f5;
+  --tec-surface-3: #e8e8ee;
+  --tec-border:    rgba(0,0,0,0.10);
+  --tec-text-1:    rgba(0,0,0,0.90);
+  --tec-text-2:    rgba(0,0,0,0.58);
+  --tec-text-3:    rgba(0,0,0,0.34);
+  --tec-text-rgb:  0, 0, 0;
+  --tec-fill-soft: rgba(0,0,0,0.04);
+  --tec-gold:      #FEA500;
+  --tec-gold-rgb:  254, 165, 0;
+  --tec-gold-dim:  rgba(254,165,0,0.16);
+  --tec-gold-glow: rgba(254,165,0,0.10);
+  --tec-border-gold: rgba(254,165,0,0.35);
+  /* Shadows on a light page are subtler, or they read as dirt. */
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.08);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
+}
+
+/* ── Theme: system (no attribute) follows the phone ──── */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --tec-bg:        #f4f3f1;
+    --tec-surface-1: #ffffff;
+    --tec-surface-2: #f2f2f5;
+    --tec-surface-3: #e8e8ee;
+    --tec-border:    rgba(0,0,0,0.10);
+    --tec-text-1:    rgba(0,0,0,0.90);
+    --tec-text-2:    rgba(0,0,0,0.58);
+    --tec-text-3:    rgba(0,0,0,0.34);
+    --tec-text-rgb:  0, 0, 0;
+    --tec-fill-soft: rgba(0,0,0,0.04);
+    --tec-gold:      #FEA500;
+    --tec-gold-rgb:  254, 165, 0;
+    --tec-gold-dim:  rgba(254,165,0,0.16);
+    --tec-gold-glow: rgba(254,165,0,0.10);
+    --tec-border-gold: rgba(254,165,0,0.35);
+    --shadow-sm:     0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
+    --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
+  }
 }
 
 /* ── Global resets ───────────────────────────────────── */
@@ -175,7 +269,8 @@ input[type=number] { -moz-appearance: textfield; }
 .tec-float     { animation: tec-float 3s ease-in-out infinite; }
 
 .tec-glass {
-  background:              rgba(255,255,255,0.03);
+  /* A white wash is invisible on a white page — token, not literal. */
+  background:              var(--tec-fill-soft);
   backdrop-filter:         blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border: 1px solid var(--tec-border);
@@ -199,7 +294,7 @@ input[type=number] { -moz-appearance: textfield; }
 .tec-nav-btn:active  { transform: scale(0.9);  transition: transform 80ms ease; }
 
 .tec-nav-link        { transition: background 0.15s ease, color 0.15s ease; }
-.tec-nav-link:active { background: rgba(255,255,255,0.08) !important; transform: scale(0.98); }
+.tec-nav-link:active { background: rgba(var(--tec-text-rgb), 0.08) !important; transform: scale(0.98); }
 
 /* ── Dashboard sidebar ───────────────────────────────── */
 .tec-main-content {
@@ -226,3 +321,36 @@ input[type=number] { -moz-appearance: textfield; }
     transition-duration:  0.01ms !important;
   }
 }
+
+/* ── Leaflet, wearing the app's theme ────────────────── */
+/* The map ships its own stylesheet, and it assumes a light page: the popup is a
+   white card with black ink and the zoom buttons are white on white. On a dark
+   page that is a bright rectangle punched through the app — visible in the
+   very first screenshot of this map, before either theme existed.
+ 
+   These are the only Leaflet internals worth overriding. Everything else it
+   draws is the tile image itself, which is not ours. */
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  background: var(--tec-surface-1);
+  color:      var(--tec-text-1);
+  box-shadow: var(--shadow-md);
+}
+.leaflet-popup-content-wrapper { border: 1px solid var(--tec-border); }
+.leaflet-container a.leaflet-popup-close-button { color: var(--tec-text-2); }
+
+.leaflet-bar a,
+.leaflet-bar a:hover {
+  background: var(--tec-surface-1);
+  color:      var(--tec-text-1);
+  border-bottom-color: var(--tec-border);
+}
+.leaflet-bar a:hover { background: var(--tec-surface-2); }
+
+/* The attribution is a licence requirement, so it must stay LEGIBLE in both
+   themes rather than being dimmed into decoration. */
+.leaflet-control-attribution {
+  background: var(--tec-surface-1) !important;
+  color:      var(--tec-text-2);
+}
+.leaflet-control-attribution a { color: var(--tec-gold); }

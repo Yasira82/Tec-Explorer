@@ -11,7 +11,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
 import { useTranslation } from '@/lib/i18n';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ExplorerPro } from './components/ExplorerPro';
 import { ListingPanel } from './components/ListingPanel';
 import { BottomNav, type ExpTab } from './components/BottomNav';
@@ -22,6 +21,7 @@ import {
 } from '@/lib/explorer/directory';
 import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
 import { reportError } from '@/lib/observability/reportError';
+import { C, goldA } from '@/lib-client/palette';
 
 // Leaflet touches `window` at module scope, so this cannot be server-rendered —
 // a plain import breaks the BUILD, not just the render.
@@ -118,14 +118,14 @@ export default function ExplorerHome() {
   const verifiedCount = useMemo(() => listings.filter((l) => l.verification === 'verified').length, [listings]);
 
   const card: React.CSSProperties = {
-    background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
+    background: C.surface, border: `1px solid ${goldA(0.133)}`,
     borderRadius: 12, padding: 14, display: 'block', textDecoration: 'none',
   };
   const chip = (active: boolean): React.CSSProperties => ({
     fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
-    color: active ? '#0a0800' : TEC_COLORS.text,
-    background: active ? `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})` : 'transparent',
-    border: `1px solid ${TEC_COLORS.gold}${active ? '' : '33'}`,
+    color: active ? C.onGold : C.text,
+    background: active ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent',
+    border: `1px solid ${C.gold}${active ? '' : '33'}`,
     borderRadius: 999, padding: '6px 12px', cursor: 'pointer',
   });
 
@@ -136,13 +136,13 @@ export default function ExplorerHome() {
     : (isLoading || !name ? t.explorer.discover : t.explorer.discoverName.replace('{name}', name));
 
   return (
-    <main style={{ minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+    <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 22px calc(96px + env(safe-area-inset-bottom))' }}>
         <header>
-          <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>{t.explorer.brand}</div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: TEC_COLORS.gold, margin: '6px 0 0' }}>{title}</h1>
+          <div style={{ fontSize: 12, letterSpacing: 1, color: C.subtext, textTransform: 'uppercase' }}>{t.explorer.brand}</div>
+          <h1 style={{ fontSize: 26, fontWeight: 900, color: C.gold, margin: '6px 0 0' }}>{title}</h1>
           {tab === 'discover' && (
-            <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>{t.explorer.subtitle}</p>
+            <p style={{ fontSize: 14, color: C.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>{t.explorer.subtitle}</p>
           )}
         </header>
 
@@ -156,8 +156,8 @@ export default function ExplorerHome() {
                 placeholder={t.explorer.searchPlaceholder}
                 style={{
                   width: '100%', padding: '12px 14px', borderRadius: 12,
-                  background: TEC_COLORS.surface, color: TEC_COLORS.text,
-                  border: `1px solid ${TEC_COLORS.gold}33`, fontSize: 14,
+                  background: C.surface, color: C.text,
+                  border: `1px solid ${goldA(0.2)}`, fontSize: 14,
                 }}
               />
             </div>
@@ -194,7 +194,7 @@ export default function ExplorerHome() {
                 device that cannot answer at all, and telling that person to
                 "allow location" is advice that cannot work. */}
             {(nearMe.state.status === 'denied' || nearMe.state.status === 'unavailable') && (
-              <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
+              <p style={{ fontSize: 12, color: C.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
                 {nearMe.state.status === 'denied' ? t.explorer.geoDenied : t.explorer.geoUnavailable}
               </p>
             )}
@@ -202,13 +202,13 @@ export default function ExplorerHome() {
             {/* Results */}
             <section style={{ marginTop: 26 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
-                <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>
+                <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>
                   {status === 'ready'
                     ? (count === 1 ? t.explorer.resultsOne : t.explorer.results.replace('{n}', String(count)))
                     : t.explorer.discover}
                 </h2>
                 {status === 'ready' && count > 0 && (
-                  <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
+                  <span style={{ fontSize: 11, color: C.subtext, border: `1px solid ${goldA(0.2)}`, borderRadius: 999, padding: '2px 10px' }}>
                     {t.explorer.liveVerified.replace('{n}', String(verifiedCount))}
                   </span>
                 )}
@@ -219,7 +219,7 @@ export default function ExplorerHome() {
                   {pins.length < count && (
                     // Said out loud, because a map showing 3 of 8 results with
                     // no explanation reads as a broken map.
-                    <p style={{ fontSize: 11.5, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
+                    <p style={{ fontSize: 11.5, color: C.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
                       {t.explorer.notOnMap
                         .replace('{n}', String(count - pins.length))
                         .replace('{total}', String(count))}.
@@ -234,11 +234,11 @@ export default function ExplorerHome() {
                 ))}
 
                 {status === 'error' && (
-                  <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                  <div style={{ ...card, textAlign: 'center', color: C.subtext, fontSize: 13 }}>
                     <div>{t.explorer.cantLoad}</div>
                     <button
                       onClick={() => setReload((r) => r + 1)}
-                      style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#0a0800', background: `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
+                      style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: C.onGold, background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
                     >↻ {t.explorer.retry}</button>
                   </div>
                 )}
@@ -257,33 +257,33 @@ export default function ExplorerHome() {
                       />
                     )}
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
+                      <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
                         {CATEGORY_META[l.category].icon} {l.name}
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: l.verification === 'verified' ? TEC_COLORS.gold : TEC_COLORS.subtext, border: `1px solid ${l.verification === 'verified' ? TEC_COLORS.gold + '55' : TEC_COLORS.subtext + '55'}`, borderRadius: 999, padding: '2px 8px' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: l.verification === 'verified' ? C.gold : C.subtext, border: `1px solid ${l.verification === 'verified' ? C.gold + '55' : C.subtext + '55'}`, borderRadius: 999, padding: '2px 8px' }}>
                         {l.verification === 'verified' ? '✅ Verified' : 'Unverified'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
+                    <div style={{ fontSize: 11, color: C.gold, marginTop: 3 }}>
                       {CATEGORY_META[l.category].label} · {l.area} · {l.piAccepted ? 'π accepted' : 'Pi soon'}
                       {km !== null && (
                         <span style={{ fontWeight: 800 }}> · {t.explorer.away.replace('{d}', formatDistance(km))}</span>
                       )}
-                      {l.featured && <span style={{ marginLeft: 6, color: TEC_COLORS.gold, fontWeight: 800 }}>· ⭐ Featured</span>}
+                      {l.featured && <span style={{ marginLeft: 6, color: C.gold, fontWeight: 800 }}>· ⭐ Featured</span>}
                     </div>
-                    <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
+                    <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
                   </Link>
                 ))}
 
                 {status === 'ready' && view === 'list' && count === 0 && (
-                  <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
+                  <div style={{ ...card, textAlign: 'center', color: C.subtext, fontSize: 13 }}>
                     {query.trim() || category !== 'all' ? t.explorer.noMatches : t.explorer.beFirst}
                   </div>
                 )}
               </div>
             </section>
 
-            <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 11, color: C.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
               Explorer helps you discover public, self-declared businesses. It doesn&apos;t
               verify them, score their trust, or handle payments — those happen at the
               business. Your location is used for search only and never stored.

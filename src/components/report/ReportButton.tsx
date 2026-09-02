@@ -16,9 +16,9 @@
 // is the only thing this app actually knows — a human decides the rest, and a
 // message implying otherwise would be a lie the first time nothing happens.
 import { useState } from 'react';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { useTranslation } from '@/lib/i18n';
 import { reportError } from '@/lib/observability/reportError';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 /** The reasons the backend accepts. Any other value is rejected there. */
 const REASONS = ['scam', 'spam', 'offensive', 'not_a_business', 'wrong_info', 'impersonation', 'other'] as const;
@@ -65,7 +65,7 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
 
   if (state === 'sent') {
     return (
-      <p style={{ fontSize: 11.5, color: TEC_COLORS.subtext, marginTop: 10, lineHeight: 1.5 }}>
+      <p style={{ fontSize: 11.5, color: C.subtext, marginTop: 10, lineHeight: 1.5 }}>
         {x.reportSent}
       </p>
     );
@@ -77,7 +77,7 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
         onClick={() => setOpen(true)}
         style={{
           background: 'none', border: 'none', padding: '6px 0', cursor: 'pointer',
-          fontSize: 11.5, color: TEC_COLORS.subtext, textDecoration: 'underline',
+          fontSize: 11.5, color: C.subtext, textDecoration: 'underline',
         }}
       >{x.report}</button>
     );
@@ -87,9 +87,9 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
   return (
     <div style={{
       marginTop: 10, padding: 12, borderRadius: 10,
-      background: TEC_COLORS.bg, border: `1px solid ${TEC_COLORS.subtext}33`,
+      background: C.bg, border: `1px solid ${inkA(0.2)}`,
     }}>
-      <div style={{ fontSize: 12, fontWeight: 700, color: TEC_COLORS.text }}>{x.reportTitle}</div>
+      <div style={{ fontSize: 12, fontWeight: 700, color: C.text }}>{x.reportTitle}</div>
 
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8 }}>
         {REASONS.map((r) => (
@@ -98,9 +98,9 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
             onClick={() => setReason(r)}
             style={{
               fontSize: 11.5, borderRadius: 999, padding: '4px 10px', cursor: 'pointer',
-              background: reason === r ? `${TEC_COLORS.gold}22` : 'transparent',
-              color: reason === r ? TEC_COLORS.gold : TEC_COLORS.subtext,
-              border: `1px solid ${reason === r ? `${TEC_COLORS.gold}66` : `${TEC_COLORS.subtext}44`}`,
+              background: reason === r ? `${goldA(0.133)}` : 'transparent',
+              color: reason === r ? C.gold : C.subtext,
+              border: `1px solid ${reason === r ? `${goldA(0.4)}` : `${inkA(0.267)}`}`,
             }}
           >{x.reportReasons[r]}</button>
         ))}
@@ -111,14 +111,14 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
         dir="auto" placeholder={x.reportNotePlaceholder}
         style={{
           width: '100%', boxSizing: 'border-box', marginTop: 8, padding: '8px 10px',
-          background: TEC_COLORS.surface, color: TEC_COLORS.text, resize: 'vertical',
-          border: `1px solid ${TEC_COLORS.subtext}33`, borderRadius: 8, fontSize: 12.5,
+          background: C.surface, color: C.text, resize: 'vertical',
+          border: `1px solid ${inkA(0.2)}`, borderRadius: 8, fontSize: 12.5,
           outline: 'none', fontFamily: 'inherit',
         }}
       />
 
       {state === 'failed' && (
-        <div style={{ fontSize: 11.5, color: '#EF4444', marginTop: 6 }}>{x.reportFailed}</div>
+        <div style={{ fontSize: 11.5, color: C.error, marginTop: 6 }}>{x.reportFailed}</div>
       )}
 
       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
@@ -127,21 +127,21 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
           style={{
             fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '7px 14px',
             border: 'none', cursor: busy ? 'default' : 'pointer',
-            background: busy ? `${TEC_COLORS.gold}33` : `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
-            color: busy ? TEC_COLORS.subtext : '#0a0800',
+            background: busy ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            color: busy ? C.subtext : C.onGold,
           }}
         >{busy ? x.reportSending : x.reportSend}</button>
         <button
           onClick={() => { setOpen(false); setState('idle'); }}
           style={{
             fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '7px 14px',
-            background: 'transparent', color: TEC_COLORS.subtext,
-            border: `1px solid ${TEC_COLORS.subtext}44`, cursor: 'pointer',
+            background: 'transparent', color: C.subtext,
+            border: `1px solid ${inkA(0.267)}`, cursor: 'pointer',
           }}
         >{x.cancel}</button>
       </div>
 
-      <p style={{ fontSize: 10.5, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 10.5, color: C.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
         {x.reportPrivacyNote}
       </p>
     </div>
