@@ -195,6 +195,11 @@ export const tr = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: 'Tema',
+      themeDesc: 'Açık, koyu veya telefonunuza göre',
+      themeSystem: 'Sistem',
+      themeLight: 'Açık',
+      themeDark: 'Koyu',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

@@ -195,6 +195,11 @@ export const ar = {
     settings: {
       profile: 'الملف الشخصي', planFree: 'مجاني', planPro: 'Pro',
       connectedPi: 'متصل بـ Pi', notSignedIn: 'غير مسجّل الدخول', member: 'عضو TEC',
+      theme: 'المظهر',
+      themeDesc: 'فاتح أو غامق أو زي الموبايل',
+      themeSystem: 'الموبايل',
+      themeLight: 'فاتح',
+      themeDark: 'غامق',
       appearance: 'المظهر', language: 'اللغة', languageDesc: 'لغة العرض',
       about: 'حول', version: 'الإصدار', domain: 'النطاق', ecosystem: 'المنظومة',
       builtOn: 'مبني على', builtOnPi: 'شبكة Pi', logout: 'تسجيل الخروج',

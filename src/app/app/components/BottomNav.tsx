@@ -4,6 +4,7 @@
 // scale + underline, light haptic. Same quality bar as tec-assets.
 import { Icon, type ExpIconName } from './Icon';
 import { useTranslation } from '@/lib/i18n';
+import { C } from '@/lib-client/palette';
 
 export type ExpTab = 'discover' | 'listing' | 'pro' | 'settings';
 
@@ -38,13 +39,13 @@ export function BottomNav({ active, onSelect }: { active: ExpTab; onSelect: (t: 
             }}
           >
             <div style={{ transform: isActive ? 'scale(1.08)' : 'scale(1)', transition: 'transform 0.2s' }}>
-              <Icon name={item.icon} size={21} color={isActive ? '#FBB44A' : '#3a3a4a'} strokeWidth={isActive ? 2.2 : 1.9} />
+              <Icon name={item.icon} size={21} color={isActive ? C.gold : C.faint} strokeWidth={isActive ? 2.2 : 1.9} />
             </div>
-            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.5, color: isActive ? '#FBB44A' : '#3a3a4a', transition: 'color 0.2s' }}>
+            <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: 0.5, color: isActive ? C.gold : C.faint, transition: 'color 0.2s' }}>
               {item.label}
             </div>
             {isActive && (
-              <div style={{ position: 'absolute', bottom: 0, width: 20, height: 2, borderRadius: 1, background: '#FBB44A' }} />
+              <div style={{ position: 'absolute', bottom: 0, width: 20, height: 2, borderRadius: 1, background: C.gold }} />
             )}
           </button>
         );

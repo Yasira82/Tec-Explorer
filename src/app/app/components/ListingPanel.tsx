@@ -7,13 +7,13 @@
 // owner is derived from the token server-side, never a client field — P6). Ranking
 // (popularity / trend) is Analytics' job, applied at discovery time — not here.
 import { useEffect, useState } from 'react';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
 import { reportError } from '@/lib/observability/reportError';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 /**
  * Mirrors MAX_LISTINGS_PER_OWNER in tec-identity-service.
@@ -244,7 +244,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   if (authLoading || (isAuth && !loaded)) {
     return (
       <section style={{ marginTop: 24 }}>
-        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>{x.loadingListing}</p>
+        <p style={{ fontSize: 13, color: C.subtext }}>{x.loadingListing}</p>
       </section>
     );
   }
@@ -254,10 +254,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   if (!isAuth) {
     return (
       <section style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
           {x.listPitchTitle}
         </h2>
-        <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.55 }}>
+        <p style={{ fontSize: 12.5, color: C.subtext, margin: '0 0 12px', lineHeight: 1.55 }}>
           {x.listPitchBody}
         </p>
         <button
@@ -305,11 +305,11 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   }
 
   const card: React.CSSProperties = {
-    background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 12, padding: 14,
+    background: C.surface, border: `1px solid ${goldA(0.133)}`, borderRadius: 12, padding: 14,
   };
   const input: React.CSSProperties = {
-    width: '100%', padding: '9px 11px', background: TEC_COLORS.bg, color: TEC_COLORS.text,
-    border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13, outline: 'none',
+    width: '100%', padding: '9px 11px', background: C.bg, color: C.text,
+    border: `1px solid ${goldA(0.133)}`, borderRadius: 8, fontSize: 13, outline: 'none',
   };
 
   /**
@@ -323,9 +323,9 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   const removedBanner = removedName ? (
     <div style={{
       marginBottom: 12, padding: '9px 11px', borderRadius: 8, fontSize: 12,
-      color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.subtext}33`,
+      color: C.subtext, border: `1px solid ${inkA(0.2)}`,
     }}>
-      {x.removedOk} <strong style={{ color: TEC_COLORS.text }}>{removedName}</strong>
+      {x.removedOk} <strong style={{ color: C.text }}>{removedName}</strong>
     </div>
   ) : null;
 
@@ -340,7 +340,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
    */
   const switcher = listings.length > 1 ? (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginBottom: 6 }}>{x.switchListing}</div>
+      <div style={{ fontSize: 11, color: C.subtext, marginBottom: 6 }}>{x.switchListing}</div>
       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
         {listings.map((l) => {
           const on = l.id === selectedId;
@@ -355,9 +355,9 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               }}
               style={{
                 padding: '5px 11px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                background: on ? `${TEC_COLORS.gold}22` : 'transparent',
-                color: on ? TEC_COLORS.gold : TEC_COLORS.subtext,
-                border: `1px solid ${on ? `${TEC_COLORS.gold}66` : `${TEC_COLORS.subtext}44`}`,
+                background: on ? `${goldA(0.133)}` : 'transparent',
+                color: on ? C.gold : C.subtext,
+                border: `1px solid ${on ? `${goldA(0.4)}` : `${inkA(0.267)}`}`,
               }}
             >{CATEGORY_META[l.category].icon} {l.name}</button>
           );
@@ -371,32 +371,32 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     const v = listing.verification === 'verified';
     return (
       <section style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 10px' }}>
           {listings.length > 1 ? x.yourListings : x.yourListing}
         </h2>
         {removedBanner}
         {switcher}
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
               {CATEGORY_META[listing.category].icon} {listing.name}
             </span>
-            <span style={{ fontSize: 10, fontWeight: 800, color: v ? TEC_COLORS.gold : TEC_COLORS.subtext, border: `1px solid ${(v ? TEC_COLORS.gold : TEC_COLORS.subtext)}55`, borderRadius: 999, padding: '2px 8px' }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: v ? C.gold : C.subtext, border: `1px solid ${(v ? C.gold : C.subtext)}55`, borderRadius: 999, padding: '2px 8px' }}>
               {v ? x.verifiedTag : x.unverifiedTag}
             </span>
           </div>
-          <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
+          <div style={{ fontSize: 11, color: C.gold, marginTop: 3 }}>
             {CATEGORY_META[listing.category].label} · {listing.area} · {listing.piAccepted ? 'π accepted' : 'Pi soon'}
           </div>
-          <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{listing.summary}</div>
+          <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>{listing.summary}</div>
           {listing.featured ? (
-            <div style={{ marginTop: 10, fontSize: 12, color: TEC_COLORS.gold, fontWeight: 700 }}>
+            <div style={{ marginTop: 10, fontSize: 12, color: C.gold, fontWeight: 700 }}>
               {x.featured}
             </div>
           ) : (
-            <div style={{ marginTop: 10, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 10, fontSize: 11.5, color: C.subtext, lineHeight: 1.5 }}>
               {x.goProHint.split('{pro}')[0]}
-              <strong style={{ color: TEC_COLORS.gold }}>Pro</strong>
+              <strong style={{ color: C.gold }}>Pro</strong>
               {x.goProHint.split('{pro}')[1]}
             </div>
           )}
@@ -435,13 +435,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               {listing.hasPhoto && (
                 <button
                   type="button" onClick={() => void removePhoto()} disabled={photoBusy}
-                  style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
+                  style={{ ...ghostBtn, color: C.subtext, borderColor: `${inkA(0.267)}` }}
                 >{x.removePhoto}</button>
               )}
             </div>
-            {photoError && <div style={{ marginTop: 6, fontSize: 11.5, color: '#EF4444' }}>{photoError}</div>}
+            {photoError && <div style={{ marginTop: 6, fontSize: 11.5, color: C.error }}>{photoError}</div>}
             {!listing.hasPhoto && !photoError && (
-              <div style={{ marginTop: 6, fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+              <div style={{ marginTop: 6, fontSize: 11, color: C.subtext, lineHeight: 1.5 }}>
                 {x.photoHint.replace('{mb}', String(Math.round(PHOTO_MAX_BYTES / 1024 / 1024)))}
               </div>
             )}
@@ -464,57 +464,57 @@ export function ListingPanel({ isAuth, authLoading = false }: {
                 key={label}
                 style={{
                   fontSize: 10.5, borderRadius: 999, padding: '2px 8px',
-                  color: value ? TEC_COLORS.gold : TEC_COLORS.subtext,
-                  border: `1px solid ${value ? `${TEC_COLORS.gold}55` : `${TEC_COLORS.subtext}44`}`,
+                  color: value ? C.gold : C.subtext,
+                  border: `1px solid ${value ? `${goldA(0.333)}` : `${inkA(0.267)}`}`,
                   opacity: value ? 1 : 0.7,
                 }}
               >{value ? `✓ ${label}` : `+ ${label}`}</span>
             ))}
           </div>
           {listing.lat === undefined && (
-            <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 8, fontSize: 11.5, color: C.subtext, lineHeight: 1.5 }}>
               {x.notOnMapWarn}
             </div>
           )}
           {!listing.address && !listing.phone && !listing.website && (
-            <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+            <div style={{ marginTop: 8, fontSize: 11.5, color: C.subtext, lineHeight: 1.5 }}>
               {x.reachableWarn}
             </div>
           )}
 
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>{x.editListing}</button>
-            {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>{x.kycNote}</span>}
+            {!v && <span style={{ fontSize: 11, color: C.subtext }}>{x.kycNote}</span>}
           </div>
 
           {/* Taking the listing down. Placed last and styled as plain text, not
               a button: a merchant opens this card to edit or add a photo, and
               the destructive action should be the hardest thing on it to hit by
               accident — not a red button sitting next to Edit. */}
-          <div style={{ marginTop: 14, borderTop: `1px solid ${TEC_COLORS.subtext}22`, paddingTop: 10 }}>
+          <div style={{ marginTop: 14, borderTop: `1px solid ${inkA(0.133)}`, paddingTop: 10 }}>
             {!confirming ? (
               <button
                 type="button"
                 onClick={() => { setConfirming(true); setTyped(''); setRemoveError(null); }}
                 style={{
                   background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                  fontSize: 11.5, color: TEC_COLORS.subtext, textDecoration: 'underline',
+                  fontSize: 11.5, color: C.subtext, textDecoration: 'underline',
                 }}
               >{x.removeListing}</button>
             ) : (
               <div style={{ display: 'grid', gap: 8 }}>
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#EF4444' }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: C.error }}>
                   {x.removeConfirmT.replace('{name}', listing.name)}
                 </div>
                 {/* Says what actually happens, including the part the merchant
                     cannot see: other people's reviews survive but become
                     unreachable. Hiding that would make this feel smaller than
                     it is. */}
-                <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.55 }}>
+                <div style={{ fontSize: 11.5, color: C.subtext, lineHeight: 1.55 }}>
                   {x.removeConfirmB}
                 </div>
                 <label style={{ display: 'grid', gap: 4 }}>
-                  <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>
+                  <span style={{ fontSize: 11, color: C.subtext }}>
                     {x.removeTypeHint.replace('{word}', x.removeWord)}
                   </span>
                   <input
@@ -529,7 +529,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
                     style={{ ...input, borderColor: '#EF444455' }}
                   />
                 </label>
-                {removeError && <div style={{ fontSize: 11.5, color: '#EF4444' }}>{removeError}</div>}
+                {removeError && <div style={{ fontSize: 11.5, color: C.error }}>{removeError}</div>}
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button
                     type="button"
@@ -540,7 +540,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
                       border: '1px solid #EF444466',
                       cursor: typed.trim().toUpperCase() === x.removeWord && !busy ? 'pointer' : 'not-allowed',
                       background: 'transparent',
-                      color: typed.trim().toUpperCase() === x.removeWord ? '#EF4444' : TEC_COLORS.subtext,
+                      color: typed.trim().toUpperCase() === x.removeWord ? C.error : C.subtext,
                       opacity: typed.trim().toUpperCase() === x.removeWord ? 1 : 0.6,
                     }}
                   >{busy ? x.removing : x.removeConfirm}</button>
@@ -561,7 +561,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             discovered by pressing. */}
         <div style={{ marginTop: 12 }}>
           {atCap ? (
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>
+            <span style={{ fontSize: 11.5, color: C.subtext }}>
               {x.atListingCap.replace('{max}', String(MAX_LISTINGS))}
             </span>
           ) : (
@@ -584,65 +584,65 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   return (
     <section style={{ marginTop: 24 }}>
       {removedBanner}
-      <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
+      <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 4px' }}>
         {isEdit ? x.editTitle : x.createTitle}
       </h2>
-      <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 12, color: C.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
         {x.createHint.split('{unverified}')[0]}
-        <strong style={{ color: TEC_COLORS.text }}>{x.unverifiedTag}</strong>
+        <strong style={{ color: C.text }}>{x.unverifiedTag}</strong>
         {x.createHint.split('{unverified}')[1]}
       </p>
       <form onSubmit={save} style={{ ...card, display: 'grid', gap: 10 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldName}</span>
+            <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldName}</span>
             <input value={draft.name} onChange={(e) => setDraft({ ...draft, name: e.target.value })} required minLength={2} maxLength={80} placeholder="e.g. Pi Corner Café" style={input} />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldCategory}</span>
+            <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldCategory}</span>
             <select value={draft.category} onChange={(e) => setDraft({ ...draft, category: e.target.value as Category })} style={input}>
               {CATEGORIES.map((c) => <option key={c} value={c}>{CATEGORY_META[c].icon} {CATEGORY_META[c].label}</option>)}
             </select>
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldArea} <span style={{ opacity: 0.6 }}>{x.fieldAreaHint}</span></span>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldArea} <span style={{ opacity: 0.6 }}>{x.fieldAreaHint}</span></span>
           <input value={draft.area} onChange={(e) => setDraft({ ...draft, area: e.target.value })} required minLength={2} maxLength={60} placeholder="e.g. City Center / Remote" style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldSummary}</span>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldSummary}</span>
           <input value={draft.summary} onChange={(e) => setDraft({ ...draft, summary: e.target.value })} required minLength={2} maxLength={160} placeholder="What you offer, paid in Pi." style={input} />
         </label>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldTags} <span style={{ opacity: 0.6 }}>{x.fieldTagsHint}</span></span>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldTags} <span style={{ opacity: 0.6 }}>{x.fieldTagsHint}</span></span>
           <input value={draft.tags} onChange={(e) => setDraft({ ...draft, tags: e.target.value })} maxLength={120} placeholder="coffee, wifi, brunch" style={input} />
         </label>
 
         {/* How customers reach you. Optional, but this is the half that turns a
             name in a list into a visit — a listing without it can be found and
             not acted on. Unlike `Area` above, these are yours to publish. */}
-        <div style={{ borderTop: `1px solid ${TEC_COLORS.gold}22`, paddingTop: 10, marginTop: 2 }}>
-          <div style={{ fontSize: 11.5, fontWeight: 700, color: TEC_COLORS.text }}>{x.reachTitle}</div>
-          <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginTop: 2, lineHeight: 1.5 }}>
+        <div style={{ borderTop: `1px solid ${goldA(0.133)}`, paddingTop: 10, marginTop: 2 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: C.text }}>{x.reachTitle}</div>
+          <div style={{ fontSize: 11, color: C.subtext, marginTop: 2, lineHeight: 1.5 }}>
             {x.reachHint}
           </div>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldAddress} <span style={{ opacity: 0.6 }}>{x.fieldAddressHint}</span></span>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldAddress} <span style={{ opacity: 0.6 }}>{x.fieldAddressHint}</span></span>
           <input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} maxLength={160} placeholder="12 Nile St, Maadi" style={input} />
         </label>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldHours}</span>
+            <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldHours}</span>
             <input value={draft.hours} onChange={(e) => setDraft({ ...draft, hours: e.target.value })} maxLength={120} placeholder="Sat–Thu 9am–11pm" style={input} />
           </label>
           <label style={{ display: 'grid', gap: 4 }}>
-            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldPhone}</span>
+            <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldPhone}</span>
             <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} type="tel" maxLength={32} placeholder="+20 100 123 4567" style={input} dir="ltr" />
           </label>
         </div>
         <label style={{ display: 'grid', gap: 4 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{x.fieldWebsite}</span>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>{x.fieldWebsite}</span>
           <input value={draft.website} onChange={(e) => setDraft({ ...draft, website: e.target.value })} maxLength={200} placeholder="yourshop.com" style={input} dir="ltr" />
         </label>
 
@@ -655,7 +655,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             premises — the opposite party from the searcher whose location
             C-108 §6 says is never stored. */}
         <div style={{ display: 'grid', gap: 6 }}>
-          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>
+          <span style={{ fontSize: 11.5, color: C.subtext }}>
             {x.fieldMapPin} <span style={{ opacity: 0.6 }}>{x.fieldMapPinHint}</span>
           </span>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -664,23 +664,23 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             </button>
             {draft.lat !== null && draft.lng !== null && (
               <>
-                <span style={{ fontSize: 11.5, color: TEC_COLORS.gold }} dir="ltr">
+                <span style={{ fontSize: 11.5, color: C.gold }} dir="ltr">
                   {draft.lat.toFixed(5)}, {draft.lng.toFixed(5)}
                 </span>
                 <button
                   type="button"
                   onClick={() => setDraft({ ...draft, lat: null, lng: null })}
-                  style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
+                  style={{ ...ghostBtn, color: C.subtext, borderColor: `${inkA(0.267)}` }}
                 >{x.removePin}</button>
               </>
             )}
           </div>
-          {geoError && <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>{geoError}</div>}
-          <div style={{ fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+          {geoError && <div style={{ fontSize: 11.5, color: C.subtext }}>{geoError}</div>}
+          <div style={{ fontSize: 11, color: C.subtext, lineHeight: 1.5 }}>
             {x.pinHint}
           </div>
         </div>
-        {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
+        {error && <div style={{ color: C.error, fontSize: 12.5 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
           <button type="submit" disabled={busy || draft.name.trim().length < 2} style={primaryBtn(busy || draft.name.trim().length < 2)}>
             {busy ? x.saving : isEdit ? x.saveChanges : x.createListing}
@@ -703,12 +703,12 @@ export function ListingPanel({ isAuth, authLoading = false }: {
 
 const primaryBtn = (disabled: boolean): React.CSSProperties => ({
   padding: '10px 16px', borderRadius: 8, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-  background: disabled ? `${TEC_COLORS.gold}33` : `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
-  color: disabled ? TEC_COLORS.subtext : '#0a0800', fontWeight: 800, fontSize: 13, flex: 1,
+  background: disabled ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+  color: disabled ? C.subtext : C.onGold, fontWeight: 800, fontSize: 13, flex: 1,
 });
 
 const ghostBtn: React.CSSProperties = {
   padding: '9px 14px', borderRadius: 8, cursor: 'pointer',
-  background: 'transparent', color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}44`,
+  background: 'transparent', color: C.gold, border: `1px solid ${goldA(0.267)}`,
   fontWeight: 700, fontSize: 12.5,
 };

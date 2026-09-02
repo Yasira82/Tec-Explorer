@@ -18,12 +18,12 @@
 // component renders whichever it is told, so the day that lookup exists nothing
 // here changes.
 import { useCallback, useEffect, useState } from 'react';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
 import { useTranslation } from '@/lib/i18n';
 import { ReportButton } from '@/components/report/ReportButton';
 import { reportError } from '@/lib/observability/reportError';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -36,8 +36,8 @@ interface Summary { count: number; average: number | null; verifiedCount: number
 
 const Stars = ({ n }: { n: number }) => (
   <span aria-label={`${n} out of 5`} style={{ letterSpacing: 1 }}>
-    <span style={{ color: TEC_COLORS.gold }}>{'★'.repeat(n)}</span>
-    <span style={{ color: `${TEC_COLORS.subtext}88` }}>{'★'.repeat(5 - n)}</span>
+    <span style={{ color: C.gold }}>{'★'.repeat(n)}</span>
+    <span style={{ color: `${inkA(0.533)}` }}>{'★'.repeat(5 - n)}</span>
   </span>
 );
 
@@ -123,7 +123,7 @@ export function Reviews({ handle, ownerUsername }: {
   }
 
   const card: React.CSSProperties = {
-    background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
+    background: C.surface, border: `1px solid ${goldA(0.133)}`,
     borderRadius: 12, padding: 14,
   };
 
@@ -132,28 +132,28 @@ export function Reviews({ handle, ownerUsername }: {
   return (
     <section style={{ marginTop: 18 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>{x.reviews}</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: 0 }}>{x.reviews}</h2>
         {/* `average === null` is "nobody has reviewed this", NOT a score of
             zero. Rendering 0 for a new shop would libel it. */}
         {summary.average !== null ? (
-          <span style={{ fontSize: 13, color: TEC_COLORS.subtext }}>
-            <strong style={{ color: TEC_COLORS.gold }}>{summary.average.toFixed(1)}</strong>
+          <span style={{ fontSize: 13, color: C.subtext }}>
+            <strong style={{ color: C.gold }}>{summary.average.toFixed(1)}</strong>
             {' '}{x.fromNReviews.replace('{n}', String(summary.count))}
           </span>
         ) : (
-          <span style={{ fontSize: 12.5, color: TEC_COLORS.subtext }}>{x.noReviews}</span>
+          <span style={{ fontSize: 12.5, color: C.subtext }}>{x.noReviews}</span>
         )}
       </div>
 
       {/* Write / edit */}
       <div style={{ ...card, marginTop: 10 }}>
         {isOwner ? (
-          <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: 0, lineHeight: 1.5 }}>
+          <p style={{ fontSize: 12.5, color: C.subtext, margin: 0, lineHeight: 1.5 }}>
             {x.ownBusiness}
           </p>
         ) : !signedIn ? (
           <>
-            <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: '0 0 10px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: 12.5, color: C.subtext, margin: '0 0 10px', lineHeight: 1.5 }}>
               {x.reviewPitch}
             </p>
             <button
@@ -170,7 +170,7 @@ export function Reviews({ handle, ownerUsername }: {
                   style={{
                     background: 'none', border: 'none', cursor: 'pointer', padding: '2px 3px',
                     fontSize: 24, lineHeight: 1,
-                    color: n <= rating ? TEC_COLORS.gold : `${TEC_COLORS.subtext}66`,
+                    color: n <= rating ? C.gold : `${inkA(0.4)}`,
                   }}
                 >★</button>
               ))}
@@ -180,12 +180,12 @@ export function Reviews({ handle, ownerUsername }: {
               dir="auto" placeholder={x.reviewPlaceholder}
               style={{
                 width: '100%', boxSizing: 'border-box', marginTop: 10, padding: '9px 11px',
-                background: TEC_COLORS.bg, color: TEC_COLORS.text, resize: 'vertical',
-                border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13,
+                background: C.bg, color: C.text, resize: 'vertical',
+                border: `1px solid ${goldA(0.133)}`, borderRadius: 8, fontSize: 13,
                 outline: 'none', fontFamily: 'inherit',
               }}
             />
-            {error && <div style={{ fontSize: 12.5, color: '#EF4444', marginTop: 8 }}>{error}</div>}
+            {error && <div style={{ fontSize: 12.5, color: C.error, marginTop: 8 }}>{error}</div>}
             <div style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
               <button onClick={() => void submit()} disabled={busy || rating < 1} style={primary(busy || rating < 1)}>
                 {busy ? x.reviewSaving : mine ? x.updateReview : x.postReview}
@@ -205,7 +205,7 @@ export function Reviews({ handle, ownerUsername }: {
           return (
             <div key={r.id} style={card}>
               <div style={{ display: 'flex', gap: 8, alignItems: 'baseline', justifyContent: 'space-between', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>
+                <span style={{ fontSize: 13, fontWeight: 800, color: C.text }}>
                   <bdi>@{r.author}</bdi>
                 </span>
                 <Stars n={r.rating} />
@@ -216,14 +216,14 @@ export function Reviews({ handle, ownerUsername }: {
               <div style={{
                 display: 'inline-block', marginTop: 6, fontSize: 10.5, fontWeight: 700,
                 borderRadius: 999, padding: '2px 8px',
-                color: verified ? '#22C55E' : TEC_COLORS.subtext,
+                color: verified ? C.success : C.subtext,
                 background: verified ? 'rgba(34,197,94,0.10)' : 'transparent',
-                border: `1px solid ${verified ? 'rgba(34,197,94,0.25)' : `${TEC_COLORS.subtext}44`}`,
+                border: `1px solid ${verified ? 'rgba(34,197,94,0.25)' : `${inkA(0.267)}`}`,
               }}>
                 {verified ? x.verifiedPurchase : x.signedInWithPi}
               </div>
               {r.body && (
-                <p dir="auto" style={{ fontSize: 13, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.55 }}>
+                <p dir="auto" style={{ fontSize: 13, color: C.subtext, margin: '8px 0 0', lineHeight: 1.55 }}>
                   {r.body}
                 </p>
               )}
@@ -236,7 +236,7 @@ export function Reviews({ handle, ownerUsername }: {
         })}
       </div>
 
-      <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 11, color: C.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
         {x.reviewsNote}
       </p>
     </section>
@@ -245,11 +245,11 @@ export function Reviews({ handle, ownerUsername }: {
 
 const primary = (disabled: boolean): React.CSSProperties => ({
   padding: '9px 16px', borderRadius: 999, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-  background: disabled ? `${TEC_COLORS.gold}33` : `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
-  color: disabled ? TEC_COLORS.subtext : '#0a0800', fontWeight: 800, fontSize: 13,
+  background: disabled ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+  color: disabled ? C.subtext : C.onGold, fontWeight: 800, fontSize: 13,
 });
 
 const ghost: React.CSSProperties = {
   padding: '9px 14px', borderRadius: 999, cursor: 'pointer', background: 'transparent',
-  color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.subtext}44`, fontWeight: 700, fontSize: 12.5,
+  color: C.subtext, border: `1px solid ${inkA(0.267)}`, fontWeight: 700, fontSize: 12.5,
 };

@@ -3,7 +3,7 @@
 import { useEffect }               from 'react';
 import { useRouter }               from 'next/navigation';
 import { usePiAuth, ssoRedirect }  from '@yasser172/tec-auth';
-import { TEC_COLORS }              from '@yasser172/tec-ui';
+import { C } from '@/lib-client/palette';
 
 // ── تعديل حسب الـ domain ──────────────────────────────────
 const HUB_URL    = process.env.NEXT_PUBLIC_HUB_URL    ?? 'https://hub.tecosystem.app';
@@ -35,13 +35,13 @@ export default function HomePage() {
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>{APP_EMOJI}</div>
-        <div style={{ fontSize: 24, fontWeight: 900, color: TEC_COLORS.gold, marginBottom: 8 }}>
+        <div style={{ fontSize: 24, fontWeight: 900, color: C.gold, marginBottom: 8 }}>
           {APP_NAME}
         </div>
-        <div style={{ fontSize: 13, color: TEC_COLORS.subtext, marginBottom: 6 }}>
+        <div style={{ fontSize: 13, color: C.subtext, marginBottom: 6 }}>
           TEC ECOSYSTEM · DISCOVERY
         </div>
-        <div style={{ fontSize: 13, color: TEC_COLORS.subtext, marginBottom: 32, maxWidth: 300, lineHeight: 1.5 }}>
+        <div style={{ fontSize: 13, color: C.subtext, marginBottom: 32, maxWidth: 300, lineHeight: 1.5 }}>
           Discover Pi-accepting businesses, services, and opportunities near you.
         </div>
         <button
@@ -49,10 +49,10 @@ export default function HomePage() {
           disabled={isLoading}
           style={{
             padding:      '14px 32px',
-            background:   `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
+            background:   `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
             border:       'none',
             borderRadius: 16,
-            color:        '#0a0800',
+            color:        C.onGold,
             fontSize:     15,
             fontWeight:   700,
             cursor:       isLoading ? 'not-allowed' : 'pointer',

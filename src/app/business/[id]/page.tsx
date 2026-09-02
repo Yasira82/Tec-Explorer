@@ -16,9 +16,9 @@
 // the fewer chances there are to reintroduce that.
 import Link from 'next/link';
 import type { Metadata } from 'next';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { resolveBusiness, resolveOwnerProfile } from '@/lib/explorer/server';
 import { BusinessView } from '@/components/business/BusinessView';
+import { C } from '@/lib-client/palette';
 
 // The live search module is the index of record (C-108 §5) — every business page
 // renders on demand from it; nothing is pre-baked from a curated sample.
@@ -54,15 +54,15 @@ export default async function BusinessPage(
     const unavailable = source === 'unavailable';
     return (
       <main style={{
-        minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
+        minHeight: '100vh', background: C.bg, color: C.text,
         padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif',
       }}>
         <div style={{ maxWidth: 680, margin: '0 auto' }}>
-          <Link href="/app" style={{ fontSize: 13, color: TEC_COLORS.gold, textDecoration: 'none' }}>←</Link>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: TEC_COLORS.text, marginTop: 16 }}>
+          <Link href="/app" style={{ fontSize: 13, color: C.gold, textDecoration: 'none' }}>←</Link>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: C.text, marginTop: 16 }}>
             {unavailable ? "Couldn't load this listing" : 'Listing not found'}
           </h1>
-          <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>
+          <p style={{ fontSize: 13, color: C.subtext }}>
             {unavailable
               ? 'The directory is unavailable right now. Please try again shortly.'
               : <>No business with id <code>{id}</code> is listed here.</>}

@@ -195,6 +195,11 @@ export const id = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: 'Tema',
+      themeDesc: 'Terang, gelap, atau ikuti ponsel',
+      themeSystem: 'Sistem',
+      themeLight: 'Terang',
+      themeDark: 'Gelap',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

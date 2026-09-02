@@ -5,6 +5,7 @@ import '@/styles/tec-design-tokens.css';
 // already installed, so the stylesheet ships with the app.
 import 'leaflet/dist/leaflet.css';
 import { LocaleProvider } from '@/lib/i18n';
+import { THEME_BOOT_SCRIPT } from '@/lib-client/theme';
 
 export const metadata: Metadata = {
   title:       'TEC Explorer — Discover the Pi economy',
@@ -17,13 +18,27 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    /* `suppressHydrationWarning`: the boot script below stamps `data-theme` and
+       `colorScheme` on this element before React hydrates, so the server markup
+       and the client DOM differ here ON PURPOSE. Without it React logs a
+       mismatch on every load for something that is working correctly. */
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-        {/* Full-bleed dark shell — tint the browser UI + declare dark canvas so
-            no white frame shows around the app in Pi Browser. */}
-        <meta name="theme-color" content="#050816" />
-        <meta name="color-scheme" content="dark" />
+        {/* One theme-color per scheme, so the browser chrome above the page
+            matches the page. A single dark value left a black bar sitting on
+            top of a light app. */}
+        <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#050816" />
+        <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f3f1" />
+        {/* `color-scheme` is NOT declared here any more. It has to follow the
+            reader's stored choice, which only the boot script knows — a static
+            `dark` meta made light mode paint dark scrollbars and dark form
+            controls, which is how a theme ends up looking half-finished. */}
+        {/* Applies the stored theme BEFORE first paint. Inline and synchronous
+            by necessity: anything deferred paints too late, and the page would
+            render dark and then snap to light on every single load — a flash
+            that is worse than not offering the choice at all. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <script
           src="https://sdk.minepi.com/pi-sdk.js"
           async

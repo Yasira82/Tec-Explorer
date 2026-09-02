@@ -195,6 +195,11 @@ export const ur = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: 'تھیم',
+      themeDesc: 'روشن، گہرا، یا فون کے مطابق',
+      themeSystem: 'سسٹم',
+      themeLight: 'روشن',
+      themeDark: 'گہرا',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

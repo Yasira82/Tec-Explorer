@@ -195,6 +195,11 @@ export const ko = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: '테마',
+      themeDesc: '라이트, 다크, 또는 기기 설정 따르기',
+      themeSystem: '시스템',
+      themeLight: '라이트',
+      themeDark: '다크',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

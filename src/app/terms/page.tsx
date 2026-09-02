@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { C } from '@/lib-client/palette';
 
 // TODO(new app): set these three for your app — required for Pi Portal submission.
 const APP     = 'TEC Explorer';
@@ -11,11 +12,11 @@ export const metadata: Metadata = {
   description: `Terms of Service for ${APP} (${DOMAIN}).`,
 };
 
-const wrap = { maxWidth: 820, margin: '0 auto', padding: '48px 22px', color: '#e7e7ea', background: '#050816', minHeight: '100vh', fontFamily: 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', lineHeight: 1.75 } as const;
-const h1   = { color: '#FBB44A', fontSize: 30, marginBottom: 4 } as const;
-const h2   = { color: '#FBB44A', fontSize: 19, marginTop: 30, marginBottom: 6 } as const;
+const wrap = { maxWidth: 820, margin: '0 auto', padding: '48px 22px', color: C.text, background: C.bg, minHeight: '100vh', fontFamily: 'system-ui,-apple-system,Segoe UI,Roboto,sans-serif', lineHeight: 1.75 } as const;
+const h1   = { color: C.gold, fontSize: 30, marginBottom: 4 } as const;
+const h2   = { color: C.gold, fontSize: 19, marginTop: 30, marginBottom: 6 } as const;
 const meta = { opacity: 0.65, fontSize: 14, marginBottom: 8 } as const;
-const link = { color: '#FBB44A' } as const;
+const link = { color: C.gold } as const;
 
 export default function TermsPage() {
   return (

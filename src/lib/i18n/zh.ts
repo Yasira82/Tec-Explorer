@@ -195,6 +195,11 @@ export const zh = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: '主题',
+      themeDesc: '浅色、深色，或跟随手机',
+      themeSystem: '跟随系统',
+      themeLight: '浅色',
+      themeDark: '深色',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

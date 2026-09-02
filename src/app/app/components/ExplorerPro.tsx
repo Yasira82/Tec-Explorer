@@ -10,7 +10,7 @@
 // Explorer never processes the merchant's own sales — payments happen at the
 // merchant via tec-payment-service (C-108 §4).
 import { useEffect, useState } from 'react';
-import { TEC_COLORS } from '@yasser172/tec-ui';
+import { C, goldA, inkA, successA } from '@/lib-client/palette';
 import {
   isHubNavigation,
   redirectToHubPayment,
@@ -119,8 +119,8 @@ export function ExplorerPro() {
   };
 
   const card: React.CSSProperties = {
-    background:   TEC_COLORS.surface,
-    border:       `1px solid ${TEC_COLORS.gold}55`,
+    background:   C.surface,
+    border:       `1px solid ${goldA(0.333)}`,
     borderRadius: 16,
     padding:      20,
     marginTop:    24,
@@ -128,13 +128,13 @@ export function ExplorerPro() {
 
   if (isSubscribed) {
     return (
-      <div style={{ background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}55`, borderRadius: 16, padding: 20, marginTop: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>★ You’re on Pro</div>
-        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6 }}>
+      <div style={{ background: C.surface, border: `1px solid ${goldA(0.333)}`, borderRadius: 16, padding: 20, marginTop: 24 }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.gold }}>★ You’re on Pro</div>
+        <div style={{ fontSize: 12, color: C.subtext, marginTop: 6 }}>
           Your subscription is active. Thanks for supporting TEC.
         </div>
         {typeof daysRemaining === 'number' && (
-          <div style={{ fontSize: 12, fontWeight: daysRemaining <= 7 ? 700 : 600, color: daysRemaining <= 7 ? TEC_COLORS.gold : TEC_COLORS.subtext, marginTop: 8 }}>
+          <div style={{ fontSize: 12, fontWeight: daysRemaining <= 7 ? 700 : 600, color: daysRemaining <= 7 ? C.gold : C.subtext, marginTop: 8 }}>
             {daysRemaining <= 7 ? '⏳ ' : ''}Expires in {daysRemaining} day{daysRemaining === 1 ? '' : 's'}{daysRemaining <= 7 ? ' — re-subscribe to keep Pro (one-time monthly, no auto-renewal).' : '.'}
           </div>
         )}
@@ -144,10 +144,10 @@ export function ExplorerPro() {
 
   if (status === 'success') {
     return (
-      <div style={{ ...card, borderColor: `${TEC_COLORS.success}66` }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.success }}>✅ Business Pro active</div>
-        <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 6, lineHeight: 1.5 }}>
-          Payment received. Your listing is now <strong style={{ color: TEC_COLORS.gold }}>⭐ Featured</strong> —
+      <div style={{ ...card, borderColor: `${successA(0.4)}` }}>
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.success }}>✅ Business Pro active</div>
+        <div style={{ fontSize: 12, color: C.subtext, marginTop: 6, lineHeight: 1.5 }}>
+          Payment received. Your listing is now <strong style={{ color: C.gold }}>⭐ Featured</strong> —
           it ranks higher in discovery so more Pi users find you. (Open “Your listing” to see the badge.)
         </div>
       </div>
@@ -159,13 +159,13 @@ export function ExplorerPro() {
   return (
     <div style={card}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12 }}>
-        <div style={{ fontSize: 15, fontWeight: 800, color: TEC_COLORS.gold }}>🧭 Explorer Business Pro</div>
-        <div style={{ fontSize: 20, fontWeight: 900, color: TEC_COLORS.text }}>
-          {PRICE}π<span style={{ fontSize: 12, color: TEC_COLORS.subtext, fontWeight: 600 }}> / month</span>
+        <div style={{ fontSize: 15, fontWeight: 800, color: C.gold }}>🧭 Explorer Business Pro</div>
+        <div style={{ fontSize: 20, fontWeight: 900, color: C.text }}>
+          {PRICE}π<span style={{ fontSize: 12, color: C.subtext, fontWeight: 600 }}> / month</span>
         </div>
       </div>
-      <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 8, lineHeight: 1.5 }}>
-        <strong style={{ color: TEC_COLORS.text }}>⭐ Featured placement</strong> — your listing ranks
+      <div style={{ fontSize: 12, color: C.subtext, marginTop: 8, lineHeight: 1.5 }}>
+        <strong style={{ color: C.text }}>⭐ Featured placement</strong> — your listing ranks
         higher in discovery so more Pi users find you. (Visibility only — never a shortcut to the
         “Verified” badge, which is KYC-earned; a verified business always ranks above an unverified
         one.) A service subscription: Explorer never processes your customers’ payments — those happen
@@ -177,8 +177,8 @@ export function ExplorerPro() {
         disabled={busy}
         style={{
           marginTop: 14, width: '100%', padding: '12px 16px', borderRadius: 12,
-          background: busy ? '#333' : `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
-          color: busy ? '#888' : '#0a0800',
+          background: busy ? '#333' : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: busy ? '#888' : C.onGold,
           border: 'none', fontSize: 14, fontWeight: 800,
           cursor: busy ? 'not-allowed' : 'pointer',
         }}
@@ -189,7 +189,7 @@ export function ExplorerPro() {
       </button>
 
       {status === 'error' && (
-        <div style={{ fontSize: 12, color: TEC_COLORS.error, marginTop: 10 }}>{message}</div>
+        <div style={{ fontSize: 12, color: C.error, marginTop: 10 }}>{message}</div>
       )}
     </div>
   );

@@ -18,10 +18,10 @@
 // in the UI, and mutual connection is a whole feature (request, accept, reject,
 // notify) that should not be invented on a business page.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { usePiAuth, ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
 import { reportError } from '@/lib/observability/reportError';
+import { C } from '@/lib-client/palette';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -130,21 +130,21 @@ export function FollowOwner({ username, headline, verified }: {
   return (
     <section style={{
       marginTop: 18, padding: '16px 18px', borderRadius: 14,
-      background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.border}`,
+      background: C.surface, border: `1px solid ${C.border}`,
     }}>
-      <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: TEC_COLORS.subtext }}>
+      <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: C.subtext }}>
         {x.runBy}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 6, flexWrap: 'wrap' }}>
         {/* <bdi>: a Latin handle inside an RTL paragraph would render as
             "handle@" — the '@' is bidi-neutral and resolves against the
             surrounding direction. */}
-        <bdi style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text }}>@{username}</bdi>
+        <bdi style={{ fontSize: 16, fontWeight: 800, color: C.text }}>@{username}</bdi>
         {verified && (
           <span
             title="Verified — presented from Zone / KYC, never minted by Explorer"
             style={{
-              fontSize: 10.5, fontWeight: 700, color: '#22C55E',
+              fontSize: 10.5, fontWeight: 700, color: C.success,
               background: 'rgba(34,197,94,0.10)', border: '1px solid rgba(34,197,94,0.25)',
               borderRadius: 999, padding: '2px 8px',
             }}
@@ -152,7 +152,7 @@ export function FollowOwner({ username, headline, verified }: {
         )}
       </div>
       {headline && (
-        <p dir="auto" style={{ fontSize: 13, color: TEC_COLORS.subtext, margin: '6px 0 0', lineHeight: 1.5 }}>
+        <p dir="auto" style={{ fontSize: 13, color: C.subtext, margin: '6px 0 0', lineHeight: 1.5 }}>
           {headline}
         </p>
       )}
@@ -164,20 +164,20 @@ export function FollowOwner({ username, headline, verified }: {
           marginTop: 12, width: '100%', boxSizing: 'border-box',
           padding: '11px 18px', borderRadius: 999, border: 'none',
           background: inert
-            ? TEC_COLORS.surface2
-            : `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`,
-          color: inert ? TEC_COLORS.subtext : '#0a0800',
+            ? C.surface2
+            : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: inert ? C.subtext : C.onGold,
           fontSize: 14, fontWeight: 800, cursor: inert ? 'default' : 'pointer',
         }}
       ><bdi>{label}</bdi></button>
 
       {state === 'failed' && (
-        <p style={{ fontSize: 12.5, color: TEC_COLORS.error, margin: '10px 0 0' }}>
+        <p style={{ fontSize: 12.5, color: C.error, margin: '10px 0 0' }}>
           {x.followFailed}
         </p>
       )}
 
-      <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
+      <p style={{ fontSize: 11, color: C.subtext, margin: '10px 0 0', lineHeight: 1.5 }}>
         {x.followNote}
       </p>
     </section>

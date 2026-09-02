@@ -195,6 +195,11 @@ export const vi = {
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
+      theme: 'Giao diện',
+      themeDesc: 'Sáng, tối, hoặc theo điện thoại',
+      themeSystem: 'Hệ thống',
+      themeLight: 'Sáng',
+      themeDark: 'Tối',
       appearance: 'Appearance', language: 'Language', languageDesc: 'Display language',
       about: 'About', version: 'Version', domain: 'Domain', ecosystem: 'Ecosystem',
       builtOn: 'Built on', builtOnPi: 'Pi Network', logout: 'Logout',

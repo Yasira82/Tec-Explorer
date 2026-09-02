@@ -11,7 +11,6 @@
 // data down; everything a person actually READS is rendered here, where
 // `useTranslation` works.
 import Link from 'next/link';
-import { TEC_COLORS } from '@yasser172/tec-ui';
 import { useTranslation } from '@/lib/i18n';
 import { CATEGORY_META, safeWebsite, telHref, mappable, type Listing } from '@/lib/explorer/directory';
 import { FollowOwner } from '@/components/connect/FollowOwner';
@@ -19,6 +18,7 @@ import { BusinessMapCard } from '@/components/map/BusinessMapCard';
 import { Reviews } from '@/components/reviews/Reviews';
 import { ReportButton } from '@/components/report/ReportButton';
 import type { OwnerProfile } from '@/lib/explorer/server';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 export function BusinessView({ listing: l, owner }: {
   listing: Listing;
@@ -28,7 +28,7 @@ export function BusinessView({ listing: l, owner }: {
   const x = t.explorer;
 
   const wrap: React.CSSProperties = {
-    minHeight: '100vh', background: TEC_COLORS.bg, color: TEC_COLORS.text,
+    minHeight: '100vh', background: C.bg, color: C.text,
     padding: '32px 22px', fontFamily: 'system-ui, -apple-system, sans-serif',
   };
   const inner: React.CSSProperties = { maxWidth: 680, margin: '0 auto' };
@@ -47,23 +47,23 @@ export function BusinessView({ listing: l, owner }: {
   const pin     = mappable([l])[0] ?? null;
 
   const factCard: React.CSSProperties = {
-    background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
+    background: C.surface, border: `1px solid ${goldA(0.133)}`,
     borderRadius: 12, padding: 14,
   };
 
   return (
     <main style={wrap}>
       <div style={inner}>
-        <Link href="/app" style={{ fontSize: 13, color: TEC_COLORS.gold, textDecoration: 'none' }}>{x.backToDiscover}</Link>
+        <Link href="/app" style={{ fontSize: 13, color: C.gold, textDecoration: 'none' }}>{x.backToDiscover}</Link>
 
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
           <div>
-            <div style={{ fontSize: 12, letterSpacing: 1, color: TEC_COLORS.subtext, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 12, letterSpacing: 1, color: C.subtext, textTransform: 'uppercase' }}>
               {meta.icon} {meta.label} · {l.area}
             </div>
-            <h1 style={{ fontSize: 24, fontWeight: 900, color: TEC_COLORS.text, margin: '4px 0 0' }}>{l.name}</h1>
+            <h1 style={{ fontSize: 24, fontWeight: 900, color: C.text, margin: '4px 0 0' }}>{l.name}</h1>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? '#0a0800' : TEC_COLORS.text, background: verified ? `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})` : 'transparent', border: verified ? 'none' : `1px solid ${TEC_COLORS.subtext}66`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? C.onGold : C.text, background: verified ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent', border: verified ? 'none' : `1px solid ${inkA(0.4)}`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
             {verified ? x.verifiedBusiness : x.pendingVerify}
           </div>
         </div>
@@ -82,12 +82,12 @@ export function BusinessView({ listing: l, owner }: {
             alt=""
             style={{
               width: '100%', height: 200, objectFit: 'cover', borderRadius: 12,
-              marginTop: 16, border: `1px solid ${TEC_COLORS.gold}22`, display: 'block',
+              marginTop: 16, border: `1px solid ${goldA(0.133)}`, display: 'block',
             }}
           />
         )}
 
-        <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '14px 0 0', lineHeight: 1.6 }}>{l.summary}</p>
+        <p style={{ fontSize: 14, color: C.subtext, margin: '14px 0 0', lineHeight: 1.6 }}>{l.summary}</p>
 
         {/* ── Visit & contact ──────────────────────────────────────────────
             The reason someone opened this page. Before these fields existed the
@@ -103,7 +103,7 @@ export function BusinessView({ listing: l, owner }: {
             than as absent. */}
         {(l.address || l.hours || website || tel || pin) && (
           <section style={{ ...factCard, marginTop: 20, display: 'grid', gap: 12 }}>
-            <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: TEC_COLORS.subtext }}>
+            <div style={{ fontSize: 11, letterSpacing: 0.6, textTransform: 'uppercase', fontWeight: 700, color: C.subtext }}>
               {x.visitContact}
             </div>
 
@@ -152,20 +152,20 @@ export function BusinessView({ listing: l, owner }: {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10, marginTop: 12 }}>
           <div style={factCard}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>💠 {x.piPayments}</div>
-            <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>💠 {x.piPayments}</div>
+            <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>
               {l.piAccepted ? x.piAcceptedYes : x.piAcceptedNo}
             </div>
           </div>
           <div style={factCard}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>🛡️ {x.verification}</div>
-            <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>🛡️ {x.verification}</div>
+            <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>
               {verified ? x.verifiedBody : x.unverifiedBody}
             </div>
           </div>
           <div style={factCard}>
-            <div style={{ fontSize: 13, fontWeight: 800, color: TEC_COLORS.text }}>🤝 {x.trust}</div>
-            <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>
+            <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>🤝 {x.trust}</div>
+            <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>
               {l.trustHint}
             </div>
           </div>
@@ -188,7 +188,7 @@ export function BusinessView({ listing: l, owner }: {
         {l.tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>
             {l.tags.map((t) => (
-              <span key={t} style={{ fontSize: 11, color: TEC_COLORS.gold, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '3px 10px' }}>#{t}</span>
+              <span key={t} style={{ fontSize: 11, color: C.gold, border: `1px solid ${goldA(0.2)}`, borderRadius: 999, padding: '3px 10px' }}>#{t}</span>
             ))}
           </div>
         )}
@@ -198,7 +198,7 @@ export function BusinessView({ listing: l, owner }: {
             invites pressing. */}
         <ReportButton targetKind="listing" targetId={l.id} />
 
-        <p style={{ fontSize: 11, color: TEC_COLORS.subtext, margin: '12px 0 0', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 11, color: C.subtext, margin: '12px 0 0', lineHeight: 1.5 }}>
           {x.disclaimer}
         </p>
       </div>
@@ -206,7 +206,7 @@ export function BusinessView({ listing: l, owner }: {
   );
 }
 
-const linkStyle: React.CSSProperties = { color: TEC_COLORS.gold, textDecoration: 'none', fontWeight: 600 };
+const linkStyle: React.CSSProperties = { color: C.gold, textDecoration: 'none', fontWeight: 600 };
 
 /** One labelled line of contact information. */
 function Fact({ icon, label, children }: {
@@ -216,8 +216,8 @@ function Fact({ icon, label, children }: {
     <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
       <span aria-hidden style={{ fontSize: 14, lineHeight: 1.5 }}>{icon}</span>
       <div style={{ minWidth: 0, flex: 1 }}>
-        <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginBottom: 1 }}>{label}</div>
-        <div style={{ fontSize: 13.5, color: TEC_COLORS.text, lineHeight: 1.5, wordBreak: 'break-word' }}>
+        <div style={{ fontSize: 11, color: C.subtext, marginBottom: 1 }}>{label}</div>
+        <div style={{ fontSize: 13.5, color: C.text, lineHeight: 1.5, wordBreak: 'break-word' }}>
           {children}
         </div>
       </div>
