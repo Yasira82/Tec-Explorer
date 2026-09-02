@@ -145,7 +145,7 @@ export function FollowOwner({ username, headline, verified }: {
             title="Verified — presented from Zone / KYC, never minted by Explorer"
             style={{
               fontSize: 10.5, fontWeight: 700, color: C.success,
-              background: successA(0.10), border: '1px solid ${successA(0.25)}',
+              background: successA(0.10), border: `1px solid ${successA(0.25)}`,
               borderRadius: 999, padding: '2px 8px',
             }}
           >{x.verifiedShort}</span>

@@ -121,7 +121,7 @@ export function SettingsView() {
               <span style={{
                 display: 'inline-block', marginTop: 8, fontSize: 12, fontWeight: 700,
                 color: C.success, background: successA(0.10),
-                border: '1px solid ${successA(0.25)}', borderRadius: 999, padding: '3px 10px',
+                border: `1px solid ${successA(0.25)}`, borderRadius: 999, padding: '3px 10px',
               }}>● {s.connectedPi}</span>
             )}
           </div>
@@ -182,7 +182,7 @@ export function SettingsView() {
           onClick={() => { void logout(); }}
           style={{
             width: '100%', marginTop: 16, padding: '14px', cursor: 'pointer',
-            background: errorA(0.06), border: '1px solid ${errorA(0.28)}',
+            background: errorA(0.06), border: `1px solid ${errorA(0.28)}`,
             borderRadius: 14, color: C.error, fontSize: 15, fontWeight: 800,
           }}>
           {s.logout}

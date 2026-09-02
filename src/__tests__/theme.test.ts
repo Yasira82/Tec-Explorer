@@ -109,6 +109,44 @@ describe('nothing appends alpha to a CSS variable', () => {
     expect(offenders).toEqual([]);
   });
 
+  /**
+   * A `${…}` inside SINGLE quotes is not an interpolation — it is those five
+   * characters, literally, in the CSS value.
+   *
+   *     border: '1px solid ${successA(0.25)}'
+   *
+   * The browser cannot parse that, drops the declaration, and says nothing: the
+   * border simply never paints. Identical damage to `var(--tec-gold)22`, from a
+   * different direction — and it shipped in THREE places in this repo, because
+   * the sweep that replaced the old hex strings rewrote what was inside the
+   * quotes without noticing the quotes themselves were wrong.
+   *
+   * That is the fourth form now. The pattern holds: a guard that knows only the
+   * shapes of the bugs already found finds each bug exactly once.
+   */
+  /*
+   * Backticks are excluded from every run, and that is the whole difficulty.
+   * Without it, `[^']*` happily spans from the CLOSING quote of one string,
+   * across a perfectly good template literal, to the OPENING quote of the next —
+   * which flagged four innocent files on the first attempt.
+   */
+  const DEAD_PLACEHOLDER = /'[^'`\n]*\$\{[^'`\n]*\}[^'`\n]*'/;
+
+  /*
+   * `theme.ts` builds the boot script as a template literal whose OUTPUT is
+   * JavaScript containing single-quoted strings — `localStorage.getItem('${KEY}')`.
+   * There the `${…}` does interpolate and the quotes belong to the generated
+   * code, not to ours. It is the one true instance of this shape in the repo.
+   */
+  const GENERATES_CODE = ['lib-client/theme.ts'];
+
+  it('no `${…}` inside a non-template string', () => {
+    const offenders = files
+      .map((f) => f.slice(4))
+      .filter((f) => !GENERATES_CODE.includes(f) && DEAD_PLACEHOLDER.test(strip(src(f))));
+    expect(offenders).toEqual([]);
+  });
+
   it('no bare `var(--tec-…)NN`', () => {
     const offenders = files.filter((f) => /var\(--tec-[a-z0-9-]+\)[0-9a-fA-F]{2}/.test(strip(src(f.slice(4)))));
     expect(offenders).toEqual([]);
@@ -120,10 +158,12 @@ describe('nothing appends alpha to a CSS variable', () => {
     expect(ALPHA_ON_TOKEN.test('`1px solid ${C.gold}22`')).toBe(true);
     expect(ALPHA_ON_TOKEN.test('`1px solid ${(v ? C.gold : C.subtext)}55`')).toBe(true);
     expect(CONCAT_ALPHA.test("border: C.subtext + '55'")).toBe(true);
+    expect(DEAD_PLACEHOLDER.test("border: '1px solid ${successA(0.25)}'")).toBe(true);
     // …and the correct forms must NOT trip it, or the guard becomes noise
     // people learn to route around.
     expect(ALPHA_ON_TOKEN.test('`1px solid ${goldA(0.33)}`')).toBe(false);
     expect(CONCAT_ALPHA.test('const s = C.gold + suffix')).toBe(false);
+    expect(DEAD_PLACEHOLDER.test('border: `1px solid ${successA(0.25)}`')).toBe(false);
   });
 });
 
