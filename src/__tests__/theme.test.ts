@@ -81,20 +81,49 @@ describe('nothing appends alpha to a CSS variable', () => {
     expect(files.length).toBeGreaterThan(20);
   });
 
-  it('no `${C.x}NN` anywhere', () => {
-    const offenders = files.filter((f) => /\$\{\s*C\.[a-zA-Z0-9]+\s*\}[0-9a-fA-F]{2}/.test(strip(src(f.slice(4)))));
+  /**
+   * Any interpolation that yields a token, with two hex digits stuck on the end.
+   *
+   * This started as `\$\{\s*C\.\w+\s*\}` — matching only the ONE form I had
+   * seen. Three more turned up afterwards, each doing exactly the same damage:
+   *
+   *     `${C.gold}22`                      the original
+   *     `${(v ? C.gold : C.subtext)}55`     an expression, not a bare member
+   *     C.subtext + '55'                    concatenation, no template at all
+   *     rgba(5,8,22,0.92)                   a raw colour (covered further down)
+   *
+   * So this matches an interpolation CONTAINING a token rather than one shaped
+   * a particular way. Chasing syntax one form at a time is how a guard ends up
+   * finding each bug once.
+   */
+  const ALPHA_ON_TOKEN = /\$\{[^}]*(?:C\.[a-zA-Z0-9]+|var\(--tec-[a-z0-9-]+\))[^}]*\}[0-9a-fA-F]{2}/;
+  const CONCAT_ALPHA   = /(?:C\.[a-zA-Z0-9]+|var\(--tec-[a-z0-9-]+\)['"`]?)\s*\+\s*['"`][0-9a-fA-F]{2}['"`]/;
+
+  it('no alpha appended to an interpolated token, in ANY form', () => {
+    const offenders = files.filter((f) => ALPHA_ON_TOKEN.test(strip(src(f.slice(4)))));
     expect(offenders).toEqual([]);
   });
 
-  it('no `var(--tec-…)NN` anywhere', () => {
+  it('no alpha CONCATENATED onto a token', () => {
+    const offenders = files.filter((f) => CONCAT_ALPHA.test(strip(src(f.slice(4)))));
+    expect(offenders).toEqual([]);
+  });
+
+  it('no bare `var(--tec-…)NN`', () => {
     const offenders = files.filter((f) => /var\(--tec-[a-z0-9-]+\)[0-9a-fA-F]{2}/.test(strip(src(f.slice(4)))));
     expect(offenders).toEqual([]);
   });
 
-  it('the check can actually fail', () => {
-    // Guards against a regex that matches nothing and reports green forever.
-    expect(/\$\{\s*C\.[a-zA-Z0-9]+\s*\}[0-9a-fA-F]{2}/.test('`1px solid ${C.gold}22`')).toBe(true);
-    expect(/var\(--tec-[a-z0-9-]+\)[0-9a-fA-F]{2}/.test('var(--tec-gold)33')).toBe(true);
+  it('every form the app has actually shipped is caught', () => {
+    // Each of these was real, in this repo, and each shipped past an earlier
+    // version of this test.
+    expect(ALPHA_ON_TOKEN.test('`1px solid ${C.gold}22`')).toBe(true);
+    expect(ALPHA_ON_TOKEN.test('`1px solid ${(v ? C.gold : C.subtext)}55`')).toBe(true);
+    expect(CONCAT_ALPHA.test("border: C.subtext + '55'")).toBe(true);
+    // …and the correct forms must NOT trip it, or the guard becomes noise
+    // people learn to route around.
+    expect(ALPHA_ON_TOKEN.test('`1px solid ${goldA(0.33)}`')).toBe(false);
+    expect(CONCAT_ALPHA.test('const s = C.gold + suffix')).toBe(false);
   });
 });
 

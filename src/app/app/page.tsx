@@ -19,9 +19,10 @@ import {
   CATEGORIES, CATEGORY_META, mappable,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
+import { trustLevel, TRUST_TAG } from '@/lib/explorer/trust';
 import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
 import { reportError } from '@/lib/observability/reportError';
-import { C, goldA } from '@/lib-client/palette';
+import { C, goldA, inkA } from '@/lib-client/palette';
 
 // Leaflet touches `window` at module scope, so this cannot be server-rendered —
 // a plain import breaks the BUILD, not just the render.
@@ -115,7 +116,10 @@ export default function ExplorerHome() {
   const openBusiness = useCallback((id: string) => { window.location.href = `/business/${id}`; }, []);
 
   const count = listings.length;
-  const verifiedCount = useMemo(() => listings.filter((l) => l.verification === 'verified').length, [listings]);
+  // Counts L2+, not L3. The old count was "how many passed a review that is not
+  // reachable yet", which was always 0 — a live counter pinned to zero reads as
+  // a broken app, not as a high bar.
+  const trustedCount = useMemo(() => listings.filter((l) => trustLevel(l) >= 2).length, [listings]);
 
   const card: React.CSSProperties = {
     background: C.surface, border: `1px solid ${goldA(0.133)}`,
@@ -209,7 +213,7 @@ export default function ExplorerHome() {
                 </h2>
                 {status === 'ready' && count > 0 && (
                   <span style={{ fontSize: 11, color: C.subtext, border: `1px solid ${goldA(0.2)}`, borderRadius: 999, padding: '2px 10px' }}>
-                    {t.explorer.liveVerified.replace('{n}', String(verifiedCount))}
+                    {t.explorer.liveTrusted.replace('{n}', String(trustedCount))}
                   </span>
                 )}
               </div>
@@ -260,8 +264,17 @@ export default function ExplorerHome() {
                       <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
                         {CATEGORY_META[l.category].icon} {l.name}
                       </span>
-                      <span style={{ fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap', color: l.verification === 'verified' ? C.gold : C.subtext, border: `1px solid ${l.verification === 'verified' ? C.gold + '55' : C.subtext + '55'}`, borderRadius: 999, padding: '2px 8px' }}>
-                        {l.verification === 'verified' ? '✅ Verified' : 'Unverified'}
+                      {/* One ladder, four surfaces. This chip used to print
+                          English into an Arabic page and hardcode its own
+                          colours; both came from it deciding the label itself
+                          instead of asking. */}
+                      <span style={{
+                        fontSize: 10, fontWeight: 800, whiteSpace: 'nowrap',
+                        color: trustLevel(l) === 1 ? C.subtext : C.gold,
+                        border: `1px solid ${trustLevel(l) === 1 ? inkA(0.33) : goldA(0.33)}`,
+                        borderRadius: 999, padding: '2px 8px',
+                      }}>
+                        {t.explorer[TRUST_TAG[trustLevel(l)]]}
                       </span>
                     </div>
                     <div style={{ fontSize: 11, color: C.gold, marginTop: 3 }}>

@@ -13,6 +13,7 @@
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import { CATEGORY_META, safeWebsite, telHref, mappable, type Listing } from '@/lib/explorer/directory';
+import { trustLevel, TRUST_TAG, TRUST_BODY } from '@/lib/explorer/trust';
 import { FollowOwner } from '@/components/connect/FollowOwner';
 import { BusinessMapCard } from '@/components/map/BusinessMapCard';
 import { Reviews } from '@/components/reviews/Reviews';
@@ -35,6 +36,9 @@ export function BusinessView({ listing: l, owner }: {
 
   const meta = CATEGORY_META[l.category];
   const verified = l.verification === 'verified';
+  // The ladder, not the boolean. `verified` stays for the places that genuinely
+  // mean "reached L3" — the gold gradient treatment is reserved for that.
+  const level = trustLevel(l);
 
   // Merchant-supplied, therefore untrusted, therefore checked HERE and not only
   // where it was written. `safeWebsite` returns null for anything a browser
@@ -63,8 +67,8 @@ export function BusinessView({ listing: l, owner }: {
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 900, color: C.text, margin: '4px 0 0' }}>{l.name}</h1>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? C.onGold : C.text, background: verified ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent', border: verified ? 'none' : `1px solid ${inkA(0.4)}`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
-            {verified ? x.verifiedBusiness : x.pendingVerify}
+          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? C.onGold : level === 1 ? C.subtext : C.gold, background: verified ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent', border: verified ? 'none' : `1px solid ${level === 1 ? inkA(0.4) : goldA(0.4)}`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
+            {x[TRUST_TAG[level]]}
           </div>
         </div>
 
@@ -160,7 +164,7 @@ export function BusinessView({ listing: l, owner }: {
           <div style={factCard}>
             <div style={{ fontSize: 13, fontWeight: 800, color: C.text }}>🛡️ {x.verification}</div>
             <div style={{ fontSize: 12, color: C.subtext, marginTop: 5, lineHeight: 1.5 }}>
-              {verified ? x.verifiedBody : x.unverifiedBody}
+              {x[TRUST_BODY[level]]}
             </div>
           </div>
           <div style={factCard}>

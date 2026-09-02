@@ -11,6 +11,7 @@ import { ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
+import { trustLevel, TRUST_TAG } from '@/lib/explorer/trust';
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
 import { reportError } from '@/lib/observability/reportError';
 import { C, goldA, inkA, errorA } from '@/lib-client/palette';
@@ -384,6 +385,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   // ── A listing exists and we are neither editing it nor adding another → summary card ──
   if (listing && !editing && !creating) {
     const v = listing.verification === 'verified';
+    const level = trustLevel(listing);
     return (
       <section style={{ marginTop: 24 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 10px' }}>
@@ -396,8 +398,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
               {CATEGORY_META[listing.category].icon} {listing.name}
             </span>
-            <span style={{ fontSize: 10, fontWeight: 800, color: v ? C.gold : C.subtext, border: `1px solid ${(v ? C.gold : C.subtext)}55`, borderRadius: 999, padding: '2px 8px' }}>
-              {v ? x.verifiedTag : x.unverifiedTag}
+            <span style={{
+              fontSize: 10, fontWeight: 800,
+              color: level === 1 ? C.subtext : C.gold,
+              border: `1px solid ${level === 1 ? inkA(0.33) : goldA(0.33)}`,
+              borderRadius: 999, padding: '2px 8px',
+            }}>
+              {x[TRUST_TAG[level]]}
             </span>
           </div>
           <div style={{ fontSize: 11, color: C.gold, marginTop: 3 }}>
@@ -604,7 +611,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       </h2>
       <p style={{ fontSize: 12, color: C.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
         {x.createHint.split('{unverified}')[0]}
-        <strong style={{ color: C.text }}>{x.unverifiedTag}</strong>
+        <strong style={{ color: C.gold }}>{x.trustL2}</strong>
         {x.createHint.split('{unverified}')[1]}
       </p>
       <form onSubmit={save} style={{ ...card, display: 'grid', gap: 10 }}>

@@ -12,6 +12,7 @@
 // module scope, so importing it normally breaks the build, not just the render.
 import { useEffect, useRef } from 'react';
 import { CATEGORY_META, type MappableListing } from '@/lib/explorer/directory';
+import { trustLevel } from '@/lib/explorer/trust';
 import type { Position } from '@/lib-client/geo';
 import { C, goldA, inkA } from '@/lib-client/palette';
 
@@ -88,9 +89,9 @@ export default function BusinessMap({ listings, me, onOpen }: {
 
       for (const l of listings) {
         const meta = CATEGORY_META[l.category];
-        const verified = l.verification === 'verified';
+        const level = trustLevel(l);
         const m = L.marker([l.lat, l.lng], {
-          icon: icon(meta?.icon ?? '📍', verified ? C.gold : `${inkA(0.533)}`),
+          icon: icon(meta?.icon ?? '📍', level === 1 ? inkA(0.533) : C.gold),
           title: l.name,
         }).addTo(layer);
 
@@ -98,7 +99,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
         // name and summary are written by merchants.
         m.bindPopup(
           `<div style="font-family:system-ui;min-width:150px">
-             <strong>${esc(l.name)}</strong>${verified ? ' ✅' : ''}
+             <strong>${esc(l.name)}</strong>${level === 3 ? ' ✅' : ''}
              <div style="opacity:.75;margin-top:2px">${esc(meta?.label ?? '')} · ${esc(l.area)}</div>
              <div style="margin-top:6px">${esc(l.summary)}</div>
            </div>`,
