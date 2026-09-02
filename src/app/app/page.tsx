@@ -6,7 +6,8 @@
 // it presents KYC verification (tec-kyc-service) and trust (Connection, C-107) —
 // it never mints them (C-108 §4). App shell: Discover / My Business / Pro / Settings.
 import Link from 'next/link';
-import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { useMe } from '@/lib-client/hooks/useMe';
 import { useTranslation } from '@/lib/i18n';
@@ -19,6 +20,20 @@ import {
   CATEGORIES, CATEGORY_META,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
+import { mappable } from '@/components/map/BusinessMap';
+import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
+
+// Leaflet touches `window` at module scope, so this cannot be server-rendered —
+// a plain import breaks the BUILD, not just the render.
+const BusinessMap = dynamic(() => import('@/components/map/BusinessMap'), {
+  ssr: false,
+  loading: () => (
+    <div style={{
+      height: 340, borderRadius: 12, display: 'grid', placeItems: 'center',
+      background: '#0B1020', border: '1px solid #FBB44A22', color: '#8A93A6', fontSize: 13,
+    }}>Loading map…</div>
+  ),
+});
 
 export default function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
@@ -36,6 +51,13 @@ export default function ExplorerHome() {
   // never a fabricated directory on screen.
   const [status,   setStatus]   = useState<'loading' | 'ready' | 'error'>('loading');
   const [reload,   setReload]   = useState(0);
+  const [view,     setView]     = useState<'list' | 'map'>('list');
+
+  // "Who near me accepts Pi?" — the position is requested only when the visitor
+  // asks (C-108 §6) and NEVER leaves this device: the distance to each business
+  // is computed here, against coordinates the merchants published.
+  const nearMe = useNearMe();
+  const myPosition = nearMe.state.status === 'ready' ? nearMe.state.position : null;
 
   // Fetch from the BFF (the real Explorer index via the gateway). Debounced.
   useEffect(() => {
@@ -62,6 +84,27 @@ export default function ExplorerHome() {
     }, 180);
     return () => { alive = false; clearTimeout(timer); };
   }, [query, category, reload]);
+
+  // Distance is attached here, in the browser, and only when the visitor asked.
+  // Sorting by it beats every other signal: "near me" is the question, so an
+  // answer 8 km away is worse than a closer one whatever its trust tier.
+  const withDistance = useMemo(() => {
+    if (!myPosition) return listings.map((l) => ({ listing: l, km: null as number | null }));
+    return listings
+      .map((l) => ({
+        listing: l,
+        km: (typeof l.lat === 'number' && typeof l.lng === 'number')
+          ? distanceKm(myPosition, { lat: l.lat, lng: l.lng })
+          : null,
+      }))
+      // Listings with no pin sink to the bottom rather than vanishing: a shop
+      // that has not set its location is still a real shop, and dropping it
+      // would silently shrink the index the moment someone taps "Near me".
+      .sort((a, b) => (a.km ?? Infinity) - (b.km ?? Infinity));
+  }, [listings, myPosition]);
+
+  const pins = useMemo(() => mappable(listings), [listings]);
+  const openBusiness = useCallback((id: string) => { window.location.href = `/business/${id}`; }, []);
 
   const count = listings.length;
   const verifiedCount = useMemo(() => listings.filter((l) => l.verification === 'verified').length, [listings]);
@@ -121,6 +164,35 @@ export default function ExplorerHome() {
               ))}
             </div>
 
+            {/* Near me + list/map. Location is asked for ONLY on this tap
+                (C-108 §6) and the answer never leaves the device — every
+                distance below is arithmetic done here. */}
+            <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => (myPosition ? nearMe.clear() : nearMe.request())}
+                disabled={nearMe.state.status === 'asking'}
+                style={chip(!!myPosition)}
+              >
+                {nearMe.state.status === 'asking' ? '📍 Locating…' : myPosition ? '📍 Near me · on' : '📍 Near me'}
+              </button>
+              <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 6 }}>
+                <button style={chip(view === 'list')} onClick={() => setView('list')}>☰ List</button>
+                <button style={chip(view === 'map')} onClick={() => setView('map')}>🗺️ Map</button>
+              </div>
+            </div>
+
+            {/* The two refusals need different words: "denied" is a choice the
+                visitor made and can undo in browser settings; "unavailable" is a
+                device that cannot answer at all, and telling that person to
+                "allow location" is advice that cannot work. */}
+            {(nearMe.state.status === 'denied' || nearMe.state.status === 'unavailable') && (
+              <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
+                {nearMe.state.status === 'denied'
+                  ? 'Location is blocked for this site. You can allow it in your browser settings — or just search by area name.'
+                  : 'This browser can\u2019t share a location. Search by area name instead.'}
+              </p>
+            )}
+
             {/* Results */}
             <section style={{ marginTop: 26 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
@@ -133,6 +205,20 @@ export default function ExplorerHome() {
                   </span>
                 )}
               </div>
+              {view === 'map' && status === 'ready' && (
+                <div style={{ marginTop: 12 }}>
+                  <BusinessMap listings={pins} me={myPosition} onOpen={openBusiness} />
+                  {pins.length < count && (
+                    // Said out loud, because a map showing 3 of 8 results with
+                    // no explanation reads as a broken map.
+                    <p style={{ fontSize: 11.5, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
+                      {count - pins.length} of {count} {count - pins.length === 1 ? 'business has' : 'businesses have'} not
+                      set a location yet — they appear in the list, not on the map.
+                    </p>
+                  )}
+                </div>
+              )}
+
               <div style={{ display: 'grid', gap: 10, marginTop: 12 }}>
                 {status === 'loading' && [0, 1, 2].map((i) => (
                   <div key={i} style={{ ...card, height: 78, opacity: 0.4 }} aria-hidden />
@@ -148,8 +234,19 @@ export default function ExplorerHome() {
                   </div>
                 )}
 
-                {status === 'ready' && listings.map((l) => (
+                {status === 'ready' && view === 'list' && withDistance.map(({ listing: l, km }) => (
                   <Link key={l.id} href={`/business/${l.id}`} style={card}>
+                    {l.hasPhoto && (
+                                  <img
+                        src={`/api/photo/${encodeURIComponent(l.id)}`}
+                        alt=""
+                        loading="lazy"
+                        style={{
+                          width: '100%', height: 120, objectFit: 'cover', borderRadius: 8,
+                          marginBottom: 10, display: 'block',
+                        }}
+                      />
+                    )}
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
                         {CATEGORY_META[l.category].icon} {l.name}
@@ -160,13 +257,14 @@ export default function ExplorerHome() {
                     </div>
                     <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
                       {CATEGORY_META[l.category].label} · {l.area} · {l.piAccepted ? 'π accepted' : 'Pi soon'}
+                      {km !== null && <span style={{ fontWeight: 800 }}> · {formatDistance(km)} away</span>}
                       {l.featured && <span style={{ marginLeft: 6, color: TEC_COLORS.gold, fontWeight: 800 }}>· ⭐ Featured</span>}
                     </div>
                     <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
                   </Link>
                 ))}
 
-                {status === 'ready' && count === 0 && (
+                {status === 'ready' && view === 'list' && count === 0 && (
                   <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
                     {query.trim() || category !== 'all'
                       ? 'No matches. Try a different term or category.'
@@ -185,8 +283,14 @@ export default function ExplorerHome() {
         )}
 
         {tab === 'listing' && (
-          /* Self-listing (C-108) — list + edit your own business (signed-in only). */
-          <ListingPanel isAuth={isAuthenticated} />
+          /* Self-listing (C-108) — list + edit your own business.
+             `me.authenticated` FIRST and `isAuthenticated` only as a fallback:
+             usePiAuth reads document.cookie, and Pi Browser hides tec_user from
+             client JS (C-123 §3), so on the platform this app actually ships to
+             it is always false. Passing it alone rendered an EMPTY tab for every
+             signed-in user — the same reason `useMe` exists for the greeting
+             above. SettingsView already merges the two; this call site did not. */
+          <ListingPanel isAuth={me.authenticated || isAuthenticated} authLoading={me.loading} />
         )}
 
         {tab === 'pro' && (

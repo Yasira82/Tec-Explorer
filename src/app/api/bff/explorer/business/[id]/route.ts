@@ -48,6 +48,22 @@ export async function PATCH(
   if (body?.summary !== undefined)     patch.summary = String(body.summary);
   if (body?.pi_accepted !== undefined) patch.pi_accepted = Boolean(body.pi_accepted);
   if (Array.isArray(body?.tags))       patch.tags = (body.tags as unknown[]).map(String);
+  // Contact fields. Forwarded raw and normalized ONCE, in the backend service —
+  // a second opinion here is how create and edit start disagreeing about what a
+  // valid website is. The `!== undefined` test is load-bearing: it preserves the
+  // difference between "cleared" ('') and "not sent", so editing one field
+  // cannot wipe another.
+  if (body?.address !== undefined)     patch.address = String(body.address);
+  if (body?.hours   !== undefined)     patch.hours   = String(body.hours);
+  if (body?.phone   !== undefined)     patch.phone   = String(body.phone);
+  if (body?.website !== undefined)     patch.website = String(body.website);
+  // Location travels as a PAIR, forwarded only when the request mentions it.
+  // The backend clears both on anything invalid — nothing here tries to be
+  // clever about half a coordinate.
+  if (body?.lat !== undefined || body?.lng !== undefined) {
+    patch.lat = body?.lat ?? null;
+    patch.lng = body?.lng ?? null;
+  }
 
   const r = await updateListingBackend(token, id, patch);
   if (r.ok) return NextResponse.json({ business: r.listing });

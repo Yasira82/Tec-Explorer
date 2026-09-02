@@ -32,6 +32,23 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     // Connection profile, because listing a shop is not consent to having your
     // personal handle printed beside it (C-107 §4).
     owner:        b.owner ? String(b.owner) : undefined,
+    // Whether there IS a photo — never the key itself. The key is a storage
+    // path; a client has no use for one and every reason not to see it. The
+    // bytes come from /api/photo/<handle>, same-origin.
+    hasPhoto:     !!b.photo_key,
+    // Contact details, carried as-is. `website` is NOT trusted here even though
+    // the backend validates it on write — the render site checks again
+    // (safeWebsite), because these rows outlive any one writer.
+    address:      b.address ? String(b.address) : undefined,
+    hours:        b.hours   ? String(b.hours)   : undefined,
+    phone:        b.phone   ? String(b.phone)   : undefined,
+    website:      b.website ? String(b.website) : undefined,
+    // Map position, as published by the merchant. Coerced through Number and
+    // dropped unless BOTH are finite — a lone latitude would draw a pin in the
+    // wrong country, so a half-pair is treated as no pin at all.
+    ...(Number.isFinite(Number(b.lat)) && Number.isFinite(Number(b.lng))
+      ? { lat: Number(b.lat), lng: Number(b.lng) }
+      : {}),
   };
 }
 
@@ -117,13 +134,25 @@ export async function listOwnListings(token: string): Promise<{ ok: boolean; sta
 
 /** Self-list a business (starts UNVERIFIED — never self-minted, C-108 §4). */
 export const createListingBackend = (
-  token: string, body: { name: string; category: string; area: string; summary: string; tags?: string[] },
+  token: string,
+  body: {
+    name: string; category: string; area: string; summary: string; tags?: string[];
+    address?: string; hours?: string; phone?: string; website?: string;
+    lat?: number | null; lng?: number | null;
+  },
 ) => writeCall('/api/identity/explorer/business', token, 'POST', body);
 
 /** Edit the caller's OWN listing (owner-scope enforced by the backend, P6). */
 export const updateListingBackend = (
   token: string, handle: string,
-  body: { name?: string; category?: string; area?: string; summary?: string; tags?: string[]; pi_accepted?: boolean },
+  body: {
+    name?: string; category?: string; area?: string; summary?: string;
+    tags?: string[]; pi_accepted?: boolean;
+    address?: string; hours?: string; phone?: string; website?: string;
+    lat?: number | null; lng?: number | null;
+    // Tri-state: absent leaves the photo alone, null removes it, a key sets it.
+    photo_key?: string | null;
+  },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
 
 // ── Explorer Pro → FEATURED sync (C-108 §7) ───────────────────────────────────

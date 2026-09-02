@@ -1,5 +1,9 @@
 import type { Metadata } from 'next';
 import '@/styles/tec-design-tokens.css';
+// Bundled, not pulled from unpkg. A CDN <link> would be a third-party request on
+// every page load and a dependency Pi Browser might block; the package is
+// already installed, so the stylesheet ships with the app.
+import 'leaflet/dist/leaflet.css';
 import { LocaleProvider } from '@/lib/i18n';
 
 export const metadata: Metadata = {
