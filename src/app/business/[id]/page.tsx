@@ -11,6 +11,7 @@ import { resolveBusiness, resolveOwnerProfile } from '@/lib/explorer/server';
 import { FollowOwner } from '@/components/connect/FollowOwner';
 import { mappable } from '@/components/map/BusinessMap';
 import { BusinessMapCard } from '@/components/map/BusinessMapCard';
+import { Reviews } from '@/components/reviews/Reviews';
 
 // The live search module is the index of record (C-108 §5) — every business page
 // renders on demand from it; nothing is pre-baked from a curated sample.
@@ -97,6 +98,25 @@ export default async function BusinessPage(
             {verified ? '✅ Verified business' : 'Verification pending'}
           </div>
         </div>
+
+        {/* The shop itself. A directory of names reads as a spreadsheet; one
+            photo is the difference between a listing and a place. Served
+            same-origin from /api/photo/<handle> because the bucket is private
+            (src/lib/explorer/photo.ts).
+
+            A plain <img>, not next/image: the bytes are already being proxied
+            once by this app, and next/image would proxy them a second time and
+            need the route registered in `remotePatterns` for no gain. */}
+        {l.hasPhoto && (
+          <img
+            src={`/api/photo/${encodeURIComponent(l.id)}`}
+            alt=""
+            style={{
+              width: '100%', height: 200, objectFit: 'cover', borderRadius: 12,
+              marginTop: 16, border: `1px solid ${TEC_COLORS.gold}22`, display: 'block',
+            }}
+          />
+        )}
 
         <p style={{ fontSize: 14, color: TEC_COLORS.subtext, margin: '14px 0 0', lineHeight: 1.6 }}>{l.summary}</p>
 
@@ -189,6 +209,12 @@ export default async function BusinessPage(
         {owner && (
           <FollowOwner username={owner.username} headline={owner.headline} verified={owner.verified} />
         )}
+
+        {/* What customers said. `l.owner` is passed so a merchant is not shown
+            a form the API would refuse — the handle is used ONLY for that
+            comparison, never rendered (C-107 §4: listing a shop is not consent
+            to having your personal handle printed beside it). */}
+        <Reviews handle={l.id} ownerUsername={l.owner} />
 
         {l.tags.length > 0 && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 18 }}>

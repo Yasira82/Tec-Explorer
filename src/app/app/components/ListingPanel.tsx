@@ -11,6 +11,7 @@ import { TEC_COLORS } from '@yasser172/tec-ui';
 import { ssoRedirect } from '@yasser172/tec-auth';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
+import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
 
 type Draft = {
   name: string; category: Category; area: string; summary: string; tags: string;
@@ -53,6 +54,44 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   const [error, setError]     = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  // Bumped after every change so the <img> refetches. Without it the browser
+  // serves the cached copy and the merchant sees their OLD photo after a
+  // successful upload — which reads as a failure.
+  const [photoVersion, setPhotoVersion] = useState(0);
+
+  /** Upload a shop photo. The bytes go to this app's own BFF (no CORS). */
+  async function uploadPhoto(file: File) {
+    setPhotoBusy(true); setPhotoError(null);
+    try {
+      const res = await fetch('/api/bff/explorer/photo', {
+        method: 'POST',
+        // The file IS the body, and its type IS the Content-Type. No FormData:
+        // the server validates the real byte length rather than a number the
+        // client claimed.
+        headers: { 'Content-Type': file.type },
+        body: file,
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setPhotoError(data.message ?? 'Could not upload that photo.'); return; }
+      setListing(data.listing as Listing);
+      setPhotoVersion((v) => v + 1);
+    } catch { setPhotoError('Network error — please try again.'); }
+    finally { setPhotoBusy(false); }
+  }
+
+  async function removePhoto() {
+    setPhotoBusy(true); setPhotoError(null);
+    try {
+      const res = await fetch('/api/bff/explorer/photo', { method: 'DELETE' });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setPhotoError(data.error ?? 'Could not remove the photo.'); return; }
+      setListing(data.listing as Listing);
+      setPhotoVersion((v) => v + 1);
+    } catch { setPhotoError('Network error — please try again.'); }
+    finally { setPhotoBusy(false); }
+  }
 
   /**
    * Capture the shop's position from the device, once, on request.
@@ -190,6 +229,54 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               Go <strong style={{ color: TEC_COLORS.gold }}>Pro</strong> to feature your listing — rank higher so more Pi users find you.
             </div>
           )}
+          {/* The shop photo. On the summary card rather than in the edit form
+              because it uploads immediately — it is not part of the draft that
+              Save writes, and putting it in the form would imply otherwise. */}
+          <div style={{ marginTop: 12 }}>
+            {listing.hasPhoto && (
+                  <img
+                src={`/api/photo/${encodeURIComponent(listing.id)}?v=${photoVersion}`}
+                alt=""
+                style={{
+                  width: '100%', height: 140, objectFit: 'cover', borderRadius: 8,
+                  display: 'block', marginBottom: 8,
+                }}
+              />
+            )}
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+              <label style={{ ...ghostBtn, display: 'inline-block' }}>
+                {photoBusy ? 'Working…' : listing.hasPhoto ? 'Change photo' : '📷 Add a photo'}
+                <input
+                  type="file"
+                  accept={PHOTO_MIME.join(',')}
+                  disabled={photoBusy}
+                  style={{ display: 'none' }}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    // Cleared so choosing the SAME file again still fires a
+                    // change event — otherwise a retry after a failure silently
+                    // does nothing.
+                    e.target.value = '';
+                    if (f) void uploadPhoto(f);
+                  }}
+                />
+              </label>
+              {listing.hasPhoto && (
+                <button
+                  type="button" onClick={() => void removePhoto()} disabled={photoBusy}
+                  style={{ ...ghostBtn, color: TEC_COLORS.subtext, borderColor: `${TEC_COLORS.subtext}44` }}
+                >Remove photo</button>
+              )}
+            </div>
+            {photoError && <div style={{ marginTop: 6, fontSize: 11.5, color: '#EF4444' }}>{photoError}</div>}
+            {!listing.hasPhoto && !photoError && (
+              <div style={{ marginTop: 6, fontSize: 11, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+                A listing with a photo of the place gets opened far more often than a
+                line of text. JPEG, PNG or WebP, up to {Math.round(PHOTO_MAX_BYTES / 1024 / 1024)}MB.
+              </div>
+            )}
+          </div>
+
           {/* What a customer can actually do with this listing. Shown as the
               merchant's own checklist, because "you can be found but not
               reached" is invisible from their side otherwise — the listing
@@ -201,6 +288,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               ['📞 Phone',   listing.phone],
               ['🌐 Website', listing.website],
               ['🗺️ Map pin', listing.lat !== undefined && listing.lng !== undefined ? 'set' : undefined],
+              ['📷 Photo',   listing.hasPhoto ? 'set' : undefined],
             ] as const).map(([label, value]) => (
               <span
                 key={label}

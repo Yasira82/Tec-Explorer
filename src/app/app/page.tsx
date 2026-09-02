@@ -236,6 +236,17 @@ export default function ExplorerHome() {
 
                 {status === 'ready' && view === 'list' && withDistance.map(({ listing: l, km }) => (
                   <Link key={l.id} href={`/business/${l.id}`} style={card}>
+                    {l.hasPhoto && (
+                                  <img
+                        src={`/api/photo/${encodeURIComponent(l.id)}`}
+                        alt=""
+                        loading="lazy"
+                        style={{
+                          width: '100%', height: 120, objectFit: 'cover', borderRadius: 8,
+                          marginBottom: 10, display: 'block',
+                        }}
+                      />
+                    )}
                     <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
                       <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
                         {CATEGORY_META[l.category].icon} {l.name}

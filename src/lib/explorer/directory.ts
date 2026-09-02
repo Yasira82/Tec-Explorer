@@ -63,6 +63,14 @@ export interface Listing {
    */
   lat?: number;
   lng?: number;
+  /**
+   * Whether this listing has a shop photo, NOT the key.
+   *
+   * The key is a storage path (`business/<sub>/<uuid>.jpg`). A client has no use
+   * for one and every reason not to receive one, so the bytes are served
+   * same-origin from `/api/photo/<handle>` and only this boolean crosses.
+   */
+  hasPhoto?: boolean;
 }
 
 /**

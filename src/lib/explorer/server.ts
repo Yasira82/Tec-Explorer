@@ -32,6 +32,10 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     // Connection profile, because listing a shop is not consent to having your
     // personal handle printed beside it (C-107 §4).
     owner:        b.owner ? String(b.owner) : undefined,
+    // Whether there IS a photo — never the key itself. The key is a storage
+    // path; a client has no use for one and every reason not to see it. The
+    // bytes come from /api/photo/<handle>, same-origin.
+    hasPhoto:     !!b.photo_key,
     // Contact details, carried as-is. `website` is NOT trusted here even though
     // the backend validates it on write — the render site checks again
     // (safeWebsite), because these rows outlive any one writer.
@@ -146,6 +150,8 @@ export const updateListingBackend = (
     tags?: string[]; pi_accepted?: boolean;
     address?: string; hours?: string; phone?: string; website?: string;
     lat?: number | null; lng?: number | null;
+    // Tri-state: absent leaves the photo alone, null removes it, a key sets it.
+    photo_key?: string | null;
   },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
 
