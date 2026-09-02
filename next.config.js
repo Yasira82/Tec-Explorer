@@ -41,7 +41,20 @@ const nextConfig = {
               "default-src 'self'",
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' sdk.minepi.com *.minepi.com",
               "connect-src 'self' https: wss:",
-              "img-src 'self' data: blob: *.railway.app *.vercel.app",
+              // Map tiles are IMAGES fetched by the browser, so the map lives or
+              // dies by this line. Blocked tiles do not raise an error the app
+              // can see: Leaflet renders its controls, marker and popup exactly
+              // as it should over an empty background, so the failure looks like
+              // a styling bug rather than a policy one.
+              //
+              // BOTH forms are listed on purpose. A CSP wildcard does not cover
+              // the bare host — `*.tile.openstreetmap.org` alone would NOT allow
+              // `tile.openstreetmap.org`, which is what the tile layer actually
+              // requests today. The wildcard is there for the `{s}.tile…` form
+              // that most Leaflet examples use, so reintroducing it cannot break
+              // the map silently. `csp-map-tiles.test.ts` keeps the two files
+              // agreeing.
+              "img-src 'self' data: blob: *.railway.app *.vercel.app tile.openstreetmap.org *.tile.openstreetmap.org",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",
               "frame-src 'self' sdk.minepi.com *.minepi.com",
