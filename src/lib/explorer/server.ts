@@ -160,6 +160,31 @@ export const updateListingBackend = (
   },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
 
+/**
+ * Take the caller's OWN listing down (identity from the forwarded JWT, P6).
+ *
+ * Not routed through `writeCall`, which expects a listing back: the whole point
+ * of this call is that there is no longer a listing to return. Squeezing it into
+ * that shape would mean inventing a business object for something that has just
+ * stopped existing.
+ */
+export async function deleteListingBackend(
+  token: string, handle: string,
+): Promise<{ ok: boolean; status: number; error?: string }> {
+  if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
+  try {
+    const res = await fetch(
+      `${GW}/api/identity/explorer/business/${encodeURIComponent(handle)}`,
+      { method: 'DELETE', headers: authHeaders(token), cache: 'no-store' },
+    );
+    if (res.ok) return { ok: true, status: res.status };
+    const data = await res.json().catch(() => ({}));
+    return { ok: false, status: res.status, error: String(data?.message ?? data?.error ?? 'Request failed') };
+  } catch (err) {
+    return { ok: false, status: 503, error: (err as Error).message };
+  }
+}
+
 // ── Explorer Pro → FEATURED sync (C-108 §7) ───────────────────────────────────
 // Explorer never sells Pro nor stores subscription truth (P5/C-47). The subscription
 // is commerce-owned; we READ the caller's live status and tell Explorer to set/clear

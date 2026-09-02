@@ -89,6 +89,49 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   // serves the cached copy and the merchant sees their OLD photo after a
   // successful upload — which reads as a failure.
   const [photoVersion, setPhotoVersion] = useState(0);
+  /**
+   * The take-down flow.
+   *
+   * `confirming` opens it; `typed` is what the merchant wrote into the confirm
+   * box. A typed word rather than a second tap: this is irreversible, it sits on
+   * the same card as Edit and Add photo, and on a phone a confirm dialog is
+   * dismissed by the same thumb motion that opened it. Typing is the one gesture
+   * that cannot be made by accident.
+   */
+  const [confirming, setConfirming] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [removeError, setRemoveError] = useState<string | null>(null);
+  const [removedName, setRemovedName] = useState<string | null>(null);
+
+  /** Take the selected listing down. */
+  async function removeListing(target: Listing) {
+    if (busy) return;
+    setBusy(true); setRemoveError(null);
+    try {
+      const res = await fetch(`/api/bff/explorer/business/${encodeURIComponent(target.id)}`, {
+        method: 'DELETE', headers: buildHeaders(null),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setRemoveError(data.error ?? x.removeFailed);
+        return;
+      }
+      // Dropped from local state rather than refetched: the merchant is looking
+      // at the card right now, and a round trip would leave the business they
+      // just removed on screen for as long as the network takes.
+      setListings((prev) => {
+        const next = prev.filter((l) => l.id !== target.id);
+        setSelectedId(next[0]?.id ?? null);
+        return next;
+      });
+      setConfirming(false); setTyped(''); setEditing(false);
+      setRemovedName(target.name);
+    } catch (err) {
+      reportError(err, { where: 'ListingPanel.removeListing' });
+      setRemoveError(x.networkError);
+    }
+    finally { setBusy(false); }
+  }
 
   /** Upload a shop photo. The bytes go to this app's own BFF (no CORS). */
   async function uploadPhoto(file: File) {
@@ -270,6 +313,23 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   };
 
   /**
+   * Confirmation that the removal happened.
+   *
+   * Needed because success looks like absence: the card the merchant was
+   * reading simply stops being there, and on the last listing the create form
+   * appears instead — which reads as the app losing their business rather than
+   * doing what they asked.
+   */
+  const removedBanner = removedName ? (
+    <div style={{
+      marginBottom: 12, padding: '9px 11px', borderRadius: 8, fontSize: 12,
+      color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.subtext}33`,
+    }}>
+      {x.removedOk} <strong style={{ color: TEC_COLORS.text }}>{removedName}</strong>
+    </div>
+  ) : null;
+
+  /**
    * Switch between the merchant's businesses.
    *
    * Rendered only past the first one: a single-business merchant — which is
@@ -288,7 +348,11 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             <button
               key={l.id}
               type="button"
-              onClick={() => { setSelectedId(l.id); setEditing(false); setError(null); setPhotoError(null); }}
+              onClick={() => {
+                setSelectedId(l.id); setEditing(false); setError(null); setPhotoError(null);
+                // Never carry a half-typed confirmation onto a DIFFERENT business.
+                setConfirming(false); setTyped(''); setRemoveError(null);
+              }}
               style={{
                 padding: '5px 11px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
                 background: on ? `${TEC_COLORS.gold}22` : 'transparent',
@@ -310,6 +374,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
         <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>
           {listings.length > 1 ? x.yourListings : x.yourListing}
         </h2>
+        {removedBanner}
         {switcher}
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
@@ -421,6 +486,73 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>{x.editListing}</button>
             {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>{x.kycNote}</span>}
           </div>
+
+          {/* Taking the listing down. Placed last and styled as plain text, not
+              a button: a merchant opens this card to edit or add a photo, and
+              the destructive action should be the hardest thing on it to hit by
+              accident — not a red button sitting next to Edit. */}
+          <div style={{ marginTop: 14, borderTop: `1px solid ${TEC_COLORS.subtext}22`, paddingTop: 10 }}>
+            {!confirming ? (
+              <button
+                type="button"
+                onClick={() => { setConfirming(true); setTyped(''); setRemoveError(null); }}
+                style={{
+                  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                  fontSize: 11.5, color: TEC_COLORS.subtext, textDecoration: 'underline',
+                }}
+              >{x.removeListing}</button>
+            ) : (
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontSize: 12.5, fontWeight: 800, color: '#EF4444' }}>
+                  {x.removeConfirmT.replace('{name}', listing.name)}
+                </div>
+                {/* Says what actually happens, including the part the merchant
+                    cannot see: other people's reviews survive but become
+                    unreachable. Hiding that would make this feel smaller than
+                    it is. */}
+                <div style={{ fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.55 }}>
+                  {x.removeConfirmB}
+                </div>
+                <label style={{ display: 'grid', gap: 4 }}>
+                  <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>
+                    {x.removeTypeHint.replace('{word}', x.removeWord)}
+                  </span>
+                  <input
+                    value={typed}
+                    onChange={(e) => setTyped(e.target.value)}
+                    // The confirm word stays in the Latin alphabet in every
+                    // language (see removeWord), so the field is LTR even on an
+                    // Arabic or Urdu page — a right-aligned box asking for
+                    // "REMOVE" fights the person typing it.
+                    dir="ltr"
+                    autoComplete="off"
+                    style={{ ...input, borderColor: '#EF444455' }}
+                  />
+                </label>
+                {removeError && <div style={{ fontSize: 11.5, color: '#EF4444' }}>{removeError}</div>}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    disabled={busy || typed.trim().toUpperCase() !== x.removeWord}
+                    onClick={() => void removeListing(listing)}
+                    style={{
+                      padding: '9px 14px', borderRadius: 8, fontWeight: 800, fontSize: 12.5,
+                      border: '1px solid #EF444466',
+                      cursor: typed.trim().toUpperCase() === x.removeWord && !busy ? 'pointer' : 'not-allowed',
+                      background: 'transparent',
+                      color: typed.trim().toUpperCase() === x.removeWord ? '#EF4444' : TEC_COLORS.subtext,
+                      opacity: typed.trim().toUpperCase() === x.removeWord ? 1 : 0.6,
+                    }}
+                  >{busy ? x.removing : x.removeConfirm}</button>
+                  <button
+                    type="button"
+                    onClick={() => { setConfirming(false); setTyped(''); setRemoveError(null); }}
+                    style={ghostBtn}
+                  >{x.cancel}</button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* A second branch, a second project, a stall and a workshop. Offered
@@ -451,6 +583,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   const isEdit = listing !== null && editing;
   return (
     <section style={{ marginTop: 24 }}>
+      {removedBanner}
       <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
         {isEdit ? x.editTitle : x.createTitle}
       </h2>

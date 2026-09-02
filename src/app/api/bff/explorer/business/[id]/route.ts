@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CATEGORIES } from '@/lib/explorer/directory';
-import { resolveBusiness, updateListingBackend } from '@/lib/explorer/server';
+import { resolveBusiness, updateListingBackend, deleteListingBackend } from '@/lib/explorer/server';
 
 // GET /api/bff/explorer/business/:id — one business listing (C-108).
 // Server-only: resolves via the real Explorer backend (search module in
@@ -67,5 +67,27 @@ export async function PATCH(
 
   const r = await updateListingBackend(token, id, patch);
   if (r.ok) return NextResponse.json({ business: r.listing });
+  return NextResponse.json({ error: r.error }, { status: r.status || 502 });
+}
+
+// DELETE /api/bff/explorer/business/:id — take your OWN listing down (C-108).
+// The JWT is forwarded and the backend enforces owner-scope (P6): this route
+// never decides whose listing it is. CSRF is enforced ONCE in middleware — not
+// here (KB C-12 §11).
+//
+// The backend redacts and retires the row rather than dropping it, so the handle
+// can never be reissued to another merchant along with this business's reviews
+// and reports. Nothing about that is the browser's concern; to every reader the
+// listing is simply gone.
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const token = req.cookies.get('tec_access_token')?.value;
+  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { id } = await params;
+  const r = await deleteListingBackend(token, id);
+  if (r.ok) return NextResponse.json({ removed: true, id });
   return NextResponse.json({ error: r.error }, { status: r.status || 502 });
 }
