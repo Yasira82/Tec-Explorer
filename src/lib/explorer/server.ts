@@ -32,6 +32,13 @@ export function listingFromBackend(b: Record<string, unknown>): Listing {
     // Connection profile, because listing a shop is not consent to having your
     // personal handle printed beside it (C-107 §4).
     owner:        b.owner ? String(b.owner) : undefined,
+    // Contact details, carried as-is. `website` is NOT trusted here even though
+    // the backend validates it on write — the render site checks again
+    // (safeWebsite), because these rows outlive any one writer.
+    address:      b.address ? String(b.address) : undefined,
+    hours:        b.hours   ? String(b.hours)   : undefined,
+    phone:        b.phone   ? String(b.phone)   : undefined,
+    website:      b.website ? String(b.website) : undefined,
   };
 }
 
@@ -117,13 +124,21 @@ export async function listOwnListings(token: string): Promise<{ ok: boolean; sta
 
 /** Self-list a business (starts UNVERIFIED — never self-minted, C-108 §4). */
 export const createListingBackend = (
-  token: string, body: { name: string; category: string; area: string; summary: string; tags?: string[] },
+  token: string,
+  body: {
+    name: string; category: string; area: string; summary: string; tags?: string[];
+    address?: string; hours?: string; phone?: string; website?: string;
+  },
 ) => writeCall('/api/identity/explorer/business', token, 'POST', body);
 
 /** Edit the caller's OWN listing (owner-scope enforced by the backend, P6). */
 export const updateListingBackend = (
   token: string, handle: string,
-  body: { name?: string; category?: string; area?: string; summary?: string; tags?: string[]; pi_accepted?: boolean },
+  body: {
+    name?: string; category?: string; area?: string; summary?: string;
+    tags?: string[]; pi_accepted?: boolean;
+    address?: string; hours?: string; phone?: string; website?: string;
+  },
 ) => writeCall(`/api/identity/explorer/business/${encodeURIComponent(handle)}`, token, 'PATCH', body);
 
 // ── Explorer Pro → FEATURED sync (C-108 §7) ───────────────────────────────────

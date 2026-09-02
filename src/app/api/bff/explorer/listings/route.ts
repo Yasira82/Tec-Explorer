@@ -44,7 +44,14 @@ export async function POST(req: NextRequest) {
   if (!(CATEGORIES as string[]).includes(category)) return NextResponse.json({ error: 'invalid category' }, { status: 400 });
 
   const tags = Array.isArray(body?.tags) ? (body.tags as unknown[]).map(String) : undefined;
-  const r = await createListingBackend(token, { name, category, area, summary, tags });
+  // Contact fields are optional and normalized in the backend service (one
+  // place, so create and edit cannot drift on what a valid website is).
+  const optional = (v: unknown) => (v === undefined ? undefined : String(v));
+  const r = await createListingBackend(token, {
+    name, category, area, summary, tags,
+    address: optional(body?.address), hours: optional(body?.hours),
+    phone:   optional(body?.phone),   website: optional(body?.website),
+  });
   if (r.ok) return NextResponse.json({ listing: r.listing }, { status: 201 });
   return NextResponse.json({ error: r.error }, { status: r.status || 502 });
 }

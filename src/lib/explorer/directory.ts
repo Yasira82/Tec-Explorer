@@ -36,6 +36,54 @@ export interface Listing {
    * handle printed beside it (C-107 §4).
    */
   owner?: string;
+  /**
+   * How a customer actually reaches the business. All optional, all self-declared
+   * by the merchant, all public by intent — they publish these to be found.
+   *
+   * `area` above stays a coarse label for the INDEX (C-108 §6 protects the
+   * searcher's location); `address` is the shop's own, which the merchant chose
+   * to print. Opposite parties, opposite defaults.
+   *
+   * ⚠️ `website` reaches an href. Validated to http/https on write, and AGAIN on
+   * render (`safeWebsite`) — these rows outlive any one writer, and a
+   * `javascript:` URL in a link is stored XSS.
+   */
+  address?: string;
+  hours?:   string;
+  phone?:   string;
+  website?: string;
+}
+
+/**
+ * A merchant-supplied website, or null if it is not safe to put in an href.
+ *
+ * The backend already validates this on write. This is the SECOND check, and it
+ * is not redundant: a listing row is written once and rendered forever, so the
+ * guarantee has to hold for rows that predate the validator, rows from a future
+ * writer, and rows an operator edited by hand. A `javascript:` or
+ * `data:text/html` URL in a link is stored XSS — executed in the browser of
+ * everyone who opens that business.
+ *
+ * Allowlist, never a denylist: a denylist misses the next scheme a browser
+ * learns to execute.
+ */
+export function safeWebsite(raw: string | undefined | null): string | null {
+  const v = (raw ?? '').trim();
+  if (!v) return null;
+  try {
+    const u = new URL(v);
+    return (u.protocol === 'http:' || u.protocol === 'https:') ? u.toString() : null;
+  } catch {
+    // No scheme at all → not a URL we will link to. The backend upgrades a bare
+    // domain to https on write; anything still schemeless here is malformed.
+    return null;
+  }
+}
+
+/** A phone number reduced to what `tel:` accepts. */
+export function telHref(raw: string | undefined | null): string | null {
+  const v = (raw ?? '').replace(/[^\d+]/g, '');
+  return v.length >= 4 ? `tel:${v}` : null;
 }
 
 export const CATEGORY_META: Record<Category, { icon: string; label: string }> = {

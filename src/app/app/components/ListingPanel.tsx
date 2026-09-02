@@ -12,14 +12,24 @@ import { ssoRedirect } from '@yasser172/tec-auth';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
 
-type Draft = { name: string; category: Category; area: string; summary: string; tags: string };
+type Draft = {
+  name: string; category: Category; area: string; summary: string; tags: string;
+  address: string; hours: string; phone: string; website: string;
+};
 
-const emptyDraft: Draft = { name: '', category: 'services', area: '', summary: '', tags: '' };
+const emptyDraft: Draft = {
+  name: '', category: 'services', area: '', summary: '', tags: '',
+  address: '', hours: '', phone: '', website: '',
+};
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
 const toDraft = (l: Listing): Draft => ({
   name: l.name, category: l.category, area: l.area, summary: l.summary, tags: l.tags.join(', '),
+  // '' for a field the business has not filled in. The form always sends all
+  // four, so '' consistently means "cleared" — the backend distinguishes that
+  // from "not sent" and only the latter leaves a column untouched.
+  address: l.address ?? '', hours: l.hours ?? '', phone: l.phone ?? '', website: l.website ?? '',
 });
 const tagsArray = (s: string) => s.split(',').map((t) => t.trim()).filter(Boolean);
 
@@ -91,6 +101,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     const payload = {
       name: draft.name, category: draft.category, area: draft.area,
       summary: draft.summary, tags: tagsArray(draft.tags),
+      address: draft.address, hours: draft.hours, phone: draft.phone, website: draft.website,
     };
     try {
       const res = await fetch(
@@ -144,6 +155,35 @@ export function ListingPanel({ isAuth, authLoading = false }: {
               Go <strong style={{ color: TEC_COLORS.gold }}>Pro</strong> to feature your listing — rank higher so more Pi users find you.
             </div>
           )}
+          {/* What a customer can actually do with this listing. Shown as the
+              merchant's own checklist, because "you can be found but not
+              reached" is invisible from their side otherwise — the listing
+              looks complete to the person who wrote it. */}
+          <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {([
+              ['📍 Address', listing.address],
+              ['🕒 Hours',   listing.hours],
+              ['📞 Phone',   listing.phone],
+              ['🌐 Website', listing.website],
+            ] as const).map(([label, value]) => (
+              <span
+                key={label}
+                style={{
+                  fontSize: 10.5, borderRadius: 999, padding: '2px 8px',
+                  color: value ? TEC_COLORS.gold : TEC_COLORS.subtext,
+                  border: `1px solid ${value ? `${TEC_COLORS.gold}55` : `${TEC_COLORS.subtext}44`}`,
+                  opacity: value ? 1 : 0.7,
+                }}
+              >{value ? `✓ ${label}` : `+ ${label}`}</span>
+            ))}
+          </div>
+          {!listing.address && !listing.phone && !listing.website && (
+            <div style={{ marginTop: 8, fontSize: 11.5, color: TEC_COLORS.subtext, lineHeight: 1.5 }}>
+              People can find you but not reach you. Add an address, phone, or website
+              so a search turns into a visit.
+            </div>
+          )}
+
           <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <button onClick={() => { setDraft(toDraft(listing)); setEditing(true); setError(null); }} style={ghostBtn}>Edit listing</button>
             {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>Verification is issued by KYC — Explorer never self-verifies.</span>}
@@ -188,6 +228,34 @@ export function ListingPanel({ isAuth, authLoading = false }: {
         <label style={{ display: 'grid', gap: 4 }}>
           <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Tags <span style={{ opacity: 0.6 }}>(comma-separated, optional)</span></span>
           <input value={draft.tags} onChange={(e) => setDraft({ ...draft, tags: e.target.value })} maxLength={120} placeholder="coffee, wifi, brunch" style={input} />
+        </label>
+
+        {/* How customers reach you. Optional, but this is the half that turns a
+            name in a list into a visit — a listing without it can be found and
+            not acted on. Unlike `Area` above, these are yours to publish. */}
+        <div style={{ borderTop: `1px solid ${TEC_COLORS.gold}22`, paddingTop: 10, marginTop: 2 }}>
+          <div style={{ fontSize: 11.5, fontWeight: 700, color: TEC_COLORS.text }}>How customers reach you</div>
+          <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginTop: 2, lineHeight: 1.5 }}>
+            All optional — but a listing people can&apos;t reach is a listing they can&apos;t visit.
+          </div>
+        </div>
+        <label style={{ display: 'grid', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Address <span style={{ opacity: 0.6 }}>(shown publicly, with a directions link)</span></span>
+          <input value={draft.address} onChange={(e) => setDraft({ ...draft, address: e.target.value })} maxLength={160} placeholder="12 Nile St, Maadi" style={input} />
+        </label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Hours</span>
+            <input value={draft.hours} onChange={(e) => setDraft({ ...draft, hours: e.target.value })} maxLength={120} placeholder="Sat–Thu 9am–11pm" style={input} />
+          </label>
+          <label style={{ display: 'grid', gap: 4 }}>
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Phone</span>
+            <input value={draft.phone} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} type="tel" maxLength={32} placeholder="+20 100 123 4567" style={input} dir="ltr" />
+          </label>
+        </div>
+        <label style={{ display: 'grid', gap: 4 }}>
+          <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>Website</span>
+          <input value={draft.website} onChange={(e) => setDraft({ ...draft, website: e.target.value })} maxLength={200} placeholder="yourshop.com" style={input} dir="ltr" />
         </label>
         {error && <div style={{ color: '#EF4444', fontSize: 12.5 }}>{error}</div>}
         <div style={{ display: 'flex', gap: 8 }}>
