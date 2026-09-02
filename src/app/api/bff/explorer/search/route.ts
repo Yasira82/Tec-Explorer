@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { reportError } from '@/lib/observability/reportError';
 import { CATEGORIES, type Category } from '@/lib/explorer/directory';
 import { listingFromBackend } from '@/lib/explorer/server';
 
@@ -45,7 +46,12 @@ export async function GET(req: NextRequest) {
           );
         }
       }
-    } catch { /* fall through to the honest unavailable state below */ }
+    } catch (err) {
+    // The screen still falls through to an honest "unavailable" with a retry.
+    // This is the other half: search breaking for everyone must not be
+    // something we learn from a screenshot (C-96).
+    reportError(err, { where: 'bff/explorer/search' });
+  }
   }
 
   // Backend unreachable/unset — never fabricate a directory on screen (C-135 §4).

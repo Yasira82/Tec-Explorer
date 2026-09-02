@@ -17,21 +17,25 @@ import { ListingPanel } from './components/ListingPanel';
 import { BottomNav, type ExpTab } from './components/BottomNav';
 import { SettingsView } from './components/SettingsView';
 import {
-  CATEGORIES, CATEGORY_META,
+  CATEGORIES, CATEGORY_META, mappable,
   type Category, type Listing,
 } from '@/lib/explorer/directory';
-import { mappable } from '@/components/map/BusinessMap';
 import { distanceKm, formatDistance, useNearMe } from '@/lib-client/geo';
+import { reportError } from '@/lib/observability/reportError';
 
 // Leaflet touches `window` at module scope, so this cannot be server-rendered —
 // a plain import breaks the BUILD, not just the render.
 const BusinessMap = dynamic(() => import('@/components/map/BusinessMap'), {
   ssr: false,
   loading: () => (
+    // Language-neutral: this sits inside `dynamic(..., { loading })` at MODULE
+    // scope, where `useTranslation` cannot be called. An English word here would
+    // be the one flash of English in an Arabic UI, so the placeholder says the
+    // same thing in every language instead.
     <div style={{
       height: 340, borderRadius: 12, display: 'grid', placeItems: 'center',
       background: '#0B1020', border: '1px solid #FBB44A22', color: '#8A93A6', fontSize: 13,
-    }}>Loading map…</div>
+    }}>🗺️ ···</div>
   ),
 });
 
@@ -78,7 +82,11 @@ export default function ExplorerHome() {
           setListings([]);
           setStatus('error');
         }
-      } catch {
+      } catch (err) {
+        // The screen already says "couldn't load the directory" and offers a
+        // retry. This is the other half: without it, the day search breaks for
+        // everyone we find out from a screenshot (C-96).
+        reportError(err, { where: 'Discover.search', query, category });
         if (alive) { setListings([]); setStatus('error'); }
       }
     }, 180);
@@ -173,11 +181,11 @@ export default function ExplorerHome() {
                 disabled={nearMe.state.status === 'asking'}
                 style={chip(!!myPosition)}
               >
-                {nearMe.state.status === 'asking' ? '📍 Locating…' : myPosition ? '📍 Near me · on' : '📍 Near me'}
+                📍 {nearMe.state.status === 'asking' ? t.explorer.locating : myPosition ? t.explorer.nearMeOn : t.explorer.nearMe}
               </button>
               <div style={{ marginInlineStart: 'auto', display: 'flex', gap: 6 }}>
-                <button style={chip(view === 'list')} onClick={() => setView('list')}>☰ List</button>
-                <button style={chip(view === 'map')} onClick={() => setView('map')}>🗺️ Map</button>
+                <button style={chip(view === 'list')} onClick={() => setView('list')}>☰ {t.explorer.list}</button>
+                <button style={chip(view === 'map')} onClick={() => setView('map')}>🗺️ {t.explorer.map}</button>
               </div>
             </div>
 
@@ -187,9 +195,7 @@ export default function ExplorerHome() {
                 "allow location" is advice that cannot work. */}
             {(nearMe.state.status === 'denied' || nearMe.state.status === 'unavailable') && (
               <p style={{ fontSize: 12, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
-                {nearMe.state.status === 'denied'
-                  ? 'Location is blocked for this site. You can allow it in your browser settings — or just search by area name.'
-                  : 'This browser can\u2019t share a location. Search by area name instead.'}
+                {nearMe.state.status === 'denied' ? t.explorer.geoDenied : t.explorer.geoUnavailable}
               </p>
             )}
 
@@ -197,11 +203,13 @@ export default function ExplorerHome() {
             <section style={{ marginTop: 26 }}>
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
                 <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: 0 }}>
-                  {status === 'ready' ? `${count} result${count === 1 ? '' : 's'}` : 'Discover'}
+                  {status === 'ready'
+                    ? (count === 1 ? t.explorer.resultsOne : t.explorer.results.replace('{n}', String(count)))
+                    : t.explorer.discover}
                 </h2>
                 {status === 'ready' && count > 0 && (
                   <span style={{ fontSize: 11, color: TEC_COLORS.subtext, border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 999, padding: '2px 10px' }}>
-                    live · {verifiedCount} verified
+                    {t.explorer.liveVerified.replace('{n}', String(verifiedCount))}
                   </span>
                 )}
               </div>
@@ -212,8 +220,9 @@ export default function ExplorerHome() {
                     // Said out loud, because a map showing 3 of 8 results with
                     // no explanation reads as a broken map.
                     <p style={{ fontSize: 11.5, color: TEC_COLORS.subtext, margin: '8px 0 0', lineHeight: 1.5 }}>
-                      {count - pins.length} of {count} {count - pins.length === 1 ? 'business has' : 'businesses have'} not
-                      set a location yet — they appear in the list, not on the map.
+                      {t.explorer.notOnMap
+                        .replace('{n}', String(count - pins.length))
+                        .replace('{total}', String(count))}.
                     </p>
                   )}
                 </div>
@@ -226,11 +235,11 @@ export default function ExplorerHome() {
 
                 {status === 'error' && (
                   <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-                    <div>Couldn&apos;t load the directory right now.</div>
+                    <div>{t.explorer.cantLoad}</div>
                     <button
                       onClick={() => setReload((r) => r + 1)}
                       style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: '#0a0800', background: `linear-gradient(135deg, ${TEC_COLORS.gold}, ${TEC_COLORS.goldDark})`, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
-                    >↻ Retry</button>
+                    >↻ {t.explorer.retry}</button>
                   </div>
                 )}
 
@@ -257,7 +266,9 @@ export default function ExplorerHome() {
                     </div>
                     <div style={{ fontSize: 11, color: TEC_COLORS.gold, marginTop: 3 }}>
                       {CATEGORY_META[l.category].label} · {l.area} · {l.piAccepted ? 'π accepted' : 'Pi soon'}
-                      {km !== null && <span style={{ fontWeight: 800 }}> · {formatDistance(km)} away</span>}
+                      {km !== null && (
+                        <span style={{ fontWeight: 800 }}> · {t.explorer.away.replace('{d}', formatDistance(km))}</span>
+                      )}
                       {l.featured && <span style={{ marginLeft: 6, color: TEC_COLORS.gold, fontWeight: 800 }}>· ⭐ Featured</span>}
                     </div>
                     <div style={{ fontSize: 12, color: TEC_COLORS.subtext, marginTop: 5, lineHeight: 1.5 }}>{l.summary}</div>
@@ -266,9 +277,7 @@ export default function ExplorerHome() {
 
                 {status === 'ready' && view === 'list' && count === 0 && (
                   <div style={{ ...card, textAlign: 'center', color: TEC_COLORS.subtext, fontSize: 13 }}>
-                    {query.trim() || category !== 'all'
-                      ? 'No matches. Try a different term or category.'
-                      : 'No Pi businesses are listed here yet. Be the first — list your business in “My Business”.'}
+                    {query.trim() || category !== 'all' ? t.explorer.noMatches : t.explorer.beFirst}
                   </div>
                 )}
               </div>

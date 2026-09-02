@@ -1,12 +1,12 @@
 'use client';
 
 // A proper app Settings page for Explorer (modeled on tec-assets' settings):
-// sectioned, with a Profile card, an EN/AR language toggle that drives i18n + RTL,
+// sectioned, with a Profile card, a 12-language selector that drives i18n + RTL,
 // an About block, and logout. Fully translated.
 import { useEffect, useState } from 'react';
 import { usePiAuth } from '@yasser172/tec-auth';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import { useTranslation } from '@/lib/i18n';
+import { useTranslation, LOCALES, type Locale } from '@/lib/i18n';
 import { useMe } from '@/lib-client/hooks/useMe';
 
 const cardStyle = {
@@ -117,11 +117,28 @@ export function SettingsView() {
 
       <Section title={s.appearance} icon="🎨">
         <Row label={s.language} desc={s.languageDesc} first>
-          <Pills
+          {/* A select, not pills: twelve options do not fit in a row, and a
+              horizontally-scrolling strip hides the languages that happen to
+              sit off-screen — including, for some readers, their own.
+
+              Each is written in ITS OWN SCRIPT. Someone who cannot read the
+              current interface language cannot read "Vietnamese" either, but
+              they can always read "Tiếng Việt". That is the whole reason a
+              language menu lists native names. */}
+          <select
             value={locale}
-            options={[{ value: 'en', label: '🇺🇸 EN' }, { value: 'ar', label: '🇸🇦 AR' }]}
-            onChange={(v) => setLocale(v)}
-          />
+            onChange={(e) => setLocale(e.target.value as Locale)}
+            aria-label={s.language}
+            style={{
+              background: TEC_COLORS.bg, color: TEC_COLORS.text, fontSize: 14,
+              border: `1px solid ${TEC_COLORS.gold}33`, borderRadius: 8,
+              padding: '8px 10px', outline: 'none', maxWidth: 200,
+            }}
+          >
+            {(Object.keys(LOCALES) as Locale[]).map((code) => (
+              <option key={code} value={code}>{LOCALES[code].native}</option>
+            ))}
+          </select>
         </Row>
       </Section>
 

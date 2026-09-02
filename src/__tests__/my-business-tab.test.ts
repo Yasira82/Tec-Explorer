@@ -65,3 +65,38 @@ describe('no branch of the panel renders an empty screen', () => {
     expect(panel).toMatch(/authLoading/);
   });
 });
+
+// The owner cap went from one business to five. A panel that keeps rendering
+// `listings[0]` does not show a merchant fewer businesses — it shows them a
+// MISSING business, with nothing on screen to suggest the others exist. These
+// pin the three things that make the extra listings reachable at all.
+describe('every business the merchant owns is reachable', () => {
+  const panel = strip(src('app/app/components/ListingPanel.tsx'));
+
+  it('holds all of them, not just the first', () => {
+    expect(panel).toMatch(/listings.*useState<Listing\[\]>/s);
+    // The classic regression: quietly narrowing back to one.
+    expect(panel).not.toMatch(/setListing\(\s*own\[0\]/);
+  });
+
+  it('renders one control per listing so a second one can be opened', () => {
+    expect(panel).toMatch(/listings\.map\(/);
+    expect(panel).toContain('setSelectedId(l.id)');
+  });
+
+  it('separates "edit this one" from "add another" so adding cannot overwrite', () => {
+    // Both open the same form. If `save()` decided on form-is-open rather than
+    // on WHICH intent opened it, "add another" would PATCH the selected
+    // business instead of creating one.
+    expect(panel).toMatch(/const isEdit = listing !== null && editing/);
+    expect(panel).toContain('setCreating(true)');
+  });
+
+  it('does not offer an add button that the backend will refuse', () => {
+    expect(panel).toMatch(/atCap \?/);
+  });
+
+  it('the narrowing check can actually fail', () => {
+    expect('setListing(own[0] ?? null)').toMatch(/setListing\(\s*own\[0\]/);
+  });
+});

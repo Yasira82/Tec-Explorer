@@ -61,7 +61,9 @@ const strip = (s: string) => s
   .replace(/^[ \t]*\/\/.*$/gm, '');
 
 describe('the business page links only through the guards', () => {
-  const page = strip(src('app/business/[id]/page.tsx'));
+  // The presentation moved into a client component so it could be translated;
+  // the links live with it, so the guard follows them there.
+  const page = strip(src('components/business/BusinessView.tsx'));
 
   it('never puts the raw merchant field in an href', () => {
     expect(page).not.toMatch(/href=\{\s*l\.website\s*\}/);

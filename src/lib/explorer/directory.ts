@@ -99,6 +99,29 @@ export function safeWebsite(raw: string | undefined | null): string | null {
   }
 }
 
+/**
+ * A listing with a position that can actually be drawn.
+ *
+ * ⚠️ THIS LIVES HERE, NOT IN THE MAP COMPONENT, AND THAT IS LOAD-BEARING.
+ *
+ * `BusinessMap.tsx` is a `'use client'` module. When a SERVER component imports
+ * from one, Next replaces every export with a client REFERENCE — a marker, not
+ * the function. Calling it on the server throws at request time ("attempted to
+ * call mappable() from the server"), and because the business page is
+ * force-dynamic there is no prerender to catch it: the build passes and the
+ * page 500s in production. That is exactly what happened.
+ *
+ * A plain module with no client boundary can be called from both sides, which
+ * is what a pure filter should be anyway.
+ */
+export type MappableListing = Listing & { lat: number; lng: number };
+
+/** Listings that can actually be drawn. A pin needs both halves of a pair. */
+export const mappable = (ls: Listing[]): MappableListing[] =>
+  ls.filter((l): l is MappableListing =>
+    typeof l.lat === 'number' && typeof l.lng === 'number'
+    && Number.isFinite(l.lat) && Number.isFinite(l.lng));
+
 /** A phone number reduced to what `tel:` accepts. */
 export function telHref(raw: string | undefined | null): string | null {
   const v = (raw ?? '').replace(/[^\d+]/g, '');

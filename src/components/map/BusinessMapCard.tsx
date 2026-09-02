@@ -7,16 +7,20 @@
 // can legally hold the option — it exists for that rule and nothing else.
 import dynamic from 'next/dynamic';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-import type { MappableListing } from './BusinessMap';
+import type { MappableListing } from '@/lib/explorer/directory';
 
 const BusinessMap = dynamic(() => import('./BusinessMap'), {
   ssr: false,
   loading: () => (
+    // Language-neutral: this sits inside `dynamic(..., { loading })` at MODULE
+    // scope, where `useTranslation` cannot be called. An English word here would
+    // be the one flash of English in an Arabic UI, so the placeholder says the
+    // same thing in every language instead.
     <div style={{
       height: 340, borderRadius: 12, display: 'grid', placeItems: 'center',
       background: TEC_COLORS.surface, border: `1px solid ${TEC_COLORS.gold}22`,
       color: TEC_COLORS.subtext, fontSize: 13,
-    }}>Loading map…</div>
+    }}>🗺️ ···</div>
   ),
 });
 

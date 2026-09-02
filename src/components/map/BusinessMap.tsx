@@ -11,18 +11,9 @@
 // Loaded through a dynamic import with no SSR: Leaflet reaches for `window` at
 // module scope, so importing it normally breaks the build, not just the render.
 import { useEffect, useRef } from 'react';
-import type { Listing } from '@/lib/explorer/directory';
-import { CATEGORY_META } from '@/lib/explorer/directory';
+import { CATEGORY_META, type MappableListing } from '@/lib/explorer/directory';
 import type { Position } from '@/lib-client/geo';
 import { TEC_COLORS } from '@yasser172/tec-ui';
-
-export interface MappableListing extends Listing { lat: number; lng: number }
-
-/** Listings that can actually be drawn. A pin needs both halves of a pair. */
-export const mappable = (ls: Listing[]): MappableListing[] =>
-  ls.filter((l): l is MappableListing =>
-    typeof l.lat === 'number' && typeof l.lng === 'number'
-    && Number.isFinite(l.lat) && Number.isFinite(l.lng));
 
 /**
  * Escape text before it goes into a Leaflet popup.

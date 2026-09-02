@@ -51,7 +51,7 @@ const strip = (s: string) => s
 
 describe('the photo key never reaches a browser', () => {
   const mapper = strip(src('lib/explorer/server.ts'));
-  const page   = strip(src('app/business/[id]/page.tsx'));
+  const page   = strip(src('components/business/BusinessView.tsx'));
 
   it('the listing mapper exposes only whether a photo exists', () => {
     // A storage key is a path. A client has no use for one and every reason not
@@ -73,11 +73,20 @@ describe('the photo key never reaches a browser', () => {
 describe('the photo upload derives the target from the session', () => {
   const route = strip(src('app/api/bff/explorer/photo/route.ts'));
 
-  it('never takes the listing to attach to from the request', () => {
-    // A handle in the body would let anyone attach an image to anyone's
-    // business (P6).
+  it('never takes OWNERSHIP from the request', () => {
+    // An owner may have several businesses, so the caller names which one —
+    // but the name is only a SELECTOR, matched against the listings fetched
+    // with THEIR token. A handle that is not theirs is simply not found (P6).
+    // The rule is "verify ownership", not "never read a handle".
     expect(route).toContain('listOwnListings(token)');
-    expect(route).not.toMatch(/body\??\.\s*handle/);
+    expect(route).toMatch(/own\.listings\.find\(\(l\) => l\.id === wanted\)/);
+  });
+
+  it('does not confirm the existence of someone elses listing', () => {
+    // To this caller, a listing they do not own and one that does not exist
+    // are the same thing.
+    expect(route).toContain('That listing is not yours.');
+    expect(route).not.toMatch(/403|Forbidden/);
   });
 
   it('validates the real byte length, not a claimed size', () => {
@@ -112,15 +121,16 @@ describe('reviews are read publicly and written as the session', () => {
 
   it('never renders a missing average as a zero rating', () => {
     // Zero is a rating — the worst one — and showing it for "nobody has
-    // reviewed this" would libel every new shop.
+    // reviewed this" would libel every new shop. The BRANCH is what matters;
+    // the words themselves moved into the locale files.
     expect(ui).toContain('summary.average !== null');
-    expect(ui).toContain('No reviews yet');
+    expect(ui).toContain('x.noReviews');
   });
 
   it('states the evidence on every review, not only the strong ones', () => {
     // A badge on some and nothing on the rest leaves the reader guessing what
     // the absence means.
-    expect(ui).toContain('Verified purchase');
-    expect(ui).toContain('Signed in with Pi');
+    expect(ui).toContain('x.verifiedPurchase');
+    expect(ui).toContain('x.signedInWithPi');
   });
 });
