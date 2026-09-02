@@ -8,6 +8,7 @@
 // (popularity / trend) is Analytics' job, applied at discovery time — not here.
 import { useEffect, useState } from 'react';
 import { TEC_COLORS } from '@yasser172/tec-ui';
+import { ssoRedirect } from '@yasser172/tec-auth';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
 
@@ -15,12 +16,22 @@ type Draft = { name: string; category: Category; area: string; summary: string; 
 
 const emptyDraft: Draft = { name: '', category: 'services', area: '', summary: '', tags: '' };
 
+const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
+
 const toDraft = (l: Listing): Draft => ({
   name: l.name, category: l.category, area: l.area, summary: l.summary, tags: l.tags.join(', '),
 });
 const tagsArray = (s: string) => s.split(',').map((t) => t.trim()).filter(Boolean);
 
-export function ListingPanel({ isAuth }: { isAuth: boolean }) {
+export function ListingPanel({ isAuth, authLoading = false }: {
+  isAuth: boolean;
+  /**
+   * Whether the session is still being resolved server-side. Without this the
+   * signed-out pitch flashes for everyone on every open, because the answer to
+   * "am I signed in?" arrives over the network (C-123 §3).
+   */
+  authLoading?: boolean;
+}) {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loaded, setLoaded]   = useState(false);
   const [editing, setEditing] = useState(false);
@@ -41,7 +52,36 @@ export function ListingPanel({ isAuth }: { isAuth: boolean }) {
 
   useEffect(() => { if (isAuth) load(); }, [isAuth]);
 
-  if (!isAuth || !loaded) return null;
+  // A tab that renders nothing is indistinguishable from a broken app, and this
+  // one did exactly that. Every branch below says something.
+  if (authLoading || (isAuth && !loaded)) {
+    return (
+      <section style={{ marginTop: 24 }}>
+        <p style={{ fontSize: 13, color: TEC_COLORS.subtext }}>Loading your listing…</p>
+      </section>
+    );
+  }
+
+  // Signed out. This is the pitch, not an error: listing a business is the whole
+  // reason a merchant opens Explorer, so tell them what it does and how to start.
+  if (!isAuth) {
+    return (
+      <section style={{ marginTop: 24 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
+          List your business
+        </h2>
+        <p style={{ fontSize: 12.5, color: TEC_COLORS.subtext, margin: '0 0 12px', lineHeight: 1.55 }}>
+          Put your Pi-accepting business on the discovery map so people searching for
+          somewhere to spend Pi can find you. Sign in with Pi to create your listing —
+          it is tied to your Pi account, so only you can edit it.
+        </p>
+        <button
+          onClick={() => ssoRedirect(HUB_URL, `${window.location.origin}/app`)}
+          style={primaryBtn(false)}
+        >Sign in with Pi</button>
+      </section>
+    );
+  }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();

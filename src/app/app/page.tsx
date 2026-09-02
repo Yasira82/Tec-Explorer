@@ -185,8 +185,14 @@ export default function ExplorerHome() {
         )}
 
         {tab === 'listing' && (
-          /* Self-listing (C-108) — list + edit your own business (signed-in only). */
-          <ListingPanel isAuth={isAuthenticated} />
+          /* Self-listing (C-108) — list + edit your own business.
+             `me.authenticated` FIRST and `isAuthenticated` only as a fallback:
+             usePiAuth reads document.cookie, and Pi Browser hides tec_user from
+             client JS (C-123 §3), so on the platform this app actually ships to
+             it is always false. Passing it alone rendered an EMPTY tab for every
+             signed-in user — the same reason `useMe` exists for the greeting
+             above. SettingsView already merges the two; this call site did not. */
+          <ListingPanel isAuth={me.authenticated || isAuthenticated} authLoading={me.loading} />
         )}
 
         {tab === 'pro' && (
