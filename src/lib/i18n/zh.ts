@@ -179,6 +179,10 @@ export const zh = {
       other: '其他原因',
     },
 
+    atListingCap: '你已达到上限（{max} 个商家）。',
+    yourListings: '你的商家',
+    addAnother: '+ 添加另一个商家',
+    switchListing: '选择商家',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

@@ -179,6 +179,10 @@ export const en = {
       other:          'Something else',
     },
 
+    atListingCap:   'You have reached the limit ({max} businesses).',
+    yourListings:   'Your businesses',
+    addAnother:     '+ Add another business',
+    switchListing:  'Choose a business',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

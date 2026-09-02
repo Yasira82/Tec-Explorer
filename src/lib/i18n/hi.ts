@@ -179,6 +179,10 @@ export const hi = {
       other: 'कोई अन्य कारण',
     },
 
+    atListingCap: 'आप सीमा तक पहुँच गए हैं ({max} व्यवसाय)।',
+    yourListings: 'आपके व्यवसाय',
+    addAnother: '+ एक और व्यवसाय जोड़ें',
+    switchListing: 'व्यवसाय चुनें',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

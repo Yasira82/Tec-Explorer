@@ -179,6 +179,10 @@ export const id = {
       other: 'Lainnya',
     },
 
+    atListingCap: 'Anda telah mencapai batas ({max} usaha).',
+    yourListings: 'Usaha Anda',
+    addAnother: '+ Tambah usaha lain',
+    switchListing: 'Pilih usaha',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

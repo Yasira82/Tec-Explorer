@@ -179,6 +179,10 @@ export const ar = {
       other:          'سبب آخر',
     },
 
+    atListingCap:   'وصلت للحد الأقصى ({max} أنشطة).',
+    yourListings:   'أنشطتك',
+    addAnother:     '+ أضف نشاط تاني',
+    switchListing:  'اختر نشاط',
     settings: {
       profile: 'الملف الشخصي', planFree: 'مجاني', planPro: 'Pro',
       connectedPi: 'متصل بـ Pi', notSignedIn: 'غير مسجّل الدخول', member: 'عضو TEC',

@@ -41,15 +41,28 @@ export async function POST(req: NextRequest) {
     }, { status: 400 });
   }
 
-  // Which listing to attach it to is resolved from the SESSION, never from the
-  // request: a handle in the body would let anyone attach an image to anyone's
-  // business (P6).
+  // WHICH listing to attach to.
+  //
+  // The caller names it — an owner may have several businesses now, and picking
+  // `listings[0]` would silently put shop B's photo on shop A. But the name is
+  // only a SELECTOR: it is matched against the caller's OWN listings, fetched
+  // with their token, so a handle that is not theirs simply is not found (P6).
+  // Ownership is never taken on trust from the request.
   const own = await listOwnListings(token);
-  const listing = own.listings[0];
+  const wanted = req.nextUrl.searchParams.get('handle');
+  const listing = wanted
+    ? own.listings.find((l) => l.id === wanted)
+    : own.listings[0];
+
   if (!listing) {
     return NextResponse.json({
       error: 'NO_LISTING',
-      message: 'Create your listing first, then add a photo.',
+      message: wanted
+        // Not "forbidden": to this caller a listing they do not own and one that
+        // does not exist are the same thing, and saying which would confirm the
+        // existence of someone else's row.
+        ? 'That listing is not yours.'
+        : 'Create your listing first, then add a photo.',
     }, { status: 400 });
   }
 
@@ -101,8 +114,12 @@ export async function DELETE(req: NextRequest) {
   const token = req.cookies.get('tec_access_token')?.value ?? '';
   if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
+  // Same rule as the upload: the handle selects, the session authorises.
   const own = await listOwnListings(token);
-  const listing = own.listings[0];
+  const wanted = req.nextUrl.searchParams.get('handle');
+  const listing = wanted
+    ? own.listings.find((l) => l.id === wanted)
+    : own.listings[0];
   if (!listing) return NextResponse.json({ error: 'NO_LISTING' }, { status: 400 });
 
   // null, not '' — null is the backend's "remove it" and the whole point of the

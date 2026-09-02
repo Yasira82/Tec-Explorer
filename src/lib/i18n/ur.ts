@@ -179,6 +179,10 @@ export const ur = {
       other: 'کوئی اور وجہ',
     },
 
+    atListingCap: 'آپ حد تک پہنچ گئے ہیں ({max} کاروبار)۔',
+    yourListings: 'آپ کے کاروبار',
+    addAnother: '+ ایک اور کاروبار شامل کریں',
+    switchListing: 'کاروبار منتخب کریں',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

@@ -179,6 +179,10 @@ export const vi = {
       other: 'Lý do khác',
     },
 
+    atListingCap: 'Bạn đã đạt giới hạn ({max} cửa hàng).',
+    yourListings: 'Cửa hàng của bạn',
+    addAnother: '+ Thêm cửa hàng khác',
+    switchListing: 'Chọn cửa hàng',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

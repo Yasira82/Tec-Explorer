@@ -179,6 +179,10 @@ export const fr = {
       other: 'Autre raison',
     },
 
+    atListingCap: 'Vous avez atteint la limite ({max} commerces).',
+    yourListings: 'Vos commerces',
+    addAnother: '+ Ajouter un autre commerce',
+    switchListing: 'Choisissez un commerce',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

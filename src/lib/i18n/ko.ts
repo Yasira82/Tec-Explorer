@@ -179,6 +179,10 @@ export const ko = {
       other: '기타',
     },
 
+    atListingCap: '한도에 도달했습니다 (사업체 {max}개).',
+    yourListings: '내 사업체',
+    addAnother: '+ 사업체 추가',
+    switchListing: '사업체 선택',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

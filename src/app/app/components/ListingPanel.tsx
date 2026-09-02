@@ -15,6 +15,17 @@ import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/ex
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
 import { reportError } from '@/lib/observability/reportError';
 
+/**
+ * Mirrors MAX_LISTINGS_PER_OWNER in tec-identity-service.
+ *
+ * Duplicated rather than fetched: it is used only to decide whether to SHOW an
+ * "add another" button. The backend is still the authority — it returns 409
+ * either way — so the worst a drift can do is offer a button that is then
+ * refused with a clear message, which is better than an extra round trip on
+ * every open.
+ */
+const MAX_LISTINGS = 5;
+
 type Draft = {
   name: string; category: Category; area: string; summary: string; tags: string;
   address: string; hours: string; phone: string; website: string;
@@ -50,9 +61,23 @@ export function ListingPanel({ isAuth, authLoading = false }: {
 }) {
   const { t } = useTranslation();
   const x = t.explorer;
-  const [listing, setListing] = useState<Listing | null>(null);
+  // ALL of them, not the first one. The cap is five now, and a panel that
+  // renders `listings[0]` does not show a merchant fewer businesses — it shows
+  // them a missing business, with no way to tell that the others exist.
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loaded, setLoaded]   = useState(false);
   const [editing, setEditing] = useState(false);
+  /**
+   * Adding a business while already having one.
+   *
+   * Separate from `editing` because they are opposite intents that reach the
+   * same form: with a listing selected, `editing` means PATCH that listing and
+   * `creating` means POST a new one. Collapsing them into "the form is open"
+   * is how an add-another button silently overwrites the business the merchant
+   * was looking at.
+   */
+  const [creating, setCreating] = useState(false);
   const [draft, setDraft]     = useState<Draft>(emptyDraft);
   const [busy, setBusy]       = useState(false);
   const [error, setError]     = useState<string | null>(null);
@@ -69,7 +94,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   async function uploadPhoto(file: File) {
     setPhotoBusy(true); setPhotoError(null);
     try {
-      const res = await fetch('/api/bff/explorer/photo', {
+      const res = await fetch(`/api/bff/explorer/photo?handle=${encodeURIComponent(listing?.id ?? '')}`, {
         method: 'POST',
         // The file IS the body, and its type IS the Content-Type. No FormData:
         // the server validates the real byte length rather than a number the
@@ -79,7 +104,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setPhotoError(data.message ?? x.photoFailed); return; }
-      setListing(data.listing as Listing);
+      replace(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
     } catch (err) {
       reportError(err, { where: 'ListingPanel.uploadPhoto' });
@@ -91,10 +116,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   async function removePhoto() {
     setPhotoBusy(true); setPhotoError(null);
     try {
-      const res = await fetch('/api/bff/explorer/photo', { method: 'DELETE' });
+      const res = await fetch(
+        `/api/bff/explorer/photo?handle=${encodeURIComponent(listing?.id ?? '')}`,
+        { method: 'DELETE' },
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) { setPhotoError(data.error ?? x.photoRemoveFailed); return; }
-      setListing(data.listing as Listing);
+      replace(data.listing as Listing);
       setPhotoVersion((v) => v + 1);
     } catch (err) {
       reportError(err, { where: 'ListingPanel.removePhoto' });
@@ -137,8 +165,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       const res = await fetch('/api/bff/explorer/listings', { cache: 'no-store' });
       if (!res.ok) { setLoaded(true); return; }
       const data = await res.json().catch(() => ({}));
-      const own = (data.listings as Listing[])?.[0] ?? null;
-      setListing(own);
+      const own = (data.listings as Listing[]) ?? [];
+      setListings(own);
+      // Keep the current selection across a reload; fall back to the first.
+      setSelectedId((prev) => (prev && own.some((l) => l.id === prev) ? prev : own[0]?.id ?? null));
     } catch (err) {
       // The panel still renders the create form — a merchant with no listing
       // and a merchant whose listing failed to load look the same to them, but
@@ -149,6 +179,22 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   }
 
   useEffect(() => { if (isAuth) load(); }, [isAuth]);
+
+  /** The business currently being viewed or edited. */
+  const listing = listings.find((l) => l.id === selectedId) ?? null;
+  const atCap = listings.length >= MAX_LISTINGS;
+
+  /** Replace one listing in place after a write, without reordering the rest. */
+  const replace = (next: Listing) => {
+    setListings((prev) => {
+      const i = prev.findIndex((l) => l.id === next.id);
+      if (i === -1) return [...prev, next];
+      const copy = [...prev];
+      copy[i] = next;
+      return copy;
+    });
+    setSelectedId(next.id);
+  };
 
   // A tab that renders nothing is indistinguishable from a broken app, and this
   // one did exactly that. Every branch below says something.
@@ -183,7 +229,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     e.preventDefault();
     if (busy) return;
     setBusy(true); setError(null);
-    const isEdit = listing !== null;
+    // Editing the selected business, or adding a new one — `editing` is only
+    // true when a listing was opened for edit, so a null selection here means
+    // "create".
+    const isEdit = listing !== null && editing;
     const payload = {
       name: draft.name, category: draft.category, area: draft.area,
       summary: draft.summary, tags: tagsArray(draft.tags),
@@ -197,11 +246,14 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        setError(res.status === 409 ? x.alreadyListed : (data.error ?? x.couldNotSave));
+        setError(res.status === 409
+          ? x.atListingCap.replace('{max}', String(MAX_LISTINGS))
+          : (data.error ?? x.couldNotSave));
         return;
       }
-      setListing(data.listing as Listing);
+      replace(data.listing as Listing);
       setEditing(false);
+      setCreating(false);
     } catch (err) {
       reportError(err, { where: 'ListingPanel.save' });
       setError(x.networkError);
@@ -217,12 +269,48 @@ export function ListingPanel({ isAuth, authLoading = false }: {
     border: `1px solid ${TEC_COLORS.gold}22`, borderRadius: 8, fontSize: 13, outline: 'none',
   };
 
-  // ── The listing exists and we are not editing → summary card ──
-  if (listing && !editing) {
+  /**
+   * Switch between the merchant's businesses.
+   *
+   * Rendered only past the first one: a single-business merchant — which is
+   * almost all of them — should not have to read a control that offers them one
+   * choice. The selected chip is filled rather than merely outlined, because on
+   * a phone the previous listing is scrolled off screen and the only clue about
+   * WHICH business the card below describes is up here.
+   */
+  const switcher = listings.length > 1 ? (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ fontSize: 11, color: TEC_COLORS.subtext, marginBottom: 6 }}>{x.switchListing}</div>
+      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+        {listings.map((l) => {
+          const on = l.id === selectedId;
+          return (
+            <button
+              key={l.id}
+              type="button"
+              onClick={() => { setSelectedId(l.id); setEditing(false); setError(null); setPhotoError(null); }}
+              style={{
+                padding: '5px 11px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 700,
+                background: on ? `${TEC_COLORS.gold}22` : 'transparent',
+                color: on ? TEC_COLORS.gold : TEC_COLORS.subtext,
+                border: `1px solid ${on ? `${TEC_COLORS.gold}66` : `${TEC_COLORS.subtext}44`}`,
+              }}
+            >{CATEGORY_META[l.category].icon} {l.name}</button>
+          );
+        })}
+      </div>
+    </div>
+  ) : null;
+
+  // ── A listing exists and we are neither editing it nor adding another → summary card ──
+  if (listing && !editing && !creating) {
     const v = listing.verification === 'verified';
     return (
       <section style={{ marginTop: 24 }}>
-        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>{x.yourListing}</h2>
+        <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 10px' }}>
+          {listings.length > 1 ? x.yourListings : x.yourListing}
+        </h2>
+        {switcher}
         <div style={card}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontSize: 14, fontWeight: 800, color: TEC_COLORS.text }}>
@@ -334,12 +422,33 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             {!v && <span style={{ fontSize: 11, color: TEC_COLORS.subtext }}>{x.kycNote}</span>}
           </div>
         </div>
+
+        {/* A second branch, a second project, a stall and a workshop. Offered
+            only below the cap — a button that always fails is worse than no
+            button — and the cap itself is stated rather than left to be
+            discovered by pressing. */}
+        <div style={{ marginTop: 12 }}>
+          {atCap ? (
+            <span style={{ fontSize: 11.5, color: TEC_COLORS.subtext }}>
+              {x.atListingCap.replace('{max}', String(MAX_LISTINGS))}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={() => { setDraft(emptyDraft); setCreating(true); setEditing(false); setError(null); }}
+              style={ghostBtn}
+            >{x.addAnother}</button>
+          )}
+        </div>
       </section>
     );
   }
 
-  // ── No listing (create) OR editing → form ──
-  const isEdit = listing !== null;
+  // ── No listing (create) OR editing OR adding another → form ──
+  // Mirrors `save()` exactly: with a listing selected it is an edit only when
+  // `editing` is what opened the form. If these two ever disagree, the form
+  // says "Save changes" and then POSTs a duplicate.
+  const isEdit = listing !== null && editing;
   return (
     <section style={{ marginTop: 24 }}>
       <h2 style={{ fontSize: 16, fontWeight: 800, color: TEC_COLORS.text, margin: '0 0 4px' }}>
@@ -443,7 +552,16 @@ export function ListingPanel({ isAuth, authLoading = false }: {
           <button type="submit" disabled={busy || draft.name.trim().length < 2} style={primaryBtn(busy || draft.name.trim().length < 2)}>
             {busy ? x.saving : isEdit ? x.saveChanges : x.createListing}
           </button>
-          {isEdit && <button type="button" onClick={() => { setEditing(false); setError(null); }} style={ghostBtn}>{x.cancel}</button>}
+          {/* `isEdit || creating`, not `isEdit`: a merchant who tapped "add
+              another" has a listing to go back TO, and without this the only
+              way out of the form is to leave the tab. */}
+          {(isEdit || creating) && (
+            <button
+              type="button"
+              onClick={() => { setEditing(false); setCreating(false); setError(null); }}
+              style={ghostBtn}
+            >{x.cancel}</button>
+          )}
         </div>
       </form>
     </section>

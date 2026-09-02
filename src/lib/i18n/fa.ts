@@ -179,6 +179,10 @@ export const fa = {
       other: 'دلیل دیگر',
     },
 
+    atListingCap: 'به سقف رسیده‌اید ({max} کسب‌وکار).',
+    yourListings: 'کسب‌وکارهای شما',
+    addAnother: '+ افزودن کسب‌وکار دیگر',
+    switchListing: 'یک کسب‌وکار انتخاب کنید',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',

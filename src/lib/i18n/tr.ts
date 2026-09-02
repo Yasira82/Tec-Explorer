@@ -179,6 +179,10 @@ export const tr = {
       other: 'Başka bir sebep',
     },
 
+    atListingCap: 'Sınıra ulaştın ({max} işletme).',
+    yourListings: 'İşletmelerin',
+    addAnother: '+ Başka işletme ekle',
+    switchListing: 'Bir işletme seç',
     settings: {
       profile: 'Profile', planFree: 'Free', planPro: 'Pro',
       connectedPi: 'Connected to Pi', notSignedIn: 'Not signed in', member: 'TEC Member',
