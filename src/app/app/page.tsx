@@ -307,10 +307,13 @@ export default function ExplorerHome() {
               </div>
             </section>
 
+            {/* From the dictionary, not the file. This paragraph was four lines
+                of hardcoded ENGLISH — so an Arabic reader got the whole app in
+                Arabic and this one block in English, which is where the boundary
+                (Explorer does not verify, score or take payment) is actually
+                stated. */}
             <p style={{ fontSize: 11, color: C.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-              Explorer helps you discover public, self-declared businesses. It doesn&apos;t
-              verify them, score their trust, or handle payments — those happen at the
-              business. Your location is used for search only and never stored.
+              {t.explorer.boundaryNote}
             </p>
           </>
         )}
