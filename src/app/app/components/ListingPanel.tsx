@@ -11,9 +11,12 @@ import { ssoRedirect } from '@yasser172/tec-auth';
 import { useTranslation } from '@/lib/i18n';
 import { buildHeaders } from '@/lib/request-id';
 import { CATEGORIES, CATEGORY_META, type Category, type Listing } from '@/lib/explorer/directory';
+import { trustLevel, TRUST_TAG } from '@/lib/explorer/trust';
 import { PHOTO_MIME, PHOTO_MAX_BYTES } from '@/lib/explorer/photo-rules';
 import { reportError } from '@/lib/observability/reportError';
-import { C, goldA, inkA } from '@/lib-client/palette';
+import { C, goldA, inkA, errorA } from '@/lib-client/palette';
+import { parseCoords, formatCoords } from '@/lib-client/coords';
+import { PinPickerCard } from '@/components/map/PinPickerCard';
 
 /**
  * Mirrors MAX_LISTINGS_PER_OWNER in tec-identity-service.
@@ -83,6 +86,15 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   const [error, setError]     = useState<string | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  /**
+   * The map picker, and the coordinate box beside it.
+   *
+   * `coordText` is held SEPARATELY from the draft rather than derived from it:
+   * a paste is half-invalid while it is being typed, and rendering the field
+   * from `draft.lat` would fight the person editing it on every keystroke.
+   */
+  const [picking, setPicking] = useState(false);
+  const [coordText, setCoordText] = useState('');
   const [photoBusy, setPhotoBusy] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   // Bumped after every change so the <img> refetches. Without it the browser
@@ -198,6 +210,10 @@ export function ListingPanel({ isAuth, authLoading = false }: {
         setGeoError(err.code === err.PERMISSION_DENIED
           ? x.geoBlocked
           : x.geoFailed);
+        // Open the map straight away. The merchant asked to set a pin; being
+        // told "no" and left staring at the same button is how a field gets
+        // skipped, and a listing that is not on the map is the whole loss.
+        setPicking(true);
       },
       { enableHighAccuracy: true, timeout: 15_000, maximumAge: 0 },
     );
@@ -369,6 +385,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
   // ── A listing exists and we are neither editing it nor adding another → summary card ──
   if (listing && !editing && !creating) {
     const v = listing.verification === 'verified';
+    const level = trustLevel(listing);
     return (
       <section style={{ marginTop: 24 }}>
         <h2 style={{ fontSize: 16, fontWeight: 800, color: C.text, margin: '0 0 10px' }}>
@@ -381,8 +398,13 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             <span style={{ fontSize: 14, fontWeight: 800, color: C.text }}>
               {CATEGORY_META[listing.category].icon} {listing.name}
             </span>
-            <span style={{ fontSize: 10, fontWeight: 800, color: v ? C.gold : C.subtext, border: `1px solid ${(v ? C.gold : C.subtext)}55`, borderRadius: 999, padding: '2px 8px' }}>
-              {v ? x.verifiedTag : x.unverifiedTag}
+            <span style={{
+              fontSize: 10, fontWeight: 800,
+              color: level === 1 ? C.subtext : C.gold,
+              border: `1px solid ${level === 1 ? inkA(0.33) : goldA(0.33)}`,
+              borderRadius: 999, padding: '2px 8px',
+            }}>
+              {x[TRUST_TAG[level]]}
             </span>
           </div>
           <div style={{ fontSize: 11, color: C.gold, marginTop: 3 }}>
@@ -589,7 +611,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
       </h2>
       <p style={{ fontSize: 12, color: C.subtext, margin: '0 0 12px', lineHeight: 1.5 }}>
         {x.createHint.split('{unverified}')[0]}
-        <strong style={{ color: C.text }}>{x.unverifiedTag}</strong>
+        <strong style={{ color: C.gold }}>{x.trustL2}</strong>
         {x.createHint.split('{unverified}')[1]}
       </p>
       <form onSubmit={save} style={{ ...card, display: 'grid', gap: 10 }}>
@@ -662,20 +684,79 @@ export function ListingPanel({ isAuth, authLoading = false }: {
             <button type="button" onClick={pickHere} disabled={locating} style={ghostBtn}>
               {locating ? x.locating : draft.lat !== null ? x.updatePin : x.useMyLocation}
             </button>
+            {/* The second way in, and it is not a fallback bolted on after the
+                first failed — it is offered up front, always. Geolocation is
+                refused by whole browsers (Pi Browser is a webview whose HOST
+                app decides, not the page), and a field with one way to fill it
+                is a field that becomes impossible rather than inconvenient. */}
+            <button
+              type="button"
+              onClick={() => setPicking((p) => !p)}
+              style={{ ...ghostBtn, ...(picking ? { background: goldA(0.12) } : {}) }}
+            >{x.pickOnMap}</button>
             {draft.lat !== null && draft.lng !== null && (
               <>
                 <span style={{ fontSize: 11.5, color: C.gold }} dir="ltr">
-                  {draft.lat.toFixed(5)}, {draft.lng.toFixed(5)}
+                  {formatCoords({ lat: draft.lat, lng: draft.lng })}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setDraft({ ...draft, lat: null, lng: null })}
+                  onClick={() => { setDraft({ ...draft, lat: null, lng: null }); setCoordText(''); }}
                   style={{ ...ghostBtn, color: C.subtext, borderColor: `${inkA(0.267)}` }}
                 >{x.removePin}</button>
               </>
             )}
           </div>
-          {geoError && <div style={{ fontSize: 11.5, color: C.subtext }}>{geoError}</div>}
+
+          {/* A refusal is not the end of the road any more, so it says what to
+              do next instead of only what went wrong. */}
+          {geoError && (
+            <div style={{ fontSize: 11.5, color: C.subtext, lineHeight: 1.5 }}>
+              {geoError} <strong style={{ color: C.gold }}>{x.geoUseMapInstead}</strong>
+            </div>
+          )}
+
+          {picking && (
+            <div style={{ display: 'grid', gap: 6 }}>
+              <PinPickerCard
+                value={draft.lat !== null && draft.lng !== null ? { lat: draft.lat, lng: draft.lng } : null}
+                onChange={(p) => setDraft((d) => ({ ...d, lat: p.lat, lng: p.lng }))}
+                label={draft.name || x.fieldMapPin}
+              />
+              <div style={{ fontSize: 11, color: C.subtext, lineHeight: 1.5 }}>{x.pickOnMapHint}</div>
+
+              {/* The third way, and the one that actually works for someone
+                  filling this in at a desk: long-press in Google Maps, copy the
+                  coordinates, paste. No permission, no request, no map to pan
+                  across a country. */}
+              <label style={{ display: 'grid', gap: 4 }}>
+                <span style={{ fontSize: 11.5, color: C.subtext }}>{x.pasteCoords}</span>
+                <input
+                  value={coordText}
+                  onChange={(e) => {
+                    setCoordText(e.target.value);
+                    const parsed = parseCoords(e.target.value);
+                    // Only WRITES on a valid parse. Clearing the draft while
+                    // someone is mid-type would wipe a pin they already placed
+                    // on the map above.
+                    if (parsed) setDraft((d) => ({ ...d, lat: parsed.lat, lng: parsed.lng }));
+                  }}
+                  placeholder="30.04442, 31.23571"
+                  dir="ltr"
+                  inputMode="text"
+                  autoComplete="off"
+                  style={{
+                    ...input,
+                    borderColor: coordText.trim() && !parseCoords(coordText) ? errorA(0.4) : goldA(0.13),
+                  }}
+                />
+                {coordText.trim() && !parseCoords(coordText) && (
+                  <span style={{ fontSize: 11, color: C.error }}>{x.coordsUnreadable}</span>
+                )}
+              </label>
+            </div>
+          )}
+
           <div style={{ fontSize: 11, color: C.subtext, lineHeight: 1.5 }}>
             {x.pinHint}
           </div>

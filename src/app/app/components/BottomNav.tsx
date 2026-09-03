@@ -4,7 +4,7 @@
 // scale + underline, light haptic. Same quality bar as tec-assets.
 import { Icon, type ExpIconName } from './Icon';
 import { useTranslation } from '@/lib/i18n';
-import { C } from '@/lib-client/palette';
+import { C, bgA, inkA } from '@/lib-client/palette';
 
 export type ExpTab = 'discover' | 'listing' | 'pro' | 'settings';
 
@@ -19,8 +19,12 @@ export function BottomNav({ active, onSelect }: { active: ExpTab; onSelect: (t: 
   return (
     <nav style={{
       position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 200,
-      background: 'rgba(5,8,22,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-      borderTop: '1px solid rgba(255,255,255,0.06)',
+      // Follows the PAGE, like the Hub's own bottom nav. It used to be a
+      // hardcoded dark rgba, so on a light page the bar stayed black while the
+      // inactive icons — drawn from an ink token — flipped to black on black.
+      // Only the active tab was visible, and only because it is gold.
+      background: bgA(0.92), backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+      borderTop: `1px solid ${inkA(0.06)}`,
       display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)',
     }}>
       {ITEMS.map((item) => {
