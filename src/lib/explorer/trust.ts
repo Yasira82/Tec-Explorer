@@ -5,7 +5,7 @@ import type { Listing } from './directory';
  *
  * ── Why this replaced "Verified / Unverified" ───────────────────────────────
  * Every real merchant was labelled **Unverified**, because the only route to
- * the other value ran through a TEC KYC review that (a) is a manual queue and
+ * the other value ran through a Zone review that (a) is a manual queue and
  * (b) is not reachable end-to-end today. So the app told every honest business
  * it was unverified, and told every customer the whole directory was dubious.
  * A badge with one attainable value is not a badge, it is a warning printed on
@@ -23,15 +23,20 @@ import type { Listing } from './directory';
  *       verified Hub session, and a Pi account that can hold a Mainnet wallet
  *       has passed Pi Network's OWN KYC. The person is real. The BUSINESS is
  *       still self-declared.
- *   L3  The business itself was reviewed (tec-kyc-service). The strong claim,
- *       and the only one that survives a customer walking to the address.
+ *   L3  The business itself was reviewed by **Zone** (C-120 §3), which reaches
+ *       here as `zone.badge.issued.v1`. The strong claim, and the only one that
+ *       survives a customer walking to the address.
+ *
+ * L2 and L3 answer different questions, which is why both exist: Pi's KYC says
+ * the PERSON is real; Zone's badge says the BUSINESS is. Neither substitutes for
+ * the other, and the ladder is the only honest way to show that.
  *
  * ── The line this must not cross (C-108 §4) ─────────────────────────────────
  * Explorer PRESENTS verification and never mints it. L2 is not Explorer
  * verifying anything — it is Explorer stating a fact it already holds: this row
  * has an `owner`, set server-side from a verified session token, never from a
  * request body. L3 is the only level Explorer cannot award itself, and it still
- * arrives from KYC.
+ * arrives from Zone.
  *
  * Deriving this instead of storing it is deliberate: a stored trust column can
  * drift from the facts, and there is no migration to get wrong.
