@@ -35,7 +35,7 @@ export class ErrorBoundary extends Component<Props, State> {
         <div style={{ minHeight: '100vh', background: C.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ textAlign: 'center', maxWidth: 320 }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>⚠️</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginBottom: 8 }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: C.text, marginBottom: 8 }}>
               Something went wrong
             </div>
             <div style={{ fontSize: 13, color: C.faint, marginBottom: 24 }}>

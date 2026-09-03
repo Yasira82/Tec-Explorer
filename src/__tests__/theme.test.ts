@@ -63,6 +63,24 @@ describe('the token layer defines all three theme states', () => {
     }
   });
 
+  it('the light theme overrides the WHOLE gold family, not just the accent', () => {
+    // Overriding `--tec-gold` alone is not a theme, it is half of one. The
+    // companions stayed on their dark-ground values, so every primary button
+    // ran `#FEA500 -> #E8962A` — and #E8962A carries a desaturated brown cast
+    // chosen to sit on near-black. On white it reads as a dirty dark patch, and
+    // it looks like the gradient is broken rather than a token being unset.
+    //
+    // Derived from `:root` rather than listed, so a NEW gold token is covered
+    // the day it is added instead of the day someone notices.
+    const root = css.slice(css.indexOf(':root'), css.indexOf("[data-theme='dark']"));
+    const family = [...root.matchAll(/(--tec-gold[a-z-]*):/g)].map((m) => m[1]!);
+    expect(family.length).toBeGreaterThan(4);
+
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    const missing = family.filter((t) => !new RegExp(`${t}:`).test(light));
+    expect(missing).toEqual([]);
+  });
+
   it('the ink channels actually flip between the themes', () => {
     const light = css.slice(css.indexOf("[data-theme='light']"));
     expect(light).toMatch(/--tec-text-rgb:\s*0, 0, 0/);
@@ -275,11 +293,14 @@ describe('no component paints a raw colour', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('no `#rrggbb` literal in a component', () => {
+  it('no `#rrggbb` OR `#rgb` literal in a component', () => {
+    // The SHORTHAND was the hole. This checked six digits only, so
+    // `color: '#fff'` sailed through — white text on a white page — and
+    // `#333`/`#888` on the disabled Pro button went the same way.
     const offenders: string[] = [];
     for (const f of files) {
       const code = strip(src(f.slice(4)));
-      for (const m of code.matchAll(/#[0-9a-fA-F]{6}\b/g)) {
+      for (const m of code.matchAll(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)) {
         if (ALLOWED_LITERALS.includes(m[0])) continue;
         offenders.push(`${f}: ${m[0]}`);
       }

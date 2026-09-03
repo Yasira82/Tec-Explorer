@@ -177,8 +177,8 @@ export function ExplorerPro() {
         disabled={busy}
         style={{
           marginTop: 14, width: '100%', padding: '12px 16px', borderRadius: 12,
-          background: busy ? '#333' : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
-          color: busy ? '#888' : C.onGold,
+          background: busy ? C.surface3 : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+          color: busy ? C.subtext : C.onGold,
           border: 'none', fontSize: 14, fontWeight: 800,
           cursor: busy ? 'not-allowed' : 'pointer',
         }}

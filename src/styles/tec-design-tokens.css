@@ -193,6 +193,15 @@ html, body {
   --tec-text-rgb:  0, 0, 0;
   --tec-fill-soft: rgba(0,0,0,0.04);
   --tec-gold:      #FEA500;
+  /* The gradient COMPANIONS have to move with the accent.
+     Overriding `--tec-gold` alone left every primary button running
+     `#FEA500 -> #E8962A` — and #E8962A was chosen to sit on near-black, so it
+     carries a desaturated brown cast (R232 G150 B42) that reads as a dirty dark
+     patch on the light half of a button. It looked like the gradient was broken
+     rather than the token being unset.
+     These two are the same amber measured deeper and lighter, fully saturated. */
+  --tec-gold-dark:   #F08C00;
+  --tec-gold-light:  #FFC24D;
   --tec-gold-rgb:  254, 165, 0;
   --tec-gold-dim:  rgba(254,165,0,0.16);
   --tec-gold-glow: rgba(254,165,0,0.10);
@@ -201,6 +210,7 @@ html, body {
   --shadow-sm:     0 1px 3px rgba(0,0,0,0.08);
   --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
   --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
+  --shadow-gold:   0 0 40px rgba(254,165,0,0.18);
 }
 
 /* ── Theme: system (no attribute) follows the phone ──── */
@@ -218,6 +228,15 @@ html, body {
     --tec-text-rgb:  0, 0, 0;
     --tec-fill-soft: rgba(0,0,0,0.04);
     --tec-gold:      #FEA500;
+  /* The gradient COMPANIONS have to move with the accent.
+     Overriding `--tec-gold` alone left every primary button running
+     `#FEA500 -> #E8962A` — and #E8962A was chosen to sit on near-black, so it
+     carries a desaturated brown cast (R232 G150 B42) that reads as a dirty dark
+     patch on the light half of a button. It looked like the gradient was broken
+     rather than the token being unset.
+     These two are the same amber measured deeper and lighter, fully saturated. */
+  --tec-gold-dark:   #F08C00;
+  --tec-gold-light:  #FFC24D;
     --tec-gold-rgb:  254, 165, 0;
     --tec-gold-dim:  rgba(254,165,0,0.16);
     --tec-gold-glow: rgba(254,165,0,0.10);
@@ -225,6 +244,7 @@ html, body {
     --shadow-sm:     0 1px 3px rgba(0,0,0,0.08);
     --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
     --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
+  --shadow-gold:   0 0 40px rgba(254,165,0,0.18);
   }
 }
 
