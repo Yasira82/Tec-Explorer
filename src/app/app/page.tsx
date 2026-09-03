@@ -14,6 +14,7 @@ import { useTranslation } from '@/lib/i18n';
 import { ExplorerPro } from './components/ExplorerPro';
 import { ListingPanel } from './components/ListingPanel';
 import { BottomNav, type ExpTab } from './components/BottomNav';
+import { useTabHistory } from '@/lib-client/useTabHistory';
 import { SettingsView } from './components/SettingsView';
 import {
   CATEGORIES, CATEGORY_META, mappable,
@@ -44,7 +45,9 @@ export default function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const { t } = useTranslation();
-  const [tab, setTab] = useState<ExpTab>('discover');
+  // Each tab gets a history entry, so the phone's Back button steps back
+  // through the app instead of leaving it. See useTabHistory.
+  const [tab, setTab] = useTabHistory<ExpTab>('discover');
 
   const piName = me.username ?? user?.piUsername ?? null;
   const name = piName ? `@${piName}` : '';
@@ -307,10 +310,13 @@ export default function ExplorerHome() {
               </div>
             </section>
 
+            {/* From the dictionary, not the file. This paragraph was four lines
+                of hardcoded ENGLISH — so an Arabic reader got the whole app in
+                Arabic and this one block in English, which is where the boundary
+                (Explorer does not verify, score or take payment) is actually
+                stated. */}
             <p style={{ fontSize: 11, color: C.subtext, margin: '24px 0 0', lineHeight: 1.5 }}>
-              Explorer helps you discover public, self-declared businesses. It doesn&apos;t
-              verify them, score their trust, or handle payments — those happen at the
-              business. Your location is used for search only and never stored.
+              {t.explorer.boundaryNote}
             </p>
           </>
         )}
