@@ -67,7 +67,7 @@ export function BusinessView({ listing: l, owner }: {
             </div>
             <h1 style={{ fontSize: 24, fontWeight: 900, color: C.text, margin: '4px 0 0' }}>{l.name}</h1>
           </div>
-          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? C.onGold : level === 1 ? C.subtext : C.gold, background: verified ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent', border: verified ? 'none' : `1px solid ${level === 1 ? inkA(0.4) : goldA(0.4)}`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 12, fontWeight: 800, color: verified ? C.onGold : level === 1 ? C.subtext : C.gold, background: verified ? C.gold : 'transparent', border: verified ? 'none' : `1px solid ${level === 1 ? inkA(0.4) : goldA(0.4)}`, borderRadius: 999, padding: '6px 12px', whiteSpace: 'nowrap' }}>
             {x[TRUST_TAG[level]]}
           </div>
         </div>

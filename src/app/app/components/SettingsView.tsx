@@ -108,7 +108,7 @@ export function SettingsView() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: 16 }}>
           <div style={{
             width: 56, height: 56, borderRadius: '50%', flexShrink: 0,
-            background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            background: C.gold,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: 24, fontWeight: 900, color: C.onGold,
           }}>{(username ?? 'Y').charAt(0).toUpperCase()}</div>

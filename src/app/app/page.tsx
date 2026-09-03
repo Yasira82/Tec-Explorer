@@ -128,7 +128,7 @@ export default function ExplorerHome() {
   const chip = (active: boolean): React.CSSProperties => ({
     fontSize: 12, fontWeight: 700, whiteSpace: 'nowrap',
     color: active ? C.onGold : C.text,
-    background: active ? `linear-gradient(135deg, ${C.gold}, ${C.goldDark})` : 'transparent',
+    background: active ? C.gold : 'transparent',
     border: `1px solid ${C.gold}${active ? '' : '33'}`,
     borderRadius: 999, padding: '6px 12px', cursor: 'pointer',
   });
@@ -242,7 +242,7 @@ export default function ExplorerHome() {
                     <div>{t.explorer.cantLoad}</div>
                     <button
                       onClick={() => setReload((r) => r + 1)}
-                      style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: C.onGold, background: `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
+                      style={{ marginTop: 10, fontSize: 12, fontWeight: 700, color: C.onGold, background: C.gold, border: 'none', borderRadius: 999, padding: '7px 16px', cursor: 'pointer' }}
                     >↻ {t.explorer.retry}</button>
                   </div>
                 )}

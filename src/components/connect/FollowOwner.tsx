@@ -165,7 +165,7 @@ export function FollowOwner({ username, headline, verified }: {
           padding: '11px 18px', borderRadius: 999, border: 'none',
           background: inert
             ? C.surface2
-            : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            : C.gold,
           color: inert ? C.subtext : C.onGold,
           fontSize: 14, fontWeight: 800, cursor: inert ? 'default' : 'pointer',
         }}

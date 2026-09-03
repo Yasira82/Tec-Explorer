@@ -28,7 +28,7 @@ export default function RootLayout({
         {/* One theme-color per scheme, so the browser chrome above the page
             matches the page. A single dark value left a black bar sitting on
             top of a light app. */}
-        <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#050816" />
+        <meta name="theme-color" media="(prefers-color-scheme: dark)"  content="#101014" />
         <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f4f3f1" />
         {/* `color-scheme` is NOT declared here any more. It has to follow the
             reader's stored choice, which only the boot script knows — a static

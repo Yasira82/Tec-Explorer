@@ -245,7 +245,7 @@ export function Reviews({ handle, ownerUsername }: {
 
 const primary = (disabled: boolean): React.CSSProperties => ({
   padding: '9px 16px', borderRadius: 999, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-  background: disabled ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+  background: disabled ? `${goldA(0.2)}` : C.gold,
   color: disabled ? C.subtext : C.onGold, fontWeight: 800, fontSize: 13,
 });
 

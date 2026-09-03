@@ -63,6 +63,37 @@ describe('the token layer defines all three theme states', () => {
     }
   });
 
+  it('status colours DARKEN for light — contrast, not taste', () => {
+    // The dark-theme brights were picked to glow on near-black. #22C55E on
+    // white measures ~2.3:1, so every success line was unreadable as TEXT once
+    // the page went light. The gold-family check below did not cover these,
+    // and they were missed for exactly that reason.
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    for (const t of ['--tec-green', '--tec-blue', '--tec-red', '--tec-purple']) {
+      expect(light).toMatch(new RegExp(`${t}:`));
+    }
+    // And the CHANNELS with them, or `successA()` keeps painting the bright one.
+    expect(light).toMatch(/--tec-green-rgb:\s*21, 128, 61/);
+  });
+
+  it('the light theme overrides the WHOLE gold family, not just the accent', () => {
+    // Overriding `--tec-gold` alone is not a theme, it is half of one. The
+    // companions stayed on their dark-ground values, so every primary button
+    // ran `#FEA500 -> #E8962A` — and #E8962A carries a desaturated brown cast
+    // chosen to sit on near-black. On white it reads as a dirty dark patch, and
+    // it looks like the gradient is broken rather than a token being unset.
+    //
+    // Derived from `:root` rather than listed, so a NEW gold token is covered
+    // the day it is added instead of the day someone notices.
+    const root = css.slice(css.indexOf(':root'), css.indexOf("[data-theme='dark']"));
+    const family = [...root.matchAll(/(--tec-gold[a-z-]*):/g)].map((m) => m[1]!);
+    expect(family.length).toBeGreaterThan(4);
+
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    const missing = family.filter((t) => !new RegExp(`${t}:`).test(light));
+    expect(missing).toEqual([]);
+  });
+
   it('the ink channels actually flip between the themes', () => {
     const light = css.slice(css.indexOf("[data-theme='light']"));
     expect(light).toMatch(/--tec-text-rgb:\s*0, 0, 0/);
@@ -275,11 +306,14 @@ describe('no component paints a raw colour', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('no `#rrggbb` literal in a component', () => {
+  it('no `#rrggbb` OR `#rgb` literal in a component', () => {
+    // The SHORTHAND was the hole. This checked six digits only, so
+    // `color: '#fff'` sailed through — white text on a white page — and
+    // `#333`/`#888` on the disabled Pro button went the same way.
     const offenders: string[] = [];
     for (const f of files) {
       const code = strip(src(f.slice(4)));
-      for (const m of code.matchAll(/#[0-9a-fA-F]{6}\b/g)) {
+      for (const m of code.matchAll(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g)) {
         if (ALLOWED_LITERALS.includes(m[0])) continue;
         offenders.push(`${f}: ${m[0]}`);
       }
@@ -308,5 +342,19 @@ describe('a translucent surface follows the theme too', () => {
     const nav = strip(src('app/app/components/BottomNav.tsx'));
     expect(nav).toContain('bgA(');
     expect(nav).not.toContain('rgba(5,8,22');
+  });
+});
+
+
+// The Hub fills amber FLAT — `background: var(--tec-gold)`, 33 places, and one
+// gradient in the whole app. Explorer used `linear-gradient(C.gold, C.goldDark)`
+// on every primary button, and in LIGHT that runs #FEA500 -> #E08800: the lower
+// half of every button a visibly darker orange than the same button in the Hub.
+describe('a filled amber is flat, never a gradient', () => {
+  it('no component gradients the accent into its dark companion', () => {
+    const offenders = paintedFiles()
+      .filter((f) => !f.endsWith('opengraph-image.tsx'))
+      .filter((f) => /linear-gradient\([^)]*C\.gold[^)]*C\.goldDark/.test(strip(src(f.slice(4)))));
+    expect(offenders).toEqual([]);
   });
 });
