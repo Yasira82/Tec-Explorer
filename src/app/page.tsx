@@ -49,7 +49,7 @@ export default function HomePage() {
           disabled={isLoading}
           style={{
             padding:      '14px 32px',
-            background:   `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            background:   C.gold,
             border:       'none',
             borderRadius: 16,
             color:        C.onGold,

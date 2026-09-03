@@ -784,7 +784,7 @@ export function ListingPanel({ isAuth, authLoading = false }: {
 
 const primaryBtn = (disabled: boolean): React.CSSProperties => ({
   padding: '10px 16px', borderRadius: 8, border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-  background: disabled ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+  background: disabled ? `${goldA(0.2)}` : C.gold,
   color: disabled ? C.subtext : C.onGold, fontWeight: 800, fontSize: 13, flex: 1,
 });
 

@@ -344,3 +344,17 @@ describe('a translucent surface follows the theme too', () => {
     expect(nav).not.toContain('rgba(5,8,22');
   });
 });
+
+
+// The Hub fills amber FLAT — `background: var(--tec-gold)`, 33 places, and one
+// gradient in the whole app. Explorer used `linear-gradient(C.gold, C.goldDark)`
+// on every primary button, and in LIGHT that runs #FEA500 -> #E08800: the lower
+// half of every button a visibly darker orange than the same button in the Hub.
+describe('a filled amber is flat, never a gradient', () => {
+  it('no component gradients the accent into its dark companion', () => {
+    const offenders = paintedFiles()
+      .filter((f) => !f.endsWith('opengraph-image.tsx'))
+      .filter((f) => /linear-gradient\([^)]*C\.gold[^)]*C\.goldDark/.test(strip(src(f.slice(4)))));
+    expect(offenders).toEqual([]);
+  });
+});

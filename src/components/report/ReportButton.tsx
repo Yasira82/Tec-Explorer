@@ -127,7 +127,7 @@ export function ReportButton({ targetKind, targetId, canReport = true }: {
           style={{
             fontSize: 12, fontWeight: 700, borderRadius: 999, padding: '7px 14px',
             border: 'none', cursor: busy ? 'default' : 'pointer',
-            background: busy ? `${goldA(0.2)}` : `linear-gradient(135deg, ${C.gold}, ${C.goldDark})`,
+            background: busy ? `${goldA(0.2)}` : C.gold,
             color: busy ? C.subtext : C.onGold,
           }}
         >{busy ? x.reportSending : x.reportSend}</button>

@@ -33,16 +33,16 @@ html, body {
 
 :root {
   /* ── Colors ─────────────────────────────────────────── */
-  --tec-bg:          #050816;
+  --tec-bg:          #101014;
   /* Page-background channels, so a TRANSLUCENT surface (the frosted bottom bar)
      can follow the theme. Without this the bar was a hardcoded
-     `rgba(5,8,22,0.92)` — it stayed dark while the ink above it flipped to
+     `rgba(16,16,20,0.92)` — it stayed dark while the ink above it flipped to
      black, and the tab icons became invisible on a light page. */
-  --tec-bg-rgb:      5, 8, 22;
-  --tec-surface-1:   #0B1020;
-  --tec-surface-2:   #111627;
-  --tec-surface-3:   #1A2033;
-  --tec-border:      rgba(255,255,255,0.06);
+  --tec-bg-rgb:      16, 16, 20;
+  --tec-surface-1:   #21212a;
+  --tec-surface-2:   #2c2c37;
+  --tec-surface-3:   #383844;
+  --tec-border:      rgba(255,255,255,0.07);
   --tec-border-gold: rgba(251,180,74,0.2);
 
   --tec-gold:        #FBB44A;
@@ -76,14 +76,20 @@ html, body {
   --tec-purple:      #8b5cf6;
 
   --tec-text-1:      rgba(255,255,255,0.92);
-  --tec-text-2:      rgba(255,255,255,0.55);
-  --tec-text-3:      rgba(255,255,255,0.28);
+  --tec-text-2:      rgba(255,255,255,0.62);
+  --tec-text-3:      rgba(255,255,255,0.38);
   /* Ink channels, for the same reason as --tec-gold-rgb above: the secondary
      ink was alpha-appended in ~20 places to draw hairlines and chips. */
+  --tec-text-4:      rgba(255,255,255,0.25);
+  /* Icons are NOT body ink: a 1.5px stroke reads lighter than a filled glyph at
+     the same alpha, so an icon set to --tec-text-1 looks faded beside its own
+     label. (C-83 §5.6.3) */
+  --tec-icon:        rgba(255,255,255,0.80);
   --tec-text-rgb:    255, 255, 255;
   /* A faint wash over the page. Every `rgba(255,255,255,0.05)` chip vanishes the
      moment the page turns light, so the wash is a token that flips with it. */
   --tec-fill-soft:   rgba(255,255,255,0.05);
+  --tec-fill-softer: rgba(255,255,255,0.02);
 
   /* ── Spacing (4px base) ─────────────────────────────── */
   --sp-1:  4px;
@@ -159,19 +165,22 @@ html, body {
 
 /* ── Theme: dark (the default) ───────────────────────── */
 [data-theme='dark'] {
-  --tec-bg:        #050816;
-  --tec-bg-rgb:    5, 8, 22;
-  --tec-surface-1: #0B1020;
-  --tec-surface-2: #111627;
-  --tec-surface-3: #1A2033;
-  --tec-border:    rgba(255,255,255,0.06);
+  --tec-bg:        #101014;
+  --tec-bg-rgb:    16, 16, 20;
+  --tec-surface-1: #21212a;
+  --tec-surface-2: #2c2c37;
+  --tec-surface-3: #383844;
+  --tec-border:    rgba(255,255,255,0.07);
   --tec-text-1:    rgba(255,255,255,0.92);
-  --tec-text-2:    rgba(255,255,255,0.55);
-  --tec-text-3:    rgba(255,255,255,0.28);
+  --tec-text-2:    rgba(255,255,255,0.62);
+  --tec-text-3:    rgba(255,255,255,0.38);
   --tec-text-rgb:  255, 255, 255;
   --tec-fill-soft: rgba(255,255,255,0.05);
   --tec-gold:      #FBB44A;
   --tec-gold-rgb:  251, 180, 74;
+  --tec-text-4:    rgba(255,255,255,0.25);
+  --tec-icon:      rgba(255,255,255,0.80);
+  --tec-fill-softer: rgba(255,255,255,0.02);
 }
 
 /* ── Theme: light ────────────────────────────────────── */
@@ -184,14 +193,14 @@ html, body {
   --tec-bg:        #f4f3f1;
   --tec-bg-rgb:    244, 243, 241;
   --tec-surface-1: #ffffff;
-  --tec-surface-2: #f2f2f5;
-  --tec-surface-3: #e8e8ee;
-  --tec-border:    rgba(0,0,0,0.10);
+  --tec-surface-2: #f1efec;
+  --tec-surface-3: #e7e4df;
+  --tec-border:    rgba(0,0,0,0.09);
   --tec-text-1:    rgba(0,0,0,0.90);
-  --tec-text-2:    rgba(0,0,0,0.58);
-  --tec-text-3:    rgba(0,0,0,0.34);
+  --tec-text-2:    rgba(0,0,0,0.62);
+  --tec-text-3:    rgba(0,0,0,0.42);
   --tec-text-rgb:  0, 0, 0;
-  --tec-fill-soft: rgba(0,0,0,0.04);
+  --tec-fill-soft: rgba(0,0,0,0.05);
   --tec-gold:      #FEA500;
   /* The gradient COMPANIONS have to move with the accent.
      Overriding `--tec-gold` alone left every primary button running
@@ -223,6 +232,9 @@ html, body {
   --tec-purple:    #6d28d9;
   --tec-green-rgb: 21, 128, 61;
   --tec-red-rgb:   185, 28, 28;
+  --tec-text-4:    rgba(0,0,0,0.30);
+  --tec-icon:      rgba(0,0,0,0.68);
+  --tec-fill-softer: rgba(0,0,0,0.025);
 }
 
 /* ── Theme: system (no attribute) follows the phone ──── */
@@ -231,14 +243,14 @@ html, body {
     --tec-bg:        #f4f3f1;
     --tec-bg-rgb:    244, 243, 241;
     --tec-surface-1: #ffffff;
-    --tec-surface-2: #f2f2f5;
-    --tec-surface-3: #e8e8ee;
-    --tec-border:    rgba(0,0,0,0.10);
+    --tec-surface-2: #f1efec;
+    --tec-surface-3: #e7e4df;
+    --tec-border:    rgba(0,0,0,0.09);
     --tec-text-1:    rgba(0,0,0,0.90);
-    --tec-text-2:    rgba(0,0,0,0.58);
-    --tec-text-3:    rgba(0,0,0,0.34);
+    --tec-text-2:    rgba(0,0,0,0.62);
+    --tec-text-3:    rgba(0,0,0,0.42);
     --tec-text-rgb:  0, 0, 0;
-    --tec-fill-soft: rgba(0,0,0,0.04);
+    --tec-fill-soft: rgba(0,0,0,0.05);
     --tec-gold:      #FEA500;
   /* The gradient COMPANIONS have to move with the accent.
      Overriding `--tec-gold` alone left every primary button running
@@ -269,6 +281,9 @@ html, body {
   --tec-purple:    #6d28d9;
   --tec-green-rgb: 21, 128, 61;
   --tec-red-rgb:   185, 28, 28;
+    --tec-text-4:    rgba(0,0,0,0.30);
+    --tec-icon:      rgba(0,0,0,0.68);
+    --tec-fill-softer: rgba(0,0,0,0.025);
   }
 }
 
