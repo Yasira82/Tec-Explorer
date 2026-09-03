@@ -18,11 +18,33 @@ relationship → retention. It is the merchant-acquisition + real-world bridge f
 
 Built from `tec-template-base` (Next.js 15 frontend).
 
-**Current Phase: Explorer V0/V1 — Scaffold + Discovery MVP.** Identity / domain / slug /
-legal + themed discovery home (search · category · trust-first ranking over a curated
-**read-only sample** directory) + **Explorer Business Pro** payment surface (the Pi
-Portal "Process a Transaction" gate) + a `/business/[id]` detail page. A real listing
-index is Phase 1+ (tec-identity-service business profiles + a search backend). Deployed (Mainnet) · Pi App ID registered · env set · payment live.
+**Current Phase: Explorer V1 — the real index is LIVE.** The directory is not a sample:
+listings are created, edited and deleted by their owners and stored in the **explorer
+module of `tec-identity-service`** (`@Controller('identity/explorer')`), reached only
+through `src/lib/explorer/server.ts` → the gateway. Shipped and in production:
+
+- **search** in the database, with an Arabic normalizer applied to the stored text at
+  write time and the query at read time (ة/ه · أ/ا · ى/ي · tatweel · Arabic-Indic
+  digits · the definite article) — the same function on both sides, which is the whole
+  trick;
+- **ranking** trust-first: verified → featured → name. Featured sits BELOW verification
+  on purpose — visibility is purchasable, trust is not (C-108 §7);
+- **self-listing** (owner derived from the session JWT server-side, never the body — P6;
+  capped at 5 per owner), **reviews**, **reports**, shop **photos**, and map coordinates;
+- **Explorer Business Pro** → `featured`, re-synced to the owner's LIVE commerce
+  subscription on every visit, so a lapsed Pro clears itself (P5 — Explorer never stores
+  subscription truth);
+- a **Zone** verification seam: `zone.badge.issued.v1` / `.revoked.v1` flip a listing's
+  badge. **Not KYC** — KYC verifies a person, a listing is an entity (C-120 §3).
+
+> When the backend is unreachable the BFF returns `source:'unavailable'` with **no
+> results** and the screen says so. It never falls back to a fixture — a fabricated
+> directory is worse than an empty one (C-135 §4).
+
+Deployed (Mainnet) · Pi App ID registered · env set · payment live.
+
+**Still to build:** ranking signals from Analytics (popularity/trend beyond the current
+consumer), and Connection trust scores refining the order (C-108 §10).
 
 ---
 

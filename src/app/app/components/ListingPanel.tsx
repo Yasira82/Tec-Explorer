@@ -2,8 +2,8 @@
 
 // TEC Explorer — self-listing surface (C-108). A business owner lists their business
 // into the discovery index and edits it. Explorer OWNS the listing index; it never
-// self-mints verification — a new listing is UNVERIFIED until tec-kyc-service verifies
-// it (presented, never minted). Identity is the session (the BFF forwards the JWT;
+// self-mints verification — a new listing is UNVERIFIED until Zone verifies the
+// business (presented, never minted). Identity is the session (the BFF forwards the JWT;
 // owner is derived from the token server-side, never a client field — P6). Ranking
 // (popularity / trend) is Analytics' job, applied at discovery time — not here.
 import { useEffect, useState } from 'react';

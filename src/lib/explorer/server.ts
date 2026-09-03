@@ -87,7 +87,7 @@ export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
 // A business owner self-lists their business into the discovery index and edits it.
 // Writes forward the caller's verified JWT as `Authorization: Bearer` so the backend
 // derives the owner from the token (never the body — P6). Explorer never self-mints
-// verification; a new listing is always UNVERIFIED (KYC's to set). Ranking stays
+// verification; a new listing is always UNVERIFIED (Zone's to set). Ranking stays
 // Analytics' job. Reads of discovery stay public.
 const authHeaders = (token: string): Record<string, string> => ({
   ...gwHeaders(),
