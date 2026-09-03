@@ -64,6 +64,25 @@ html, body {
   --tec-gold-glow:   rgba(251,180,74,0.08);
   /* Ink that sits ON the gold gradient. Fixed in both themes: the button is a
      solid amber object, so its label does not follow the page. */
+
+  /* ── Top band ────────────────────────────────────────
+     The Hub frames every inner page with a solid band that has rounded BOTTOM
+     corners, and the apps did not — so tapping from the Hub into an app lost
+     the frame. Values copied from the Hub: one shape across the fleet, or it
+     is decoration. (C-83 §5.6.4 / §5.8.6)
+
+     The band is dark in BOTH themes, so everything painted on it keeps one set
+     of values and does not flip with the page. `.tec-on-band` below is what
+     makes that safe for the components inside it. */
+  --tec-topbar:        #3f311f;   /* ~20% gold mixed into the dark page */
+  --tec-topbar-ink-1:  rgba(255,255,255,0.95);
+  --tec-topbar-ink-2:  rgba(255,255,255,0.60);
+  --tec-topbar-ink-3:  rgba(255,255,255,0.42);
+  --tec-topbar-gold:   #FBB44A;
+  --tec-topbar-fill:   rgba(255,255,255,0.07);
+  --tec-topbar-border: rgba(255,255,255,0.12);
+  --tec-topbar-radius: 22px;
+
   --tec-on-gold:     #0a0800;
 
   --tec-green:       #22C55E;
@@ -201,6 +220,7 @@ html, body {
   --tec-text-3:    rgba(0,0,0,0.42);
   --tec-text-rgb:  0, 0, 0;
   --tec-fill-soft: rgba(0,0,0,0.05);
+  --tec-topbar:      #17171d;
   --tec-gold:      #FEA500;
   /* The gradient COMPANIONS have to move with the accent.
      Overriding `--tec-gold` alone left every primary button running
@@ -251,6 +271,7 @@ html, body {
     --tec-text-3:    rgba(0,0,0,0.42);
     --tec-text-rgb:  0, 0, 0;
     --tec-fill-soft: rgba(0,0,0,0.05);
+    --tec-topbar:      #17171d;
     --tec-gold:      #FEA500;
   /* The gradient COMPANIONS have to move with the accent.
      Overriding `--tec-gold` alone left every primary button running
@@ -285,6 +306,36 @@ html, body {
     --tec-icon:      rgba(0,0,0,0.68);
     --tec-fill-softer: rgba(0,0,0,0.025);
   }
+}
+
+
+
+/*
+ * The topbar strip, and why it re-scopes tokens instead of restyling controls.
+ *
+ * The band is dark in both themes. Any control that lands on it reads the page
+ * palette, so on a LIGHT page it would paint black ink and a white surface onto
+ * a near-black band and disappear.
+ *
+ * Rather than rewrite every control that can appear there, this REDEFINES the
+ * tokens for that subtree. A component drops into the header and is correct
+ * without knowing the band exists. (C-83 §5.6.4)
+ */
+.tec-on-band {
+  --tec-text-1:      var(--tec-topbar-ink-1);
+  --tec-text-2:      var(--tec-topbar-ink-2);
+  --tec-text-3:      var(--tec-topbar-ink-3);
+  --tec-gold:        var(--tec-topbar-gold);
+  --tec-gold-rgb:    251, 180, 74;
+  --tec-text-rgb:    255, 255, 255;
+  --tec-surface-1:   var(--tec-topbar-fill);
+  --tec-surface-2:   var(--tec-topbar-fill);
+  --tec-surface-3:   var(--tec-topbar-fill);
+  --tec-border:      var(--tec-topbar-border);
+  --tec-border-gold: rgba(251,180,74,0.35);
+  --tec-fill-soft:   var(--tec-topbar-fill);
+  --tec-gold-dim:    rgba(251,180,74,0.16);
+  --tec-gold-glow:   rgba(251,180,74,0.10);
 }
 
 /* ── Global resets ───────────────────────────────────── */
