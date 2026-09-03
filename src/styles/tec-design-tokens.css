@@ -199,9 +199,10 @@ html, body {
      carries a desaturated brown cast (R232 G150 B42) that reads as a dirty dark
      patch on the light half of a button. It looked like the gradient was broken
      rather than the token being unset.
-     These two are the same amber measured deeper and lighter, fully saturated. */
-  --tec-gold-dark:   #F08C00;
-  --tec-gold-light:  #FFC24D;
+     These two are the Hub's — copied, not re-derived. Inventing a near-match is
+     how two apps end up a shade apart on the same button. */
+  --tec-gold-dark:   #E08800;
+  --tec-gold-light:  #FFC04D;
   --tec-gold-rgb:  254, 165, 0;
   --tec-gold-dim:  rgba(254,165,0,0.16);
   --tec-gold-glow: rgba(254,165,0,0.10);
@@ -211,6 +212,17 @@ html, body {
   --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
   --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
   --shadow-gold:   0 0 40px rgba(254,165,0,0.18);
+  /* Status colours DARKEN on white, and this is contrast, not taste.
+     The dark-theme brights were picked to glow on near-black: #22C55E on white
+     measures ~2.3:1, so every success line was unreadable as text. These are
+     the same five meanings at a luminance that clears 4.5:1 (#15803d is 5.0:1).
+     Copied from the Hub, which had already chosen them. */
+  --tec-green:     #15803d;
+  --tec-blue:      #1d4ed8;
+  --tec-red:       #b91c1c;
+  --tec-purple:    #6d28d9;
+  --tec-green-rgb: 21, 128, 61;
+  --tec-red-rgb:   185, 28, 28;
 }
 
 /* ── Theme: system (no attribute) follows the phone ──── */
@@ -234,9 +246,10 @@ html, body {
      carries a desaturated brown cast (R232 G150 B42) that reads as a dirty dark
      patch on the light half of a button. It looked like the gradient was broken
      rather than the token being unset.
-     These two are the same amber measured deeper and lighter, fully saturated. */
-  --tec-gold-dark:   #F08C00;
-  --tec-gold-light:  #FFC24D;
+     These two are the Hub's — copied, not re-derived. Inventing a near-match is
+     how two apps end up a shade apart on the same button. */
+  --tec-gold-dark:   #E08800;
+  --tec-gold-light:  #FFC04D;
     --tec-gold-rgb:  254, 165, 0;
     --tec-gold-dim:  rgba(254,165,0,0.16);
     --tec-gold-glow: rgba(254,165,0,0.10);
@@ -245,6 +258,17 @@ html, body {
     --shadow-md:     0 4px 16px rgba(0,0,0,0.10);
     --shadow-lg:     0 8px 32px rgba(0,0,0,0.12);
   --shadow-gold:   0 0 40px rgba(254,165,0,0.18);
+  /* Status colours DARKEN on white, and this is contrast, not taste.
+     The dark-theme brights were picked to glow on near-black: #22C55E on white
+     measures ~2.3:1, so every success line was unreadable as text. These are
+     the same five meanings at a luminance that clears 4.5:1 (#15803d is 5.0:1).
+     Copied from the Hub, which had already chosen them. */
+  --tec-green:     #15803d;
+  --tec-blue:      #1d4ed8;
+  --tec-red:       #b91c1c;
+  --tec-purple:    #6d28d9;
+  --tec-green-rgb: 21, 128, 61;
+  --tec-red-rgb:   185, 28, 28;
   }
 }
 

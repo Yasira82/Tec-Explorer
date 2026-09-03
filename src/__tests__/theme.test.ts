@@ -63,6 +63,19 @@ describe('the token layer defines all three theme states', () => {
     }
   });
 
+  it('status colours DARKEN for light — contrast, not taste', () => {
+    // The dark-theme brights were picked to glow on near-black. #22C55E on
+    // white measures ~2.3:1, so every success line was unreadable as TEXT once
+    // the page went light. The gold-family check below did not cover these,
+    // and they were missed for exactly that reason.
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    for (const t of ['--tec-green', '--tec-blue', '--tec-red', '--tec-purple']) {
+      expect(light).toMatch(new RegExp(`${t}:`));
+    }
+    // And the CHANNELS with them, or `successA()` keeps painting the bright one.
+    expect(light).toMatch(/--tec-green-rgb:\s*21, 128, 61/);
+  });
+
   it('the light theme overrides the WHOLE gold family, not just the accent', () => {
     // Overriding `--tec-gold` alone is not a theme, it is half of one. The
     // companions stayed on their dark-ground values, so every primary button
