@@ -142,11 +142,22 @@ export default function ExplorerHome() {
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 22px calc(96px + env(safe-area-inset-bottom))' }}>
-        <header>
-          <div style={{ fontSize: 12, letterSpacing: 1, color: C.subtext, textTransform: 'uppercase' }}>{t.explorer.brand}</div>
-          <h1 style={{ fontSize: 26, fontWeight: 900, color: C.gold, margin: '6px 0 0' }}>{title}</h1>
+        {/* The band. Same token, same 22px, same PROPORTIONS as the Hub —
+            a corner on a tall band reads as a bigger curve than the same
+            corner on a short one, so the padding is copied too (C-83 §5.8.6).
+            `tec-on-band` re-scopes the palette: the band is dark in BOTH
+            themes, so on a light page the ink inside it has to stay light. */}
+        <header className="tec-on-band" style={{
+          background: 'var(--tec-topbar)',
+          borderRadius: '0 0 var(--tec-topbar-radius) var(--tec-topbar-radius)',
+          // Bleeds to the edges: it frames the screen, not the text column.
+          margin: '-32px -22px 20px',
+          padding: 'calc(12px + env(safe-area-inset-top)) 22px 16px',
+        }}>
+          <div style={{ fontSize: 10, letterSpacing: 1.2, color: C.subtext, textTransform: 'uppercase', fontWeight: 700 }}>{t.explorer.brand}</div>
+          <h1 style={{ fontSize: 22, fontWeight: 900, color: C.gold, margin: '2px 0 0' }}>{title}</h1>
           {tab === 'discover' && (
-            <p style={{ fontSize: 14, color: C.subtext, margin: '6px 0 0', lineHeight: 1.6 }}>{t.explorer.subtitle}</p>
+            <p style={{ fontSize: 12.5, color: C.subtext, margin: '3px 0 0', lineHeight: 1.45 }}>{t.explorer.subtitle}</p>
           )}
         </header>
 

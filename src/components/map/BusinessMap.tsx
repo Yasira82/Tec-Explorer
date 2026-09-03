@@ -10,7 +10,7 @@
 //
 // Loaded through a dynamic import with no SSR: Leaflet reaches for `window` at
 // module scope, so importing it normally breaks the build, not just the render.
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CATEGORY_META, type MappableListing } from '@/lib/explorer/directory';
 import { trustLevel } from '@/lib/explorer/trust';
 import type { Position } from '@/lib-client/geo';
@@ -40,6 +40,16 @@ export default function BusinessMap({ listings, me, onOpen }: {
   // the search box.
   const mapRef = useRef<import('leaflet').Map | null>(null);
   const layerRef = useRef<import('leaflet').LayerGroup | null>(null);
+  // The map is built inside an `await import('leaflet')`, so it does not exist
+  // when the framing effect below first runs. That effect returned early, and
+  // its deps (a memoised list, a stable callback, a position that only changes
+  // if the visitor grants location) never changed again — so it never ran a
+  // second time, `setView` was never called, and Leaflet held the tile layer in
+  // its pending queue forever. A blank frame with working controls.
+  //
+  // This is the handshake: flipping it re-runs the framing effect once the map
+  // is actually there.
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +59,13 @@ export default function BusinessMap({ listings, me, onOpen }: {
       const L = (await import('leaflet')).default;
       if (cancelled || !host.current || mapRef.current) return;
 
-      const map = L.map(host.current, { attributionControl: true, zoomControl: true });
+      // A view AT CREATION, not later. Leaflet queues every layer until a map
+      // has a centre and a zoom (`_loaded`), so a tile layer added to a map
+      // that never gets a view is simply never drawn — and nothing throws.
+      // Egypt at z5 is only the opening frame; the effect below reframes onto
+      // the real results as soon as there are any.
+      const map = L.map(host.current, { attributionControl: true, zoomControl: true })
+        .setView([26.8, 30.8], 5);
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
         // Required by the OSM tile usage policy — attribution is the licence
@@ -62,6 +78,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
       // A map sized before its container has laid out renders as grey tiles.
       setTimeout(() => map.invalidateSize(), 0);
 
+      setReady(true);
       cleanup = () => { map.remove(); mapRef.current = null; layerRef.current = null; };
     })();
 
@@ -75,7 +92,7 @@ export default function BusinessMap({ listings, me, onOpen }: {
       const L = (await import('leaflet')).default;
       const map = mapRef.current;
       const layer = layerRef.current;
-      if (cancelled || !map || !layer) return;
+      if (cancelled || !map || !layer) return;   // re-runs when `ready` flips
 
       layer.clearLayers();
 
@@ -119,10 +136,11 @@ export default function BusinessMap({ listings, me, onOpen }: {
       if (me) points.push([me.lat, me.lng]);
       if (points.length === 1) map.setView(points[0]!, 15);
       else if (points.length > 1) map.fitBounds(L.latLngBounds(points).pad(0.15));
-      else if (!map.getZoom()) map.setView([26.8, 30.8], 5);
+      // No third branch: the opening view is set at creation now, so "nothing
+      // to frame" means stay exactly where the visitor left it.
     })();
     return () => { cancelled = true; };
-  }, [listings, me, onOpen]);
+  }, [listings, me, onOpen, ready]);
 
   return (
     <div

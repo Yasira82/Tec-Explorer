@@ -358,3 +358,32 @@ describe('a filled amber is flat, never a gradient', () => {
     expect(offenders).toEqual([]);
   });
 });
+
+// ── The inner-page band ─────────────────────────────────────────────────────
+describe('the inner pages are framed like the Hub', () => {
+  const page = strip(src('app/app/page.tsx'));
+
+  it('the header is a band with rounded bottom corners', () => {
+    expect(page).toContain("background: 'var(--tec-topbar)'");
+    expect(page).toMatch(/borderRadius:\s*'0 0 var\(--tec-topbar-radius\) var\(--tec-topbar-radius\)'/);
+  });
+
+  it('re-scopes the palette for everything inside it', () => {
+    // The band is dark in BOTH themes, so a control inside it reading the PAGE
+    // palette would paint black ink onto a near-black band on a light page.
+    expect(page).toContain('tec-on-band');
+    expect(css).toContain('.tec-on-band');
+  });
+
+  it('the band stays dark on a LIGHT page', () => {
+    const light = css.slice(css.indexOf("[data-theme='light']"));
+    expect(light).toMatch(/--tec-topbar:\s*#1[0-9a-f]{5}/);
+  });
+
+  it('copies the PROPORTIONS, not only the radius', () => {
+    // C-83 §5.8.6: a 22px corner on a 117px band reads heavier than on an 87px
+    // one, so a generously padded band looks like a different radius even when
+    // the token is identical.
+    expect(page).toMatch(/padding: 'calc\(12px \+ env\(safe-area-inset-top\)\) 22px 16px'/);
+  });
+});
