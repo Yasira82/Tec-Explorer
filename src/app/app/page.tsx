@@ -14,6 +14,7 @@ import { useTranslation } from '@/lib/i18n';
 import { ExplorerPro } from './components/ExplorerPro';
 import { ListingPanel } from './components/ListingPanel';
 import { BottomNav, type ExpTab } from './components/BottomNav';
+import { useTabHistory } from '@/lib-client/useTabHistory';
 import { SettingsView } from './components/SettingsView';
 import {
   CATEGORIES, CATEGORY_META, mappable,
@@ -44,7 +45,9 @@ export default function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const { t } = useTranslation();
-  const [tab, setTab] = useState<ExpTab>('discover');
+  // Each tab gets a history entry, so the phone's Back button steps back
+  // through the app instead of leaving it. See useTabHistory.
+  const [tab, setTab] = useTabHistory<ExpTab>('discover');
 
   const piName = me.username ?? user?.piUsername ?? null;
   const name = piName ? `@${piName}` : '';
