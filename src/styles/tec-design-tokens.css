@@ -81,7 +81,13 @@ html, body {
   --tec-topbar-gold:   #FBB44A;
   --tec-topbar-fill:   rgba(255,255,255,0.07);
   --tec-topbar-border: rgba(255,255,255,0.12);
-  --tec-topbar-radius: 22px;
+  /* 8, swept from Life. Twenty-two read as a curve — and a short band makes
+     the same radius look BIGGER, so the loudest thing on the screen was the
+     frame. At 8 it is a softened edge: you stop seeing it and start seeing the
+     page under it, which is what a frame is for. Fleet-wide on purpose; one
+     app framed differently from the Hub is the drift this token exists to
+     prevent. */
+  --tec-topbar-radius: 8px;
 
   --tec-on-gold:     #0a0800;
 
