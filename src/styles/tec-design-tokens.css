@@ -87,7 +87,7 @@ html, body {
      page under it, which is what a frame is for. Fleet-wide on purpose; one
      app framed differently from the Hub is the drift this token exists to
      prevent. */
-  --tec-topbar-radius: 8px;
+  --tec-topbar-radius: 22px;
 
   --tec-on-gold:     #0a0800;
 
