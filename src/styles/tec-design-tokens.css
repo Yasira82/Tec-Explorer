@@ -81,6 +81,12 @@ html, body {
   --tec-topbar-gold:   #FBB44A;
   --tec-topbar-fill:   rgba(255,255,255,0.07);
   --tec-topbar-border: rgba(255,255,255,0.12);
+  /* 22 — the Hub's value, and it stays the Hub's value. This was briefly swept
+     to 8 "from Life", which was wrong twice over: the report that prompted it
+     was about the band's HEIGHT, not its curve, and a number invented in one
+     app has no business overwriting the Hub's in three others. Apps follow the
+     Hub; that is the drift this token exists to prevent. A tall band is fixed
+     by shortening the line inside it, not by filing down the corner. */
   --tec-topbar-radius: 22px;
 
   --tec-on-gold:     #0a0800;
