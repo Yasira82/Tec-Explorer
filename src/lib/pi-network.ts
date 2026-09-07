@@ -46,3 +46,32 @@ export const networkMetadata = (host?: string | null): { testnet?: true } =>
   // put a field about the test network on 100% of real money, and the day it
   // was written wrong is the day it means the opposite of what it says.
   isTestnetHost(host) ? { testnet: true } : {};
+
+/**
+ * The Hub host to hand a Mode-1 payment to.
+ *
+ * Mode 1 sends the buyer to the Hub, which creates and approves the payment —
+ * so the Hub's OWN host decides which Pi app, and therefore which key, that
+ * payment is approved with. A Testnet visitor handed to the Mainnet Hub gets a
+ * Mainnet approval, and a Test-Pi wallet cannot pay it: the modal simply hangs
+ * on "Confirm in Pi…". That is why no app worked on the Testnet via the Hub.
+ *
+ * `NEXT_PUBLIC_HUB_URL` is inlined at build time and names exactly one of the
+ * Hub's two hosts, so it cannot answer this — the same build-time-constant bug
+ * as `APP_URL` and `sandbox` before it, in a third place.
+ *
+ * The Mainnet path is untouched: on a custom domain this returns the
+ * configured value unchanged, and the Testnet host is a literal because a Pi
+ * app's host is read off its deployment, never derived from a name.
+ *
+ * LOGIN is deliberately NOT routed this way. SSO is identity, not payment, and
+ * the Mainnet Hub already signs sessions for Testnet hosts correctly — that is
+ * how every app completed its Testnet login. Changing it would risk a flow
+ * that works, to fix one that does not.
+ */
+const HUB_TESTNET_ORIGIN = 'https://tec-app-frontend.vercel.app';
+
+export const hubPaymentOrigin = (configuredHubUrl: string, host?: string | null): string =>
+  isTestnetHost(host ?? (typeof window === 'undefined' ? null : window.location.hostname))
+    ? HUB_TESTNET_ORIGIN
+    : configuredHubUrl;
