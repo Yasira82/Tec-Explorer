@@ -62,9 +62,26 @@ export default function RootLayout({
                 } catch(e) {}
                 if (typeof window.Pi !== 'undefined') {
                   try {
+                    var __isTestnetHost = /\\.vercel\\.app$/i.test(location.hostname);
+                    // SANDBOX IS NOT TESTNET. The HOST decides which Pi APP the
+                    // visitor is in (and so which network the server approves
+                    // against); "sandbox" points the SDK at Pi's SANDBOX
+                    // environment, a third thing. A paired Testnet app is a
+                    // normal app on its own domain — NOT the sandbox. Setting
+                    // sandbox:true there left the Pi bridge silent ("Messaging
+                    // promise with id 1 timed out after 120000ms"). Default
+                    // false; ?pi_sandbox=1 is the way back in, honoured only on
+                    // the Testnet host so no query param can put a Mainnet
+                    // payment into sandbox mode.
+                    var __q = null;
+                    try { __q = new URLSearchParams(location.search).get('pi_sandbox'); } catch (e) {}
+                    var __sandbox = __isTestnetHost
+                      ? (__q === '1')
+                      : ${process.env.NEXT_PUBLIC_PI_SANDBOX === 'true'};
+                    window.__TEC_PI_SANDBOX = __sandbox;
                     window.Pi.init({
                       version: '2.0',
-                      sandbox: ${process.env.NEXT_PUBLIC_PI_SANDBOX === 'true'},
+                      sandbox: __sandbox,
                     });
                     window.__TEC_PI_READY = true;
                     window.dispatchEvent(new Event('tec-pi-ready'));

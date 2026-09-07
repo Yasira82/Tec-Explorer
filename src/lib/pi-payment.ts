@@ -146,7 +146,14 @@ export const createU2APayment = async (
             } catch (err) { done({ status: 'error', success: false, message: String(err) }); }
           },
           onCancel: () => done({ status: 'cancelled', success: false }),
-          onError:  (err: Error) => done({ status: 'error', success: false, message: err.message }),
+          // The SDK is not guaranteed to hand back a real Error — reading
+          // `.message` off `undefined` would throw INSIDE the callback, where
+          // nothing catches it, and the payment would hang to the timeout with
+          // no message at all.
+          onError:  (err?: unknown) => done({
+            status: 'error', success: false,
+            message: err instanceof Error ? err.message : (err ? String(err) : 'Pi reported an error with no detail.'),
+          }),
         },
       );
     } catch (err) {

@@ -7,6 +7,12 @@ import { C } from '@/lib-client/palette';
 
 // ── تعديل حسب الـ domain ──────────────────────────────────
 const HUB_URL    = process.env.NEXT_PUBLIC_HUB_URL    ?? 'https://hub.tecosystem.app';
+// The SSO return address must be the host the visitor is ACTUALLY on.
+// One build serves the Mainnet app and its paired Testnet app on two
+// hosts; a build-time constant returns a Testnet visitor to the Mainnet
+// origin, where the session then lives and the Testnet host stays
+// "Unauthorized" with nothing logged. The Hub validates the target
+// against its own ALLOWED_TARGETS, so nothing is weakened.
 const APP_URL    = process.env.NEXT_PUBLIC_APP_URL    ?? 'https://explorer.tecosystem.app';
 const APP_NAME   = process.env.NEXT_PUBLIC_APP_NAME   ?? 'TEC Explorer';
 const APP_EMOJI  = process.env.NEXT_PUBLIC_APP_EMOJI  ?? '🧭';
@@ -22,7 +28,7 @@ export default function HomePage() {
   }, [isLoading, isAuthenticated, router]);
 
   const handleLogin = () => {
-    ssoRedirect(HUB_URL, `${APP_URL}/app`);
+    ssoRedirect(HUB_URL, `${typeof window === 'undefined' ? APP_URL : window.location.origin}/app`);
   };
 
   return (
