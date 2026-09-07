@@ -55,11 +55,19 @@ describe('the route and the fallback both obey C-123', () => {
     expect(s).not.toMatch(/const cookieDomain\s*=\s*\n?\s*process\.env\.COOKIE_DOMAIN/);
   });
 
-  it('the document.cookie fallback sets Partitioned (LAW 3)', () => {
-    // The server response already carries it. The fallback did not — and the
-    // Testnet host is precisely where the fallback is what carries the session.
+  it('the document.cookie fallback does NOT set Partitioned — and that is deliberate', () => {
+    // Reversed after Mainnet auth turned intermittent. The server response DOES
+    // set it (C-123 LAW 3); this fallback's value was the unpartitioned
+    // duplicate beside it, and removing that left no cookie at all in any
+    // context where the partitioned copy is not sent.
+    //
+    // Pinned so the "obvious consistency fix" is not reapplied by someone who
+    // has not read why it was undone.
     const s = read();
-    expect(s).toMatch(/secure; samesite=none; partitioned/);
+    expect(s).toMatch(/secure; samesite=none';/);
+    expect(s).not.toMatch(/samesite=none; partitioned/);
+    // The SERVER cookie must still carry it — that is the half LAW 3 governs.
+    expect(s).toMatch(/partitioned:\s*true/);
   });
 
   it('the fallback sets no domain at all', () => {
