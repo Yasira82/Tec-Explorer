@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify }                 from 'jose';
 import { cookieDomainFor }           from '@/lib/cookie-domain';
+import { HUB_HOSTS }                 from '@/lib/pi-network';
 
 // Hub SSO landing — C-123 compliant (Pi Browser Session & Cookie Spec):
 //   LAW 2: Set-Cookie on 3xx responses is dropped by Pi Browser → cookies are
@@ -108,8 +109,15 @@ export async function GET(req: NextRequest) {
   // ADR-007/C-12 §3: this landing replaces the old 3xx chain (C-123 LAW 2),
   // so location.replace() below erases the hub referrer. Persist the
   // hub-entry signal per-tab — isHubNavigation() consults it (pi-payment.ts).
+  //
+  // BOTH Hub hosts (HUB_HOSTS, lib/pi-network.ts). This named only the Mainnet
+  // Hub, so an SSO hop from the TESTNET Hub set no flag and the app then
+  // treated a Hub-owned Pi session as its own — Pi.authenticate never answers
+  // and the buy ends in a 90s timeout with the wallet never opening.
+  var hubHosts = ${esc(JSON.stringify(HUB_HOSTS))};
   try {
-    if (document.referrer.toLowerCase().indexOf('hub.tecosystem.app') !== -1) {
+    if (document.referrer &&
+        hubHosts.indexOf(new URL(document.referrer).hostname.toLowerCase()) !== -1) {
       sessionStorage.setItem('__tec_hub_entry', '1');
     }
   } catch (e) {}

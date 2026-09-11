@@ -117,3 +117,58 @@ describe('the client and the server read the same fact separately', () => {
     expect(route).toMatch(/const \{ testnet: _clientTestnet, \.\.\.metadata \}/);
   });
 });
+
+
+// ── Hub-entry detection: BOTH hosts ─────────────────────────────────────────
+// ADR-007 exists because a visitor who arrived from the Hub is inside a Pi
+// session the HUB owns: this app must not Pi.init() (it poisons that session)
+// and must not Pi.authenticate() (it never answers). The detection named only
+// `hub.tecosystem.app`, so a hop from the TESTNET Hub read as standalone —
+// there is no error to catch, and the only thing the user sees is the app's
+// own payment timeout with the Pi wallet never having opened.
+describe('isHubReferrer', () => {
+  it('recognises the Mainnet Hub — unchanged', async () => {
+    const { isHubReferrer } = await import('@/lib/pi-network');
+    expect(isHubReferrer('https://hub.tecosystem.app/hub')).toBe(true);
+    expect(isHubReferrer('https://hub.tecosystem.app/')).toBe(true);
+  });
+
+  it('recognises the TESTNET Hub — the case that was blind', async () => {
+    const { isHubReferrer } = await import('@/lib/pi-network');
+    expect(isHubReferrer('https://tec-app-frontend.vercel.app/hub')).toBe(true);
+    expect(isHubReferrer('https://TEC-APP-FRONTEND.vercel.app/hub')).toBe(true);
+  });
+
+  it('is not fooled by a host that merely CONTAINS a Hub name', async () => {
+    // The old check was `referrer.includes('hub.tecosystem.app')`, and that
+    // direction fails OPEN: a hostile referrer could force Mode 1 and choose
+    // the Hub URL the buyer is sent to.
+    const { isHubReferrer } = await import('@/lib/pi-network');
+    for (const r of [
+      'https://hub.tecosystem.app.attacker.com/x',
+      'https://evil.com/?r=hub.tecosystem.app',
+      'https://tec-app-frontend.vercel.app.evil.com/',
+    ]) {
+      expect(isHubReferrer(r)).toBe(false);
+    }
+  });
+
+  it('treats no referrer / junk as standalone, not as a Hub hop', async () => {
+    // Mode 2 is the safe reading: a wrong Mode 1 sends the buyer away from an
+    // app that could have paid.
+    const { isHubReferrer } = await import('@/lib/pi-network');
+    for (const r of ['', null, undefined, 'not a url']) {
+      expect(isHubReferrer(r as string | null | undefined)).toBe(false);
+    }
+  });
+
+  it('covers exactly the origin Mode 1 pays through', async () => {
+    // hubPaymentOrigin sends a Testnet buyer to the Testnet Hub. If that host
+    // were not also a recognised hub REFERRER, the return hop would look
+    // standalone and the next buy would hang the same way.
+    const { isHubReferrer, hubPaymentOrigin, HUB_HOSTS } = await import('@/lib/pi-network');
+    const testnetHubOrigin = hubPaymentOrigin('https://hub.tecosystem.app', 'tec-app.vercel.app');
+    expect(isHubReferrer(`${testnetHubOrigin}/hub?pay=1`)).toBe(true);
+    expect(HUB_HOSTS).toContain(new URL(testnetHubOrigin).hostname);
+  });
+});

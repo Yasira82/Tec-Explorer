@@ -32,7 +32,7 @@ export interface PaymentResult {
 // TODO(new app): set your app slug.
 const APP_SOURCE = 'explorer';
 
-import { hubPaymentOrigin } from '@/lib/pi-network';
+import { hubPaymentOrigin, isHubReferrer } from '@/lib/pi-network';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -41,13 +41,19 @@ const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
  * Two signals (C-12 §3): the sessionStorage flag persisted by the SSO landing
  * page (the C-123 LAW-2 landing erases the hub referrer via location.replace),
  * with document.referrer as fallback for direct hub→app hops.
+ *
+ * The referrer test covers BOTH Hub hosts (`isHubReferrer`). It used to name
+ * only the Mainnet Hub, so a hop from the Testnet Hub read as standalone and
+ * this app called Pi.authenticate() inside a session the Hub owns — which never
+ * answers, and shows up only as the 90s payment timeout with the Pi wallet
+ * never opening. See pi-network.ts for the full note.
  */
 export const isHubNavigation = (): boolean => {
   if (typeof window === 'undefined') return false;
   try {
     if (window.sessionStorage.getItem('__tec_hub_entry') === '1') return true;
   } catch { /* storage unavailable — fall back to referrer */ }
-  return document.referrer.toLowerCase().includes('hub.tecosystem.app');
+  return isHubReferrer(document.referrer);
 };
 
 /** Mode 1 — hand the payment off to the Hub modal. `/hub?pay=1` is LOCKED (C-76/ADR-007). */
