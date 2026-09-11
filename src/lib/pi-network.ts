@@ -37,8 +37,24 @@
  * `vercel.app.attacker.com` — is not mistaken for one. The port is stripped
  * because `Host` carries it and the hostname is what identifies the app.
  */
-export const isTestnetHost = (host?: string | null): boolean =>
-  /\.vercel\.app$/i.test((host ?? '').split(':')[0]?.trim() ?? '');
+const TESTNET_SUFFIXES = [
+  // The original pairing. Kept: these hosts stay registered and working while
+  // the fleet migrates, and an entry that resolves to nothing is inert.
+  /\.vercel\.app$/i,
+  // The `-test` pairing, which gives Testnet the SAME SHAPE as Mainnet: both
+  // halves under one registrable domain, instead of the Hub and the app living
+  // on two unrelated sites. `vercel.app` is on the PUBLIC SUFFIX LIST, so
+  // `tec-app-frontend.vercel.app` and `tec-system.vercel.app` are as unrelated
+  // to each other as two strangers' domains — different cookie jars, different
+  // partitions, nothing shared. Every host-vs-network bug in this series came
+  // from that asymmetry, so the fix is to remove the asymmetry.
+  /(^|\.)[a-z0-9-]+-test\.tecosystem\.app$/i,
+];
+
+export const isTestnetHost = (host?: string | null): boolean => {
+  const hostname = (host ?? '').split(':')[0]?.trim() ?? '';
+  return TESTNET_SUFFIXES.some(re => re.test(hostname));
+};
 
 /** The metadata a payment carries so every later step agrees which network it was on. */
 export const networkMetadata = (host?: string | null): { testnet?: true } =>
@@ -69,12 +85,24 @@ export const networkMetadata = (host?: string | null): { testnet?: true } =>
  * how every app completed its Testnet login. Changing it would risk a flow
  * that works, to fix one that does not.
  */
-const HUB_TESTNET_ORIGIN = 'https://tec-app-frontend.vercel.app';
+const HUB_TESTNET_LEGACY = 'https://tec-app-frontend.vercel.app';
+const HUB_TESTNET_PAIRED = 'https://hub-test.tecosystem.app';
 
-export const hubPaymentOrigin = (configuredHubUrl: string, host?: string | null): string =>
-  isTestnetHost(host ?? (typeof window === 'undefined' ? null : window.location.hostname))
-    ? HUB_TESTNET_ORIGIN
-    : configuredHubUrl;
+/**
+ * There are TWO Testnet Hubs during the migration, and handing a payment to the
+ * wrong one is the same failure as handing it to the Mainnet Hub: the Hub's own
+ * host decides which Pi app approves it. So the answer follows the host the
+ * visitor is actually on — `<app>-test.tecosystem.app` pairs with
+ * `hub-test.tecosystem.app`, and the legacy `*.vercel.app` app pairs with the
+ * legacy `*.vercel.app` Hub. Never derived from a name, never a build constant.
+ */
+export const hubPaymentOrigin = (configuredHubUrl: string, host?: string | null): string => {
+  const hostname = (host ?? (typeof window === 'undefined' ? '' : window.location.hostname)) ?? '';
+  if (!isTestnetHost(hostname)) return configuredHubUrl;
+  return /-test\.tecosystem\.app$/i.test(hostname.split(':')[0] ?? '')
+    ? HUB_TESTNET_PAIRED
+    : HUB_TESTNET_LEGACY;
+};
 
 
 /**
@@ -111,6 +139,7 @@ export const hubPaymentOrigin = (configuredHubUrl: string, host?: string | null)
 export const HUB_HOSTS: readonly string[] = [
   'hub.tecosystem.app',
   'tec-app-frontend.vercel.app',
+  'hub-test.tecosystem.app',
 ];
 
 /** True when this page was opened FROM the Hub — either Hub. */
