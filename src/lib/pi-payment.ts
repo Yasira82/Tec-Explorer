@@ -33,6 +33,7 @@ export interface PaymentResult {
 const APP_SOURCE = 'explorer';
 
 import { hubPaymentOrigin, isHubReferrer } from '@/lib/pi-network';
+import { piSession } from '@/lib/pi/pi-session';
 
 const HUB_URL = process.env.NEXT_PUBLIC_HUB_URL ?? 'https://hub.tecosystem.app';
 
@@ -66,6 +67,12 @@ export const redirectToHubPayment = (params: {
     source: APP_SOURCE,
     amount: String(params.amount),
     item:   params.itemId,
+    // Where the Hub sends the user back — on Cancel AND on success. Omitting it
+    // left the Hub defaulting to its OWN /hub, so cancelling a payment that
+    // started here dropped the user on the Hub: they never left this app in
+    // their mind, and the app never learned the outcome (`/app` is where
+    // ?payment_status is read). Always say where home is.
+    return_url: `${window.location.origin}/app`,
     ...(params.memo ? { memo: params.memo } : {}),
   });
   window.location.href = `${hubPaymentOrigin(HUB_URL)}/hub?${q.toString()}`;
@@ -109,19 +116,13 @@ export const createU2APayment = async (
     const headers: Record<string, string> = { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    try {
-      await window.Pi.authenticate(['username', 'payments'], async (incomplete: unknown) => {
-        const pid = (incomplete as { identifier?: string } | null)?.identifier;
-        if (!pid) return;
-        try {
-          await fetch('/api/bff/payment/resolve-incomplete', {
-            method: 'POST', credentials: 'include', headers,
-            body: JSON.stringify({ pi_payment_id: pid }),
-          });
-        } catch {}
-      });
-    } catch (authErr) {
-      done({ status: 'error', success: false, message: 'Pi auth failed: ' + (authErr instanceof Error ? authErr.message : String(authErr)) });
+    // The handshake normally already happened at page load (PiWarmup), so this
+    // resolves immediately and the tap goes straight to createPayment. It is a
+    // gate, not a second call: if a warm-up is still running this JOINS it —
+    // two concurrent Pi.authenticate calls are what Pi Browser answers neither
+    // of. See lib/pi/pi-session.ts.
+    if (!(await piSession.ensureAuth())) {
+      done({ status: 'error', success: false, message: 'Pi auth failed — please try again.' });
       return;
     }
 
