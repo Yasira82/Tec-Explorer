@@ -47,6 +47,10 @@ const TEMPLATE_FILES = [
   'lib-client/pi/pi-auth.ts',
   'lib/pi-payment.ts',
   'lib/pi/PiCircuitBreaker.ts',
+  // Shared session manager (the authenticate gate). Its one silent catch is the
+  // best-effort incomplete-payment resolve; like the rest of this list it should
+  // be fixed in the TEMPLATE, once, not diverged here.
+  'lib/pi/pi-session.ts',
   'lib/bff/createHandler.ts',
 ];
 
