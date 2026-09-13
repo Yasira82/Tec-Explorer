@@ -6,6 +6,25 @@ on:
   pull_request:
     branches: [main]
 
+# One run per ref. Pushing again to a PR branch cancels the superseded run
+# instead of racing it: the last commit is the only one anyone reads, and
+# without this every intermediate push paid for a full pipeline — CI's five
+# jobs, a CodeQL analysis, a Playwright install-build-and-run — that was
+# obsolete before it finished.
+#
+# `main` is EXCLUDED from cancellation on purpose: a run there is the
+# post-merge record (and the status a deploy gate reads). Cancelling those
+# would trade money for the one signal worth keeping.
+#
+# This expression is copied verbatim from `tec-knowledge-base`
+# knowledge-ci.yml — the fleet had TWO forms of this rule and the other one
+# (tec-app, `cancel-in-progress: true`) cancels main runs as well. One rule,
+# one spelling (P2).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+
 jobs:
   e2e:
     name: Playwright E2E

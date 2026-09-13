@@ -1,12 +1,34 @@
 name: CodeQL
 
 on:
-  push:
-    branches: [main]
+  # `push: [main]` removed. The `pull_request` run already analysed this exact
+  # code; merging re-analysed it minutes later for the same answer. The weekly
+  # `schedule` run still executes on the default branch, so the Security tab's
+  # baseline — what actually ages and closes alerts — keeps refreshing. It
+  # refreshes weekly now instead of per-merge. That is the trade, stated rather
+  # than hidden: PR coverage is unchanged, main-branch coverage is coarser.
   pull_request:
     branches: [main]
   schedule:
     - cron: '0 6 * * 1'
+
+# One run per ref. Pushing again to a PR branch cancels the superseded run
+# instead of racing it: the last commit is the only one anyone reads, and
+# without this every intermediate push paid for a full pipeline — CI's five
+# jobs, a CodeQL analysis, a Playwright install-build-and-run — that was
+# obsolete before it finished.
+#
+# `main` is EXCLUDED from cancellation on purpose: a run there is the
+# post-merge record (and the status a deploy gate reads). Cancelling those
+# would trade money for the one signal worth keeping.
+#
+# This expression is copied verbatim from `tec-knowledge-base`
+# knowledge-ci.yml — the fleet had TWO forms of this rule and the other one
+# (tec-app, `cancel-in-progress: true`) cancels main runs as well. One rule,
+# one spelling (P2).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   analyze:
