@@ -36,9 +36,14 @@ export function ArrivalReport() {
   useEffect(() => {
     try {
       if (sessionStorage.getItem(ONCE_KEY)) return;
-    } catch {
+    } catch { /* ignore */
       // Private window, or storage blocked. Report anyway — a duplicate costs
       // one upsert; skipping costs the visit.
+      //
+      // The `/* ignore */` marker is not decoration: `no-silent-failures` reads
+      // it as "this emptiness is a decision". A catch that says nothing is
+      // indistinguishable from a catch somebody forgot to finish, which is the
+      // whole reason that guard exists (C-96).
     }
 
     // The route requires a session and answers 401 without one, which is the
