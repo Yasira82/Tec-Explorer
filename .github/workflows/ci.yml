@@ -30,88 +30,53 @@ permissions:
   contents: read
 
 jobs:
-  payment-policy:
-    name: Payment contract policy (ADR-009)
+  # ── ONE job, ONE install ──────────────────────────────────────────────────
+  #
+  # This was five jobs. They were correct and they were expensive, for two
+  # reasons that compound:
+  #
+  #   1. FOUR of them ran `npm install` — the same install, four times, on four
+  #      runners, for one commit.
+  #   2. GitHub bills each job ROUNDED UP TO THE MINUTE. The policy job is a
+  #      handful of greps that finish in seconds and cost a full minute anyway.
+  #      Five jobs means five roundings before any real work is counted.
+  #
+  # Splitting them bought parallelism — a faster red light. On a platform built
+  # by one person, wall-clock minutes are worth far less than the bill, and in
+  # September 2026 the Actions budget reached 98% of its cap with `Stop usage`
+  # armed, which would have frozen every open PR across 29 repos.
+  #
+  # Nothing is dropped. Every check that ran before still runs, in the order a
+  # failure is cheapest to find: the greps need no install and go first; a type
+  # error stops the run before the test suite and the build.
+  #
+  # e2e stays a separate workflow ON PURPOSE. It builds with different
+  # `NEXT_PUBLIC_*` values (localhost gateway + E2E_MODE), and those are inlined
+  # at BUILD time — so its build is a genuinely different artifact that this one
+  # cannot stand in for.
+  verify:
+    name: Verify
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: Check payment contract + CSRF placement
-        run: |
-          violations=0
-          # ADR-009: internal-auth header + amount-as-number
-          if grep -rniE 'x-service-secret|SERVICE_SECRET' src; then
-            echo "::error::ADR-009: use x-internal-key / INTERNAL_SECRET (not x-service-secret / SERVICE_SECRET)"
-            violations=1
-          fi
-          if grep -rnE 'amount:[[:space:]]*z\.string' src | grep -qi payment; then
-            echo "::error::ADR-009: payment amount must be a number — no z.string() for amount in payment routes"
-            violations=1
-          fi
-          # P2: CSRF is middleware-only — no route-level CSRF validate-and-403
-          if grep -rnE 'csrfCookie !== csrfHeader|csrfCookie === csrfHeader|CSRF validation failed|CSRF token mismatch' src/app/api 2>/dev/null; then
-            echo "::error::CSRF must be enforced ONLY in middleware (P2). Remove route-level CSRF checks — they 403 legit Pi-Browser payments. (KB C-12 §11)"
-            violations=1
-          fi
-          [ "$violations" -eq 0 ] && echo "payment contract policy OK" || exit 1
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
+        run: "violations=0\n# ADR-009: internal-auth header + amount-as-number\nif grep -rniE 'x-service-secret|SERVICE_SECRET' src; then\n  echo \"::error::ADR-009: use x-internal-key / INTERNAL_SECRET (not x-service-secret / SERVICE_SECRET)\"\n  violations=1\nfi\nif grep -rnE 'amount:[[:space:]]*z\\.string' src | grep -qi payment; then\n  echo \"::error::ADR-009: payment amount must be a number — no z.string() for amount in payment routes\"\n  violations=1\nfi\n# P2: CSRF is middleware-only — no route-level CSRF validate-and-403\nif grep -rnE 'csrfCookie !== csrfHeader|csrfCookie === csrfHeader|CSRF validation failed|CSRF token mismatch' src/app/api 2>/dev/null; then\n  echo \"::error::CSRF must be enforced ONLY in middleware (P2). Remove route-level CSRF checks — they 403 legit Pi-Browser payments. (KB C-12 §11)\"\n  violations=1\nfi\n[ \"$violations\" -eq 0 ] && echo \"payment contract policy OK\" || exit 1\n"
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
-          cache: 'npm'
-      - name: Install
-        run: npm install --legacy-peer-deps
-      - name: Lint
-        run: npm run lint
-        continue-on-error: true
-
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
+          cache: npm
       - name: Install
         run: npm install --legacy-peer-deps
       - name: Typecheck
         run: npm run typecheck
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install
-        run: npm install --legacy-peer-deps
+      - name: Lint
+        run: npm run lint
+        continue-on-error: true
       - name: Test
         run: npm test
-
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    needs: [typecheck]
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - name: Install
-        run: npm install --legacy-peer-deps
       - name: Build
         run: npm run build
         env:
-          NEXT_PUBLIC_PI_SANDBOX:      'true'
+          NEXT_PUBLIC_PI_SANDBOX: 'true'
           NEXT_PUBLIC_API_GATEWAY_URL: ${{ secrets.NEXT_PUBLIC_API_GATEWAY_URL || 'https://api-gateway-production-6a68.up.railway.app' }}
-          NEXT_PUBLIC_PI_APP_ID:       ${{ secrets.NEXT_PUBLIC_PI_APP_ID || 'test-app-id' }}
+          NEXT_PUBLIC_PI_APP_ID: ${{ secrets.NEXT_PUBLIC_PI_APP_ID || 'test-app-id' }}
