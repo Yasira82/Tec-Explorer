@@ -61,7 +61,7 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check payment contract + CSRF placement
         run: "violations=0\n# ADR-009: internal-auth header + amount-as-number\nif grep -rniE 'x-service-secret|SERVICE_SECRET' src; then\n  echo \"::error::ADR-009: use x-internal-key / INTERNAL_SECRET (not x-service-secret / SERVICE_SECRET)\"\n  violations=1\nfi\nif grep -rnE 'amount:[[:space:]]*z\\.string' src | grep -qi payment; then\n  echo \"::error::ADR-009: payment amount must be a number — no z.string() for amount in payment routes\"\n  violations=1\nfi\n# P2: CSRF is middleware-only — no route-level CSRF validate-and-403\nif grep -rnE 'csrfCookie !== csrfHeader|csrfCookie === csrfHeader|CSRF validation failed|CSRF token mismatch' src/app/api 2>/dev/null; then\n  echo \"::error::CSRF must be enforced ONLY in middleware (P2). Remove route-level CSRF checks — they 403 legit Pi-Browser payments. (KB C-12 §11)\"\n  violations=1\nfi\n[ \"$violations\" -eq 0 ] && echo \"payment contract policy OK\" || exit 1\n"
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: '20'
           cache: npm
