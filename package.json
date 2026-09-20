@@ -17,7 +17,7 @@
   "dependencies": {
     "@sentry/nextjs": "^8.0.0",
     "@types/leaflet": "^1.9.12",
-    "@yasser172/tec-auth": "^1.0.0",
+    "@yasser172/tec-auth": "^1.2.0",
     "@yasser172/tec-sdk": "^1.2.2",
     "@yasser172/tec-ui": "^3.0.0",
     "axios": "^1.13.5",
