@@ -67,6 +67,18 @@ export function middleware(req: NextRequest) {
     if (!token || token.trim() === '') {
       const loginUrl = new URL('/', req.url);
       loginUrl.searchParams.set('redirect', pathname);
+      // Carry the Hub-surface marker across the sign-in hop.
+      //
+      // A first visit arrives as `/app?q=1`, has no session, and is sent here —
+      // and the query died on that redirect, so the one visitor who needs a way
+      // back (the one who just had to sign in) was the only one who never got it.
+      // `QuestReturn` reads it on the landing page below.
+      //
+      // Matched against the closed set it knows — `1` the Founding Quest, `2` the
+      // reward campaign — and re-emitted as a literal. This value decides a link
+      // the app renders, so it is never copied through.
+      const q = req.nextUrl.searchParams.get('q');
+      if (q === '1' || q === '2') loginUrl.searchParams.set('q', q);
       return NextResponse.redirect(loginUrl);
     }
   }
