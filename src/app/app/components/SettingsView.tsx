@@ -114,7 +114,11 @@ export function SettingsView() {
           }}>{(username ?? 'Y').charAt(0).toUpperCase()}</div>
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 18, fontWeight: 800, color: C.text }}>
-              {username ? `@${username}` : signedIn ? s.member : s.notSignedIn}
+              {/* While `/api/auth/me` is still answering, say nothing — not
+                  "Not signed in". That verdict was painted on every first
+                  render and replaced a moment later, so the same app showed
+                  the name on one visit and "Not signed in" on the next. */}
+              {username ? `@${username}` : signedIn ? s.member : me.loading ? '…' : s.notSignedIn}
             </div>
             <div style={{ fontSize: 13, color: C.subtext, marginTop: 2 }}>{isPro ? s.planPro : s.planFree}</div>
             {signedIn && (
