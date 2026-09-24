@@ -119,6 +119,14 @@ export function SettingsView() {
                   render and replaced a moment later, so the same app showed
                   the name on one visit and "Not signed in" on the next. */}
               {username ? `@${username}` : signedIn ? s.member : me.loading ? '…' : s.notSignedIn}
+              {/* Why — the word `/me` answered with, small and only when it said
+                  no. Signed-out on a device that is signed in is the one case
+                  this app cannot diagnose from anywhere else. */}
+              {!username && !signedIn && !me.loading && me.reason && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: C.subtext, marginInlineStart: 8 }}>
+                  · {me.reason}
+                </span>
+              )}
             </div>
             <div style={{ fontSize: 13, color: C.subtext, marginTop: 2 }}>{isPro ? s.planPro : s.planFree}</div>
             {signedIn && (
