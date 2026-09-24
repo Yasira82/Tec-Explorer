@@ -26,10 +26,24 @@ export async function POST(req: NextRequest) {
 
     if (newToken) {
       const cookieDomain = process.env.COOKIE_DOMAIN ?? process.env.NEXT_PUBLIC_SSO_DOMAIN ?? undefined;
-      response.cookies.set('tec_access_token', newToken, {
+      // A session is BOTH cookies, so a refresh renews both.
+      //
+      // This used to renew the token alone. `tec_user` kept the lifetime the
+      // sign-in gave it, so a day later the name cookie expired while the token
+      // was still being renewed — a half session: the page opened, and every
+      // screen said "Not signed in" with no way to sign in again. The values are
+      // re-issued exactly as they are, never invented: a cookie that has already
+      // lapsed stays lapsed, and the page guard sends that visitor back through
+      // SSO (P6).
+      const sessionCookieOpts = {
         httpOnly: false, secure: true, sameSite: 'none', partitioned: true,
         path: '/', domain: cookieDomain, maxAge: 60 * 60 * 24,
-      });
+      } as const;
+      response.cookies.set('tec_access_token', newToken, sessionCookieOpts);
+      for (const name of ['tec_user', 'tec_csrf'] as const) {
+        const value = req.cookies.get(name)?.value;
+        if (value) response.cookies.set(name, value, sessionCookieOpts);
+      }
     }
     return response;
   } catch {

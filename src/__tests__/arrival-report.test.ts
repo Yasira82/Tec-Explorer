@@ -41,6 +41,20 @@ describe('the arrival report says which app from SERVER code', () => {
     expect(route).not.toMatch(/owner|username|pi_uid/);
   });
 
+  it('says WHY an arrival was not recorded', () => {
+    // A zero on the coverage screen is the only symptom otherwise — Insure sat
+    // at 0/5 with nine pioneers opening it and nothing said which link broke.
+    expect(route).toMatch(/reason: `gateway_\$\{res\.status\}`/);
+    expect(route).toMatch(/log\.warn\('pioneer\.arrival_not_configured'/);
+  });
+
+  it('offers a read-only check that records nothing', () => {
+    const get = route.slice(route.indexOf('export async function GET'));
+    expect(get).toMatch(/configured:/);
+    expect(get).toMatch(/tokenValid/);
+    expect(get).not.toMatch(/fetch\(/);
+  });
+
   it('never fails the visit it is reporting', () => {
     // Nobody asked for this request. Bookkeeping that can break somebody's
     // visit is worse than bookkeeping that is occasionally missing.
@@ -59,7 +73,10 @@ describe('the reporter is silent and bounded', () => {
   it('marks it done only when the server actually took it', () => {
     // A failed report should be retried on the next page, not silently treated
     // as done.
-    expect(cmp).toMatch(/if \(res\.ok\)/);
+    // `res.ok` is not enough: the route answers 200 with `recorded: false` so it
+    // never fails a page, and a status-only check took every refusal as done.
+    expect(cmp).toMatch(/body\?\.recorded === true/);
+    expect(cmp).not.toMatch(/if \(res\.ok\) \{/);
   });
 
   it('survives navigation, like the Hub tap record does', () => {

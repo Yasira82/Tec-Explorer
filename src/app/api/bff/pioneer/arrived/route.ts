@@ -1,5 +1,8 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify }     from 'jose';
 import { createHandler } from '@/lib/bff/createHandler';
 import { APP_SOURCE }    from '@/lib/app-source';
+import { log }           from '@/lib/observability/logger';
 
 const GATEWAY = process.env.API_GATEWAY_URL ?? '';
 
@@ -48,7 +51,14 @@ export const POST = createHandler({
     // Unconfigured is not an error worth surfacing here — it means this
     // deployment cannot vouch for anything, and the campaign falls back to the
     // Hub's tap exactly as it did before.
-    if (!GATEWAY || !secret) return { recorded: false, reason: 'not-configured' };
+    if (!GATEWAY || !secret) {
+      // Said in the log, not only in the response: a deployment missing its
+      // gateway or key cannot count a single arrival, and the coverage screen
+      // shows that only as a zero. Insure sat at 0/5 with nine pioneers opening
+      // it, and nothing anywhere said why.
+      log.warn('pioneer.arrival_not_configured', { app: APP_SOURCE, requestId: ctx.requestId });
+      return { recorded: false, reason: 'not-configured' };
+    }
 
     try {
       const res = await fetch(`${GATEWAY}/api/identity/pioneer/arrived`, {
@@ -64,9 +74,50 @@ export const POST = createHandler({
         body:  JSON.stringify({ app: APP_SOURCE }),
         cache: 'no-store',
       });
-      return { recorded: res.ok };
+      if (res.ok) return { recorded: true };
+      // The status is the whole diagnosis — 401 is the token, 403 the internal
+      // key, 404 a gateway without the route. `recorded: false` alone named none
+      // of them.
+      log.warn('pioneer.arrival_rejected', { app: APP_SOURCE, status: res.status, requestId: ctx.requestId });
+      return { recorded: false, reason: `gateway_${res.status}` };
     } catch {
+      log.warn('pioneer.arrival_unreachable', { app: APP_SOURCE, requestId: ctx.requestId });
       return { recorded: false, reason: 'unreachable' };
     }
   },
 });
+
+/**
+ * GET /api/bff/pioneer/arrived — can this deployment count an arrival for YOU?
+ *
+ * Read-only, and made to be opened by hand on the phone that is not being
+ * counted. It answers the three questions a zero on the coverage screen cannot:
+ * is this deployment wired to the gateway, did this browser send a session, and
+ * is the token in it still good. Booleans only — never a value, a length, or a
+ * claim out of the token — and it records nothing: a GET that wrote an arrival
+ * would let a link preview count as a visit.
+ */
+export async function GET(req: NextRequest) {
+  const token = req.cookies.get('tec_access_token')?.value ?? '';
+  const user  = req.cookies.get('tec_user')?.value ?? '';
+
+  let tokenValid = false;
+  const jwtSecret = process.env.JWT_SECRET;
+  if (token && jwtSecret) {
+    try {
+      await jwtVerify(token, new TextEncoder().encode(jwtSecret), { algorithms: ['HS256'] });
+      tokenValid = true;
+    } catch { /* ignore */
+      // Expired or foreign — which is exactly the answer being asked for.
+    }
+  }
+
+  return NextResponse.json(
+    {
+      app:        APP_SOURCE,
+      configured: Boolean(GATEWAY && process.env.INTERNAL_SECRET),
+      session:    { token: token !== '', user: user !== '', tokenValid },
+    },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
+}

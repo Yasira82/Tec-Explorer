@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   if (token !== req.cookies.get('tec_access_token')?.value) {
     response.cookies.set('tec_access_token', token, {
-      httpOnly: false, secure: true, sameSite: 'none', path: '/', maxAge: 60 * 60 * 24,
+      httpOnly: false, secure: true, sameSite: 'none', partitioned: true, path: '/', maxAge: 60 * 60 * 24,
     });
   }
   return response;

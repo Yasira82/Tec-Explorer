@@ -64,7 +64,17 @@ export function middleware(req: NextRequest) {
   // ── Page auth guard ──────────────────────────────────────
   if (PROTECTED_ROUTES.some(r => pathname.startsWith(r))) {
     const token = req.cookies.get('tec_access_token')?.value;
-    if (!token || token.trim() === '') {
+    // A session is BOTH cookies — the same definition `/api/auth/me` uses.
+    //
+    // This guard used to accept the token alone. When `tec_user` had lapsed
+    // and the token had not, the page opened and then every screen said
+    // "Not signed in": the guard and `/me` disagreed about what a session is,
+    // and the person was stranded between them with no way to sign in. A half
+    // session now counts as none, so it goes through the Hub's SSO — which is
+    // silent when the Hub session is good — and comes back whole (P6: when in
+    // doubt about identity, do not proceed as if there were one).
+    const user  = req.cookies.get('tec_user')?.value;
+    if (!token || token.trim() === '' || !user || user.trim() === '') {
       const loginUrl = new URL('/', req.url);
       loginUrl.searchParams.set('redirect', pathname);
       // Carry the Hub-surface marker across the sign-in hop.

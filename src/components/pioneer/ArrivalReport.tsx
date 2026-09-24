@@ -57,10 +57,18 @@ export function ArrivalReport() {
       // navigation, which is the same reason the Hub's tap record uses it.
       keepalive:   true,
     })
-      .then((res) => {
-        // Marked only on success. A failed report should be retried on the next
-        // page, not silently treated as done.
-        if (res.ok) {
+      .then(async (res) => {
+        // Marked only when the platform actually RECORDED it. A failed report
+        // should be retried on the next page, not silently treated as done.
+        //
+        // `res.ok` alone was not that: the route answers 200 with
+        // `{ recorded: false }` when the gateway refuses or is not configured —
+        // on purpose, so bookkeeping never fails a page. Reading only the
+        // status, the reporter took every refusal as success and never asked
+        // again for the rest of the visit.
+        if (!res.ok) return;
+        const body = await res.json().catch(() => null) as { recorded?: unknown } | null;
+        if (body?.recorded === true) {
           try { sessionStorage.setItem(ONCE_KEY, '1'); } catch { /* ignore */ }
         }
       })
