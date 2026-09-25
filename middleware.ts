@@ -5,6 +5,7 @@ const PROTECTED_ROUTES  = ['/app', '/dashboard', '/profile', '/settings'];
 const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_PROTECTED    = [
   '/api/auth/logout',
+  '/api/auth/pi-login', // a sign-in is a state change too (login CSRF)
   '/api/auth/refresh',
   '/api/bff/',          // all BFF routes (payment, orders, …)
   '/api/payment',

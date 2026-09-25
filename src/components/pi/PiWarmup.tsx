@@ -13,6 +13,7 @@
 
 import { useEffect } from 'react';
 import { piSession } from '@/lib/pi/pi-session';
+import { selfSignIn } from '@/lib/pi/self-sign-in';
 
 export function PiWarmup() {
   useEffect(() => {
@@ -26,6 +27,11 @@ export function PiWarmup() {
     const warm = () => {
       if (w.__TEC_PI_FOREIGN_SESSION === true) return;
       piSession.warm();
+      // A standalone visit (the Quest, the campaign, Pi Browser's own app list)
+      // arrives with no session of its own. The handshake just started is what
+      // signs it in — see self-sign-in.ts. Joins the same handshake, never a
+      // second one, and does nothing when a session already exists.
+      void selfSignIn();
     };
 
     if (w.__TEC_PI_READY === true) { warm(); return; }
