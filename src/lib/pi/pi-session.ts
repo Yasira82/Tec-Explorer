@@ -56,6 +56,10 @@ const resolveIncomplete = async (incomplete: unknown): Promise<void> => {
 
 let authenticated = false;
 let inFlight: Promise<boolean> | null = null;
+// Pi's access token from the last handshake, in MEMORY only (ADR-001: never
+// localStorage/sessionStorage). It is what lets this app sign itself in when it
+// was opened without a TEC session — see self-sign-in.ts.
+let piAccessToken: string | null = null;
 
 /** A Hub-owned session (ADR-007) — authenticating here would never answer. */
 const isForeignSession = (): boolean =>
@@ -66,6 +70,11 @@ export const piSession = {
   /** True only while the SDK is still present — a marked session with no SDK is stale. */
   get isAuthenticated(): boolean {
     return authenticated && PiRuntime.isAvailable();
+  },
+
+  /** Pi's access token from the last successful handshake, or null. Memory only. */
+  get accessToken(): string | null {
+    return piAccessToken;
   },
 
   /** True while a handshake is running (warm-up or tap). */
@@ -86,8 +95,13 @@ export const piSession = {
     if (!inFlight) {
       inFlight = PiRuntime
         .authenticate(['username', 'payments'], (p: unknown) => { void resolveIncomplete(p); })
-        .then(() => { authenticated = true;  return true;  })
-        .catch(() => { authenticated = false; return false; })
+        .then((result: unknown) => {
+          const t = (result as { accessToken?: unknown } | null)?.accessToken;
+          piAccessToken = typeof t === 'string' && t ? t : null;
+          authenticated = true;
+          return true;
+        })
+        .catch(() => { authenticated = false; piAccessToken = null; return false; })
         .finally(() => { inFlight = null; });
     }
     return inFlight;
@@ -109,5 +123,6 @@ export const piSession = {
   reset(): void {
     authenticated = false;
     inFlight      = null;
+    piAccessToken = null;
   },
 };
