@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { jwtVerify }                 from 'jose';
 import { cookieDomainFor }           from '@/lib/cookie-domain';
 import { HUB_HOSTS }                 from '@/lib/pi-network';
+import { log }                       from '@/lib/observability/logger';
 
 // Hub SSO landing — C-123 compliant (Pi Browser Session & Cookie Spec):
 //   LAW 2: Set-Cookie on 3xx responses is dropped by Pi Browser → cookies are
@@ -32,14 +33,30 @@ const markJtiUsed = (jti: string): void => {
 export async function GET(req: NextRequest) {
   const token       = req.nextUrl.searchParams.get('token');
   const rawRedirect = req.nextUrl.searchParams.get('redirect') ?? DEFAULT_REDIRECT;
-  // Block open redirect: only same-origin absolute paths (no //host, no scheme).
-  const redirect = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//')
-    ? rawRedirect : DEFAULT_REDIRECT;
+  // Block open redirect: only same-origin absolute paths (no //host, no /\host,
+  // no scheme).
+  const redirect = /^\/(?![/\\])/.test(rawRedirect) ? rawRedirect : DEFAULT_REDIRECT;
 
-  if (!token) return NextResponse.redirect(new URL(DEFAULT_REDIRECT, req.url));
+  // A token this landing cannot use → go on to the page, signed out, exactly as
+  // a visit without a token would (C-123 §7, §12). The Hub's Quest and campaign
+  // now open apps through here with a one-time token (tec-app #258); a token
+  // tapped twice, or older than its 5 minutes, must not end on a JSON error
+  // page — the worst case is the visit as it was before those links existed.
+  // No cookie is set on this 3xx (LAW 2), and the reason is logged, never shown.
+  const carryOn = (reason: string) => {
+    log.warn('auth.sso_callback_unusable', { reason });
+    const res = NextResponse.redirect(new URL(redirect, req.url));
+    res.headers.set('Cache-Control', 'no-store');
+    return res;
+  };
+
+  if (!token) return carryOn('no_token');
 
   const secret = process.env.SSO_SECRET;
-  if (!secret) return NextResponse.json({ error: 'sso_not_configured' }, { status: 503 });
+  if (!secret) {
+    log.error('auth.sso_not_configured', {});
+    return carryOn('not_configured');
+  }
 
   const encoded = new TextEncoder().encode(secret);
   let payload: Record<string, unknown> | null = null;
@@ -54,17 +71,17 @@ export async function GET(req: NextRequest) {
     } catch { /* try next audience */ }
   }
 
-  if (!payload) return NextResponse.redirect(new URL('/', req.url));
+  if (!payload) return carryOn('invalid_or_expired');
 
   const jti = payload.jti as string | undefined;
   if (jti) {
-    if (isJtiUsed(jti)) return NextResponse.json({ error: 'replay_detected' }, { status: 401 });
+    if (isJtiUsed(jti)) return carryOn('replayed');
     markJtiUsed(jti);
   }
 
   const accessToken = payload.accessToken as string;
   const user        = payload.user as Record<string, unknown>;
-  if (!accessToken || !user) return NextResponse.redirect(new URL('/', req.url));
+  if (!accessToken || !user) return carryOn('incomplete');
 
   const csrf = crypto.randomUUID();
 

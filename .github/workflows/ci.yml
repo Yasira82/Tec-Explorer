@@ -80,3 +80,8 @@ jobs:
           NEXT_PUBLIC_PI_SANDBOX: 'true'
           NEXT_PUBLIC_API_GATEWAY_URL: ${{ secrets.NEXT_PUBLIC_API_GATEWAY_URL || 'https://api-gateway-production-6a68.up.railway.app' }}
           NEXT_PUBLIC_PI_APP_ID: ${{ secrets.NEXT_PUBLIC_PI_APP_ID || 'test-app-id' }}
+      # C-123 §11: a middleware Next.js does not load passes every unit test and
+      # runs nowhere. The build's own manifest is the proof that it runs.
+      - name: Middleware is compiled
+        run: |
+          node -e "const m=require('./.next/server/middleware-manifest.json').middleware; if(!m['/']){console.error('::error::middleware not compiled — it must live in src/ beside src/app (C-123 §11)');process.exit(1)} console.log('middleware compiled')"

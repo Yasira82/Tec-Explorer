@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // ── Per-app config — adjust for the new app ──────────────────────────
-const PROTECTED_ROUTES  = ['/app', '/dashboard', '/profile', '/settings'];
 const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 const CSRF_PROTECTED    = [
   '/api/auth/logout',
@@ -62,37 +61,14 @@ export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method       = req.method.toUpperCase();
 
-  // ── Page auth guard ──────────────────────────────────────
-  if (PROTECTED_ROUTES.some(r => pathname.startsWith(r))) {
-    const token = req.cookies.get('tec_access_token')?.value;
-    // A session is BOTH cookies — the same definition `/api/auth/me` uses.
-    //
-    // This guard used to accept the token alone. When `tec_user` had lapsed
-    // and the token had not, the page opened and then every screen said
-    // "Not signed in": the guard and `/me` disagreed about what a session is,
-    // and the person was stranded between them with no way to sign in. A half
-    // session now counts as none, so it goes through the Hub's SSO — which is
-    // silent when the Hub session is good — and comes back whole (P6: when in
-    // doubt about identity, do not proceed as if there were one).
-    const user  = req.cookies.get('tec_user')?.value;
-    if (!token || token.trim() === '' || !user || user.trim() === '') {
-      const loginUrl = new URL('/', req.url);
-      loginUrl.searchParams.set('redirect', pathname);
-      // Carry the Hub-surface marker across the sign-in hop.
-      //
-      // A first visit arrives as `/app?q=1`, has no session, and is sent here —
-      // and the query died on that redirect, so the one visitor who needs a way
-      // back (the one who just had to sign in) was the only one who never got it.
-      // `QuestReturn` reads it on the landing page below.
-      //
-      // Matched against the closed set it knows — `1` the Founding Quest, `2` the
-      // reward campaign — and re-emitted as a literal. This value decides a link
-      // the app renders, so it is never copied through.
-      const q = req.nextUrl.searchParams.get('q');
-      if (q === '1' || q === '2') loginUrl.searchParams.set('q', q);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+  // ── No page guard, on purpose (C-123 §7, §9, §11) ─────────────
+  // A guard here sent a session-less visit away — first to `/`, then (for one
+  // deploy, rolled back within minutes) into the Hub's SSO. From the Quest the
+  // app is opened standalone with Pi bound to THIS app (§9); a trip into the
+  // Hub cannot sign in there and never came back. The page shows its own
+  // sign-in state instead, and identity is enforced where it matters: every
+  // BFF route re-checks the session server-side (P6). The Quest and campaign
+  // links arrive already signed in (§12).
 
   // ── Unsafe method → CSRF (double-submit OR first-party origin) ────────
   if (!CSRF_SAFE_METHODS.has(method)) {

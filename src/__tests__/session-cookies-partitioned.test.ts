@@ -24,7 +24,7 @@ const code = (file: string) =>
     .filter((line) => !/^\s*(\/\/|\*)/.test(line)) // comments may quote the old form
     .join('\n');
 
-const files = () => [...sources('src'), 'middleware.ts'].filter(existsSync);
+const files = () => [...sources('src')].filter(existsSync);
 
 describe('session cookies (C-123 §2)', () => {
   it('every sameSite none cookie object is also partitioned', () => {
