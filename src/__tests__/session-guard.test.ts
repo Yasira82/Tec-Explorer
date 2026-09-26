@@ -12,7 +12,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { NextRequest } from 'next/server';
-import { middleware } from '../../middleware';
+import { middleware } from '../middleware';
 
 const visit = (cookies: Record<string, string>, path = '/app?q=1') => {
   const req = new NextRequest(`https://explorer.tecosystem.app${path}`);
@@ -22,31 +22,19 @@ const visit = (cookies: Record<string, string>, path = '/app?q=1') => {
 
 const redirectedTo = (res: Response) => res.headers.get('location');
 
-describe('the page guard admits a WHOLE session only', () => {
-  it('sends a half session (token, no tec_user) to sign in', () => {
-    const res = visit({ tec_access_token: 'tok' });
-    expect(res.status).toBe(307);
-    expect(redirectedTo(res)).toContain('/?redirect=%2Fapp');
-  });
-
-  it('keeps the Hub-surface marker across that hop', () => {
-    // The one visitor who had to sign in is the one most likely to be lost
-    // afterwards — the way back must survive the redirect.
-    expect(redirectedTo(visit({ tec_access_token: 'tok' }))).toContain('q=1');
-  });
-
-  it('sends the other half (tec_user, no token) too', () => {
-    expect(visit({ tec_user: '{"piUsername":"a"}' }).status).toBe(307);
-  });
-
-  it('treats a blank cookie as absent', () => {
-    expect(visit({ tec_access_token: 'tok', tec_user: '  ' }).status).toBe(307);
-  });
-
-  it('lets a whole session through', () => {
-    const res = visit({ tec_access_token: 'tok', tec_user: '{"piUsername":"a"}' });
-    expect(redirectedTo(res)).toBeNull();
-  });
+describe('no page guard — a session-less visit opens the page (C-123 §7, §9, §11)', () => {
+  // A redirect off-origin from a standalone Quest visit went into the Hub while
+  // Pi was bound to this app and never came back (2026-09-25). The page shows
+  // its own sign-in state; the BFF re-checks the session on every call (P6).
+  const cases: Record<string, string>[] = [{}, { tec_access_token: 'tok' }, { tec_user: '{"piUsername":"a"}' },
+    { tec_access_token: 'tok', tec_user: '{"piUsername":"a"}' }];
+  for (const cookies of cases) {
+    it(`GET /app with ${Object.keys(cookies).join('+') || 'no cookies'} is not redirected`, () => {
+      const res = visit(cookies);
+      expect(redirectedTo(res)).toBeNull();
+      expect(res.status).toBe(200);
+    });
+  }
 });
 
 /**
