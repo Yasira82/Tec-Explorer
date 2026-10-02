@@ -1,5 +1,6 @@
 import { type Category, type Listing } from './directory';
 import { reportError } from '@/lib/observability/reportError';
+import { APP_SOURCE } from '@/lib/app-source';
 
 // Server-only Explorer backend access (C-108). Calls the real Explorer search
 // module (identity-service) via the gateway with the inter-service key, and maps
@@ -194,7 +195,7 @@ export async function deleteListingBackend(
 export async function resolveProStatus(token: string): Promise<{ isPro: boolean; untilIso?: string }> {
   if (!GW) return { isPro: false };
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status`, {
+    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
       headers: authHeaders(token), cache: 'no-store',
     });
     if (!res.ok) return { isPro: false };

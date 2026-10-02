@@ -133,6 +133,11 @@ export async function GET(req: NextRequest) {
   // treated a Hub-owned Pi session as its own — Pi.authenticate never answers
   // and the buy ends in a 90s timeout with the wallet never opening.
   var hubHosts = ${esc(JSON.stringify(HUB_HOSTS))};
+  // This page is served only for a token that verified: the visitor arrived
+  // through a signed handoff (the Hub grid, the campaign, the Quest, or this
+  // app's own sign-in). The payment tap reads it — see enteredByHandoff() in
+  // pi-payment.ts for why it matters.
+  try { sessionStorage.setItem('__tec_handoff_entry', '1'); } catch (e) {}
   try {
     if (document.referrer &&
         hubHosts.indexOf(new URL(document.referrer).hostname.toLowerCase()) !== -1) {

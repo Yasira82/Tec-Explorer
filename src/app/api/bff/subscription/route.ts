@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isTestnetHost } from '@/lib/pi-network';
+import { APP_SOURCE } from '@/lib/app-source';
 
 // GET /api/bff/subscription — the caller's subscription (plan + status) from
 // commerce-service (the Subscription owner, C-47). Session-scoped (P6), read-only.
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
   if (process.env.INTERNAL_SECRET) headers['x-internal-key'] = process.env.INTERNAL_SECRET;
 
   try {
-    const res  = await fetch(`${GW}/api/commerce/subscriptions/status`, { method: 'GET', headers, cache: 'no-store' });
+    const res  = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, { method: 'GET', headers, cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
   } catch {
