@@ -14,6 +14,15 @@
 // *engage with the app*, measured at the app. So the only place that can honestly
 // say "somebody arrived" is the app itself. This is that sentence.
 //
+// ── Only after THIS app's own Pi sign-in (F3, #47) ─────────────────────────
+//
+// It used to fire on page load. Pi counts something narrower: a KYC'd Pioneer
+// who signed in with Pi IN THIS APP. So coverage read 5/5 while Pi said
+// "Requirements Not Met" (C-02 row 2), and a visit opened from the Hub grid —
+// a Hub-owned Pi session (ADR-007) that never signs in here — was counted too.
+// Now the report waits for `piSession.onSignedIn`: the warm-up's handshake, a
+// tap's, or this app's login. No handshake, no arrival — the way Pi sees it.
+//
 // ── Once per session, not once per page ────────────────────────────────────
 //
 // The backend upserts, so repeats are harmless — but a POST on every render is
@@ -29,51 +38,53 @@
 // sessionStorage that throws in a private window.
 
 import { useEffect } from 'react';
+import { piSession } from '@/lib/pi/pi-session';
 
 const ONCE_KEY = 'tec_arrival_reported';
 
 export function ArrivalReport() {
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem(ONCE_KEY)) return;
-    } catch { /* ignore */
-      // Private window, or storage blocked. Report anyway — a duplicate costs
-      // one upsert; skipping costs the visit.
-      //
-      // The `/* ignore */` marker is not decoration: `no-silent-failures` reads
-      // it as "this emptiness is a decision". A catch that says nothing is
-      // indistinguishable from a catch somebody forgot to finish, which is the
-      // whole reason that guard exists (C-96).
-    }
-
-    // The route requires a session and answers 401 without one, which is the
-    // correct outcome for a signed-out visitor: an arrival the platform cannot
-    // attribute to a pioneer is not an arrival it can count.
-    void fetch('/api/bff/pioneer/arrived', {
-      method:      'POST',
-      credentials: 'include',
-      // The visit may navigate away immediately — this is the tab a mission
-      // link opened. `keepalive` lets the browser finish the POST after
-      // navigation, which is the same reason the Hub's tap record uses it.
-      keepalive:   true,
-    })
-      .then(async (res) => {
-        // Marked only when the platform actually RECORDED it. A failed report
-        // should be retried on the next page, not silently treated as done.
-        //
-        // `res.ok` alone was not that: the route answers 200 with
-        // `{ recorded: false }` when the gateway refuses or is not configured —
-        // on purpose, so bookkeeping never fails a page. Reading only the
-        // status, the reporter took every refusal as success and never asked
-        // again for the rest of the visit.
-        if (!res.ok) return;
-        const body = await res.json().catch(() => null) as { recorded?: unknown } | null;
-        if (body?.recorded === true) {
-          try { sessionStorage.setItem(ONCE_KEY, '1'); } catch { /* ignore */ }
-        }
-      })
-      .catch(() => { /* ignore */ });
-  }, []);
-
+  useEffect(() => piSession.onSignedIn(report), []);
   return null;
+}
+
+function report(): void {
+  try {
+    if (sessionStorage.getItem(ONCE_KEY)) return;
+  } catch { /* ignore */
+    // Private window, or storage blocked. Report anyway — a duplicate costs
+    // one upsert; skipping costs the visit.
+    //
+    // The `/* ignore */` marker is not decoration: `no-silent-failures` reads
+    // it as "this emptiness is a decision". A catch that says nothing is
+    // indistinguishable from a catch somebody forgot to finish, which is the
+    // whole reason that guard exists (C-96).
+  }
+
+  // The route requires a session and answers 401 without one, which is the
+  // correct outcome for a signed-out visitor: an arrival the platform cannot
+  // attribute to a pioneer is not an arrival it can count.
+  void fetch('/api/bff/pioneer/arrived', {
+    method:      'POST',
+    credentials: 'include',
+    // The visit may navigate away immediately — this is the tab a mission
+    // link opened. `keepalive` lets the browser finish the POST after
+    // navigation, which is the same reason the Hub's tap record uses it.
+    keepalive:   true,
+  })
+    .then(async (res) => {
+      // Marked only when the platform actually RECORDED it. A failed report
+      // should be retried on the next page, not silently treated as done.
+      //
+      // `res.ok` alone was not that: the route answers 200 with
+      // `{ recorded: false }` when the gateway refuses or is not configured —
+      // on purpose, so bookkeeping never fails a page. Reading only the
+      // status, the reporter took every refusal as success and never asked
+      // again for the rest of the visit.
+      if (!res.ok) return;
+      const body = await res.json().catch(() => null) as { recorded?: unknown } | null;
+      if (body?.recorded === true) {
+        try { sessionStorage.setItem(ONCE_KEY, '1'); } catch { /* ignore */ }
+      }
+    })
+    .catch(() => { /* ignore */ });
 }
