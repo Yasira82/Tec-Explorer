@@ -48,7 +48,13 @@ export type SelfSignInOutcome =
   | 'foreign-session' | 'has-session' | 'already-tried' | 'no-pi'
   | 'refused' | 'navigating';
 
-export async function selfSignIn(now: number = Date.now()): Promise<SelfSignInOutcome> {
+/**
+ * `force` — a tap on the sign-in button. The attempt window guards against a
+ * LOOP (landing → back → attempt → landing …); a person pressing the button
+ * is not a loop, and must not be told "already tried" by a timer. The attempt
+ * is still recorded, so the automatic path stays bounded afterwards.
+ */
+export async function selfSignIn(now: number = Date.now(), opts: { force?: boolean } = {}): Promise<SelfSignInOutcome> {
   if (typeof window === 'undefined' || isForeignSession()) return 'foreign-session';
 
   const me = await fetch('/api/auth/me', { credentials: 'include', cache: 'no-store' }).catch(() => null);
@@ -59,7 +65,7 @@ export async function selfSignIn(now: number = Date.now()): Promise<SelfSignInOu
   const accessToken = piSession.accessToken;
   if (!accessToken) return 'no-pi';
 
-  if (!claimAttempt(now)) return 'already-tried';
+  if (!claimAttempt(now) && !opts.force) return 'already-tried';
 
   const res = await fetch('/api/auth/pi-login', {
     method:      'POST',
