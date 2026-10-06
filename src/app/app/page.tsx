@@ -1,5 +1,7 @@
 'use client';
 
+import { SignInGate } from '@/components/pi/SignInGate';
+
 // TEC Explorer — Economic Discovery Infrastructure (C-108). Make the Pi economy
 // discoverable: search Pi-accepting businesses, services, and opportunities by
 // text, category, and area, ranked trust-first. Explorer OWNS the index + search;
@@ -41,7 +43,7 @@ const BusinessMap = dynamic(() => import('@/components/map/BusinessMap'), {
   ),
 });
 
-export default function ExplorerHome() {
+function ExplorerHome() {
   const { user, isLoading, isAuthenticated } = usePiAuth();
   const me = useMe(); // server-resolved Pi username (Pi Browser hides tec_user from client JS — C-123 §3)
   const { t } = useTranslation();
@@ -343,4 +345,11 @@ export default function ExplorerHome() {
       <BottomNav active={tab} onSelect={setTab} />
     </main>
   );
+}
+
+// The door: a sign-in button before any screen when there is no session
+// (SignInGate — C-123 §10; owner, 2026-10-06). A visit from the Hub arrives
+// signed in (§12) and goes straight through.
+export default function ExplorerHomeGated() {
+  return <SignInGate><ExplorerHome /></SignInGate>;
 }

@@ -2,6 +2,9 @@ import { defineConfig } from 'vitest/config';
 import path             from 'path';
 
 export default defineConfig({
+  // The JSX runtime Next builds with — so a test can render a component that
+  // does not import React (SignInGate was the first to need it here).
+  esbuild: { jsx: 'automatic' },
   test: {
     environment: 'happy-dom',
     include:     ['src/**/*.{test,spec}.{ts,tsx}'],
