@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookieDomainFor } from '@/lib/cookie-domain';
 
 // Refreshes the access token via the gateway. CSRF enforced in middleware.
 const GW = process.env.API_GATEWAY_URL;
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     const response = NextResponse.json(data, { status: 200 });
 
     if (newToken) {
-      const cookieDomain = process.env.COOKIE_DOMAIN ?? process.env.NEXT_PUBLIC_SSO_DOMAIN ?? undefined;
+      const cookieDomain = cookieDomainFor(req.nextUrl.hostname, process.env.COOKIE_DOMAIN ?? process.env.NEXT_PUBLIC_SSO_DOMAIN ?? undefined);
       // A session is BOTH cookies, so a refresh renews both.
       //
       // This used to renew the token alone. `tec_user` kept the lifetime the
