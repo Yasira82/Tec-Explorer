@@ -101,7 +101,10 @@ export async function GET(req: NextRequest) {
     maxAge:      60 * 60 * 24,
   };
 
-  const userValue = encodeURIComponent(JSON.stringify(user));
+  // Raw JSON: `res.cookies.set` encodes the value itself. Encoding it here too
+  // put `%257B…` in the browser, and getStoredUser() (one decode) read nobody —
+  // every screen gated on usePiAuth() showed the sign-in again (2026-10-10).
+  const userValue = JSON.stringify(user);
 
   // Values for the document.cookie fallback (non-httpOnly cookies only; this
   // page is one-time via the jti guard). The script encodes values itself.
