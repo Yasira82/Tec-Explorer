@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { jwtVerify }     from 'jose';
+import { jwtVerify, errors } from 'jose';
 import { createHandler } from '@/lib/bff/createHandler';
 import { APP_SOURCE }    from '@/lib/app-source';
 import { log }           from '@/lib/observability/logger';
@@ -101,14 +101,33 @@ export async function GET(req: NextRequest) {
   const token = req.cookies.get('tec_access_token')?.value ?? '';
   const user  = req.cookies.get('tec_user')?.value ?? '';
 
+  // Booleans and minutes only — never a value, a claim or a key. `tokenProblem` says
+  // WHY a token is not good, because the two answers have different fixes: `expired`
+  // means nothing renewed it in time; `signature` means it was signed with a key this
+  // deployment does not hold (a JWT_SECRET that differs between services).
   let tokenValid = false;
+  let tokenProblem: 'expired' | 'signature' | 'malformed' | 'not-configured' | null = null;
+  let lifetimeMinutes: number | null = null;
+  let expiredMinutesAgo: number | null = null;
   const jwtSecret = process.env.JWT_SECRET;
+  const minutes = (s: unknown) => (typeof s === 'number' ? Math.round(s / 60) : null);
+  if (token && !jwtSecret) tokenProblem = 'not-configured';
   if (token && jwtSecret) {
     try {
-      await jwtVerify(token, new TextEncoder().encode(jwtSecret), { algorithms: ['HS256'] });
+      const { payload } = await jwtVerify(token, new TextEncoder().encode(jwtSecret), { algorithms: ['HS256'] });
       tokenValid = true;
-    } catch { /* ignore */
-      // Expired or foreign — which is exactly the answer being asked for.
+      if (typeof payload.exp === 'number' && typeof payload.iat === 'number') lifetimeMinutes = minutes(payload.exp - payload.iat);
+    } catch (err) {
+      if (err instanceof errors.JWTExpired) {
+        tokenProblem = 'expired';
+        const p = err.payload;
+        if (typeof p.exp === 'number' && typeof p.iat === 'number') lifetimeMinutes = minutes(p.exp - p.iat);
+        if (typeof p.exp === 'number') expiredMinutesAgo = minutes(Math.floor(Date.now() / 1000) - p.exp);
+      } else if (err instanceof errors.JWSSignatureVerificationFailed) {
+        tokenProblem = 'signature';
+      } else {
+        tokenProblem = 'malformed';
+      }
     }
   }
 
@@ -116,7 +135,7 @@ export async function GET(req: NextRequest) {
     {
       app:        APP_SOURCE,
       configured: Boolean(GATEWAY && process.env.INTERNAL_SECRET),
-      session:    { token: token !== '', user: user !== '', tokenValid },
+      session:    { token: token !== '', user: user !== '', tokenValid, tokenProblem, lifetimeMinutes, expiredMinutesAgo },
     },
     { headers: { 'Cache-Control': 'no-store' } },
   );

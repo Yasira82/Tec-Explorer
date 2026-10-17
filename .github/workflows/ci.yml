@@ -61,6 +61,12 @@ jobs:
       - uses: actions/checkout@v7
       - name: Check payment contract + CSRF placement
         run: "violations=0\n# ADR-009: internal-auth header + amount-as-number\nif grep -rniE 'x-service-secret|SERVICE_SECRET' src; then\n  echo \"::error::ADR-009: use x-internal-key / INTERNAL_SECRET (not x-service-secret / SERVICE_SECRET)\"\n  violations=1\nfi\nif grep -rnE 'amount:[[:space:]]*z\\.string' src | grep -qi payment; then\n  echo \"::error::ADR-009: payment amount must be a number — no z.string() for amount in payment routes\"\n  violations=1\nfi\n# P2: CSRF is middleware-only — no route-level CSRF validate-and-403\nif grep -rnE 'csrfCookie !== csrfHeader|csrfCookie === csrfHeader|CSRF validation failed|CSRF token mismatch' src/app/api 2>/dev/null; then\n  echo \"::error::CSRF must be enforced ONLY in middleware (P2). Remove route-level CSRF checks — they 403 legit Pi-Browser payments. (KB C-12 §11)\"\n  violations=1\nfi\n[ \"$violations\" -eq 0 ] && echo \"payment contract policy OK\" || exit 1\n"
+      # App Excellence Standard (KB audits/APP_EXPANSION_ARCHITECTURE_2026-10-11.md §2).
+      # Plain Node, no install: prints the score and fails only when a check this app
+      # has already passed (`.app-scorecard.json`) stops passing — a ratchet.
+      - name: App Excellence scorecard
+        run: node scripts/app-scorecard.mjs
+
       - uses: actions/setup-node@v6
         with:
           node-version: '20'
@@ -80,6 +86,10 @@ jobs:
           NEXT_PUBLIC_PI_SANDBOX: 'true'
           NEXT_PUBLIC_API_GATEWAY_URL: ${{ secrets.NEXT_PUBLIC_API_GATEWAY_URL || 'https://api-gateway-production-6a68.up.railway.app' }}
           NEXT_PUBLIC_PI_APP_ID: ${{ secrets.NEXT_PUBLIC_PI_APP_ID || 'test-app-id' }}
+      # Records /app's first-load JS against the 250 KB budget. Informational until E15
+      # is in the floor — the first reading is the baseline.
+      - name: App Excellence — performance budget
+        run: node scripts/app-scorecard.mjs --after-build
       # C-123 §11: a middleware Next.js does not load passes every unit test and
       # runs nowhere. The build's own manifest is the proof that it runs.
       - name: Middleware is compiled
