@@ -7,8 +7,6 @@ import { cookieDomainFor } from '@/lib/cookie-domain';
 export async function POST(req: NextRequest) {
   const res = NextResponse.json({ success: true });
 
-  // The domain the cookies were SET with: host-only on the Testnet host, where a
-  // `.tecosystem.app` Domain is rejected (cookie-domain.ts) — and so is a clear for it.
   const cookieDomain = cookieDomainFor(
     req.nextUrl.hostname,
     process.env.COOKIE_DOMAIN ?? process.env.NEXT_PUBLIC_SSO_DOMAIN ?? undefined,
