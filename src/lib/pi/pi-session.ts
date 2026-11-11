@@ -71,6 +71,8 @@ let generation = 0;
 // localStorage/sessionStorage). It is what lets this app sign itself in when it
 // was opened without a TEC session — see self-sign-in.ts.
 let piAccessToken: string | null = null;
+// The Pi username from the last handshake, memory only — for lib/pi/counted-once.
+let piUser: string | null = null;
 
 /** A Hub-owned session (ADR-007) — authenticating here would never answer. */
 const isForeignSession = (): boolean =>
@@ -86,6 +88,11 @@ export const piSession = {
   /** Pi's access token from the last successful handshake, or null. Memory only. */
   get accessToken(): string | null {
     return piAccessToken;
+  },
+
+  /** The Pi username from the last successful handshake, or null. Memory only. */
+  get username(): string | null {
+    return piUser;
   },
 
   /** True while a handshake is running (warm-up or tap). */
@@ -121,6 +128,8 @@ export const piSession = {
         .then((result: unknown) => {
           const t = (result as { accessToken?: unknown } | null)?.accessToken;
           if (typeof t === 'string' && t) piAccessToken = t;
+          const u = (result as { user?: { username?: unknown } } | null)?.user?.username;
+          if (typeof u === 'string' && u) piUser = u;
           authenticated = true;      // any answer from Pi is a live session
           announceSignedIn();
           return true;
@@ -154,6 +163,16 @@ export const piSession = {
   /** Fire-and-forget warm-up. Failure is silent: the tap will simply retry. */
   warm(): void {
     void this.ensureAuth();
+  },
+
+  /**
+   * A visitor Pi already signed in HERE on this device (lib/pi/counted-once):
+   * announce the visit so ArrivalReport still reports it and a Round 3 mission
+   * ticks — WITHOUT a handshake and without marking this page authenticated, so
+   * a Pay tap still authenticates first, as Pi requires before createPayment.
+   */
+  announceCountedVisit(): void {
+    announceSignedIn();
   },
 
   /**
