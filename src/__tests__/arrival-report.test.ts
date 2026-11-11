@@ -86,7 +86,7 @@ describe('the reporter is silent and bounded', () => {
 
   it('renders nothing and swallows every failure', () => {
     expect(cmp).toMatch(/return null;/);
-    expect(cmp).toMatch(/\.catch\(\(\) => \{/);
+    expect(cmp).toMatch(/\.catch\(\((e: unknown)?\) => \{/);
   });
 });
 
