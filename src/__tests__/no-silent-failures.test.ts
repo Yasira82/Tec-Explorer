@@ -52,6 +52,12 @@ const TEMPLATE_FILES = [
   // be fixed in the TEMPLATE, once, not diverged here.
   'lib/pi/pi-session.ts',
   'lib/bff/createHandler.ts',
+  // Shared fleet files added 11 Nov 2026, identical in every app:
+  // counted-once — localStorage absent (private window) means "sign in again", the
+  // behaviour before the file existed; safe-bottom — a boot SCRIPT string that runs
+  // before React, where there is nothing to report to.
+  'lib/pi/counted-once.ts',
+  'lib/safe-bottom.ts',
 ];
 
 const ALLOWED = [

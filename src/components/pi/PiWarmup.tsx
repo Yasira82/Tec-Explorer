@@ -14,6 +14,7 @@
 import { useEffect } from 'react';
 import { piSession } from '@/lib/pi/pi-session';
 import { selfSignIn } from '@/lib/pi/self-sign-in';
+import { wasCounted, rememberCounted, currentUsername } from '@/lib/pi/counted-once';
 
 export function PiWarmup() {
   useEffect(() => {
@@ -24,8 +25,16 @@ export function PiWarmup() {
 
     // ADR-007: in a Hub-owned session there is nothing to warm — Pi.authenticate
     // never answers there, and calling it poisons the Hub's own modal.
-    const warm = () => {
+    const warm = () => { void warmOnce(); };
+    const warmOnce = async () => {
       if (w.__TEC_PI_FOREIGN_SESSION === true) return;
+      // Once per person, not per visit (lib/pi/counted-once.ts): after several
+      // apps signed in from the Hub in one Pi Browser session, Pi stopped
+      // opening the wallet for any app (owner, 10 Nov 2026). A person Pi already
+      // signed in here is counted; the arrival is announced, no handshake made.
+      const who = await currentUsername();
+      if (wasCounted(who)) { piSession.announceCountedVisit(); return; }
+      piSession.onSignedIn(() => rememberCounted(piSession.username ?? who));
       piSession.warm();
       // A standalone visit (the Quest, the campaign, Pi Browser's own app list)
       // arrives with no session of its own. The handshake just started is what

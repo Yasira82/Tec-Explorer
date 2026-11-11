@@ -146,7 +146,7 @@ function ExplorerHome() {
 
   return (
     <main style={{ minHeight: '100vh', background: C.bg, color: C.text, fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 22px calc(96px + env(safe-area-inset-bottom))' }}>
+      <div style={{ maxWidth: 760, margin: '0 auto', padding: '32px 22px calc(96px + max(env(safe-area-inset-bottom), var(--tec-safe-bottom-fallback, 0px)))' }}>
         {/* The band. Same token, same 22px, same PROPORTIONS as the Hub —
             a corner on a tall band reads as a bigger curve than the same
             corner on a short one, so the padding is copied too (C-83 §5.8.6).
