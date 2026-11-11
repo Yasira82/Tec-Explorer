@@ -10,6 +10,7 @@ import { LocaleProvider } from '@/lib/i18n';
 import { THEME_BOOT_SCRIPT } from '@/lib-client/theme';
 import { ArrivalReport } from '@/components/pioneer/ArrivalReport';
 import { QuestReturn } from '@/components/pioneer/QuestReturn';
+import { SAFE_BOTTOM_BOOT_SCRIPT } from '@/lib/safe-bottom';
 
 export const metadata: Metadata = {
   title:       'TEC Explorer — Discover the Pi economy',
@@ -28,6 +29,8 @@ export default function RootLayout({
        mismatch on every load for something that is working correctly. */
     <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Room under the bottom bar for Android's buttons when Pi Browser reports none (lib/safe-bottom). */}
+        <script dangerouslySetInnerHTML={{ __html: SAFE_BOTTOM_BOOT_SCRIPT }} />
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
         {/* One theme-color per scheme, so the browser chrome above the page
             matches the page. A single dark value left a black bar sitting on

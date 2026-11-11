@@ -25,7 +25,7 @@ export function BottomNav({ active, onSelect }: { active: ExpTab; onSelect: (t: 
       // Only the active tab was visible, and only because it is gold.
       background: bgA(0.92), backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
       borderTop: `1px solid ${inkA(0.06)}`,
-      display: 'flex', paddingBottom: 'env(safe-area-inset-bottom)',
+      display: 'flex', paddingBottom: 'max(env(safe-area-inset-bottom), var(--tec-safe-bottom-fallback, 0px))',
     }}>
       {ITEMS.map((item) => {
         const isActive = active === item.key;
