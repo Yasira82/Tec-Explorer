@@ -34,6 +34,7 @@ const APP_SOURCE = 'explorer';
 
 import { hubPaymentOrigin, isHubReferrer } from '@/lib/pi-network';
 import { piSession } from '@/lib/pi/pi-session';
+import { PiRuntime } from '@/lib/pi/PiRuntime';
 
 // Resolve the Hub URL defensively (template fix, propagated 2026-11-11): a misconfigured
 // env — the literal placeholder `C_HUB_URL`, or an empty string — must NEVER become the
@@ -127,7 +128,7 @@ export const createU2APayment = async (
   amount: number, memo: string, metadata: Record<string, unknown>, internalId: string,
 ): Promise<PaymentResult> => {
   return new Promise(async (resolve) => {
-    if (!window.Pi) { resolve({ status: 'error', success: false, message: 'Pi SDK not ready' }); return; }
+    if (!PiRuntime.isAvailable()) { resolve({ status: 'error', success: false, message: 'Pi SDK not ready' }); return; }
     if ((window as any).__TEC_PI_FOREIGN_SESSION) { resolve({ status: 'error', success: false, message: 'foreign_session' }); return; }
 
     let settled = false;
@@ -152,7 +153,8 @@ export const createU2APayment = async (
     }
 
     try {
-      window.Pi.createPayment(
+      // Through the PAL (R1) — TEC-AUDIT-0011.
+      PiRuntime.createPayment(
         { amount, memo, metadata: { ...metadata, internalId } },
         {
           onReadyForServerApproval: async (piPaymentId: string) => {
