@@ -85,7 +85,8 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       credentials: 'include',
     });
     if (!res.ok) {
-      await logout();
+      // C-123 §4: a failed refresh never logs out — that was a logout → re-SSO thrash
+      // loop. The session stays as it is; the next screen asks to sign in if it must.
       refreshQueue.forEach(cb => cb(null));
       refreshQueue = [];
       return null;
@@ -96,7 +97,6 @@ export const refreshAccessToken = async (): Promise<string | null> => {
     return data.token ?? null;
   } catch (err) {
     console.error('[Pi Auth] Refresh failed:', err);
-    await logout();
     refreshQueue.forEach(cb => cb(null));
     refreshQueue = [];
     return null;

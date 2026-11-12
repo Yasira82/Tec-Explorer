@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cookieDomainFor } from '@/lib/cookie-domain';
+import { dropRefresh } from '@/lib/session-refresh';
 
 // C-123 §2 rule 2: deletion attributes MUST match creation (none + secure +
 // Partitioned + same domain) or the clear targets a different cookie jar and
@@ -23,6 +24,8 @@ export async function POST(req: NextRequest) {
   res.cookies.set('tec_access_token', '', gone);
   res.cookies.set('tec_user',         '', gone);
   res.cookies.set('tec_csrf',         '', gone);
+  // Host-only and HttpOnly, as it was created (rule 2) — so no Domain here.
+  dropRefresh(res.cookies);
 
   return res;
 }
