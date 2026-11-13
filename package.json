@@ -2,6 +2,9 @@
   "name": "tec-explorer",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "scorecard": "node scripts/app-scorecard.mjs",
     "dev": "next dev",
