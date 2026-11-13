@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isTestnetHost } from '@/lib/pi-network';
 import { APP_SOURCE } from '@/lib/app-source';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 const GW = process.env.API_GATEWAY_URL ?? '';
 
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
   if (process.env.INTERNAL_SECRET) headers['x-internal-key'] = process.env.INTERNAL_SECRET;
 
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/cancel?app=${encodeURIComponent(APP_SOURCE)}`, {
+    const res = await gatewayFetch(`${GW}/api/commerce/subscriptions/cancel?app=${encodeURIComponent(APP_SOURCE)}`, {
       method: 'PATCH', headers, body: JSON.stringify({ reason: 'Cancelled in app' }), cache: 'no-store',
     });
     const data = await res.json().catch(() => ({}));

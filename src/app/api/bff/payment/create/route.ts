@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { networkMetadata } from '@/lib/pi-network';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // ── ADR-009 canonical payment contract — identical across all TEC apps ──
 //   gateway path:  ${GW}/api/payment/create  (gateway rewrites ^/api/payment → /payments)
@@ -56,7 +57,7 @@ export async function POST(req: NextRequest) {
   if (process.env.INTERNAL_SECRET) gwHeaders['x-internal-key'] = process.env.INTERNAL_SECRET;
 
   try {
-    const res = await fetch(`${GW}/api/payment/create`, {
+    const res = await gatewayFetch(`${GW}/api/payment/create`, {
       method:  'POST',
       headers: gwHeaders,
       body: JSON.stringify({

@@ -1,6 +1,7 @@
 import { type Category, type Listing } from './directory';
 import { reportError } from '@/lib/observability/reportError';
 import { APP_SOURCE } from '@/lib/app-source';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // Server-only Explorer backend access (C-108). Calls the real Explorer search
 // module (identity-service) via the gateway with the inter-service key, and maps
@@ -66,7 +67,7 @@ export interface ResolvedBusiness {
 export async function resolveBusiness(id: string): Promise<ResolvedBusiness> {
   if (GW) {
     try {
-      const res = await fetch(`${GW}/api/identity/explorer/business/${encodeURIComponent(id)}`, {
+      const res = await gatewayFetch(`${GW}/api/identity/explorer/business/${encodeURIComponent(id)}`, {
         headers: gwHeaders(), cache: 'no-store',
       });
       if (res.ok) {
@@ -124,7 +125,7 @@ async function writeCall(
 export async function listOwnListings(token: string): Promise<{ ok: boolean; status: number; listings: Listing[]; error?: string }> {
   if (!GW) return { ok: false, status: 503, listings: [], error: 'Gateway not configured' };
   try {
-    const res = await fetch(`${GW}/api/identity/explorer/my/listings`, {
+    const res = await gatewayFetch(`${GW}/api/identity/explorer/my/listings`, {
       headers: authHeaders(token), cache: 'no-store',
     });
     const data = await res.json().catch(() => ({}));
@@ -174,7 +175,7 @@ export async function deleteListingBackend(
 ): Promise<{ ok: boolean; status: number; error?: string }> {
   if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
   try {
-    const res = await fetch(
+    const res = await gatewayFetch(
       `${GW}/api/identity/explorer/business/${encodeURIComponent(handle)}`,
       { method: 'DELETE', headers: authHeaders(token), cache: 'no-store' },
     );
@@ -195,7 +196,7 @@ export async function deleteListingBackend(
 export async function resolveProStatus(token: string): Promise<{ isPro: boolean; untilIso?: string }> {
   if (!GW) return { isPro: false };
   try {
-    const res = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
+    const res = await gatewayFetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, {
       headers: authHeaders(token), cache: 'no-store',
     });
     if (!res.ok) return { isPro: false };
@@ -218,7 +219,7 @@ export async function resolveProStatus(token: string): Promise<{ isPro: boolean;
 export async function syncFeatured(token: string, featured: boolean, untilIso?: string): Promise<boolean> {
   if (!GW) return false;
   try {
-    const res = await fetch(`${GW}/api/identity/explorer/featured`, {
+    const res = await gatewayFetch(`${GW}/api/identity/explorer/featured`, {
       method: 'PATCH', headers: authHeaders(token),
       body: JSON.stringify({ featured, untilIso: featured ? untilIso : undefined }),
       cache: 'no-store',
@@ -262,7 +263,7 @@ export async function resolveOwnerProfile(owner: string | null | undefined): Pro
   const handle = (owner ?? '').trim().replace(/^@+/, '');
   if (!GW || !handle) return null;
   try {
-    const res = await fetch(
+    const res = await gatewayFetch(
       `${GW}/api/identity/connection/profile/${encodeURIComponent(handle)}`,
       { headers: gwHeaders(), cache: 'no-store' },
     );
