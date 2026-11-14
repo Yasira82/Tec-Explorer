@@ -56,30 +56,54 @@ describe('gatewayFetch', () => {
   });
 });
 
-// A call to the gateway is `fetch(`${...}/api/...`)` in server code. A call to
-// this app's OWN origin (`${req.nextUrl.origin}/api/...`) is not one, and is left
-// alone. The search was shown to find before its silence is trusted: see the
-// self-check below.
-const GATEWAY_FETCH = /(?<![\w.])fetch\(\s*`\$\{(?![^}]*\borigin\b)[^}]+\}\/api\//g;
+// A call from server code to another server is `fetch(`${SOMEWHERE}...`)`: the
+// gateway (`${GW}/api/x`, or `${GW}${path}` in a shared helper), or a direct URL.
+// It must have a deadline: go through gatewayFetch, or pass its own `signal`
+// (health/ready probes do, with a short one). A call to this app's OWN origin
+// (`${req.nextUrl.origin}/api/...`) is not one. Browser code (src/lib-client) never
+// reaches the gateway (BFF-first) and is not searched.
+//
+// The first version of this test matched only `${...}/api/` and so missed every
+// helper that builds the path in a variable — the whole BFF of seven apps
+// (TEC-AUDIT-0033, found 14 Nov 2026). The self-check below holds both shapes.
+const SERVER_FETCH = /(?<![\w.])fetch\(\s*`\$\{(?![^}]*\borigin\b)[^}]+\}/g;
+
+/** The full argument list of the call that starts at `at` (balanced parentheses). */
+const callAt = (text: string, at: number): string => {
+  let depth = 0;
+  for (let j = text.indexOf('(', at); j < text.length; j++) {
+    if (text[j] === '(') depth++;
+    else if (text[j] === ')' && --depth === 0) return text.slice(at, j + 1);
+  }
+  return text.slice(at);
+};
+
+const callsWithoutDeadline = (text: string): string[] =>
+  [...text.matchAll(SERVER_FETCH)]
+    .map((m) => callAt(text, m.index!))
+    .filter((call) => !/\bsignal\b/.test(call));
 
 const files = (dir: string): string[] =>
   readdirSync(dir).flatMap((n) => {
     const p = join(dir, n);
-    if (statSync(p).isDirectory()) return n === '__tests__' ? [] : files(p);
+    if (statSync(p).isDirectory()) return n === '__tests__' || n === 'lib-client' ? [] : files(p);
     return /\.(ts|tsx)$/.test(n) && !/\.test\./.test(n) ? [p] : [];
   });
 
-describe('no gateway call without a deadline', () => {
-  it('the search finds a bare call (self-check)', () => {
-    expect('await fetch(`${GW}/api/items`, {})'.match(GATEWAY_FETCH)).toHaveLength(1);
-    expect('await gatewayFetch(`${GW}/api/items`, {})'.match(GATEWAY_FETCH)).toBeNull();
-    expect('await fetch(`${req.nextUrl.origin}/api/auth/refresh`, {})'.match(GATEWAY_FETCH)).toBeNull();
+describe('no server call without a deadline', () => {
+  it('the search finds a bare call, in both shapes (self-check)', () => {
+    expect(callsWithoutDeadline('await fetch(`${GW}/api/items`, {})')).toHaveLength(1);
+    expect(callsWithoutDeadline('await fetch(`${GW}${gatewayPath}`, { headers: h(x) })')).toHaveLength(1);
+    expect(callsWithoutDeadline('await fetch(`${BASE}/preview?u=${u}`, { cache: "no-store" })')).toHaveLength(1);
+    expect(callsWithoutDeadline('await gatewayFetch(`${GW}${path}`, {})')).toEqual([]);
+    expect(callsWithoutDeadline('await fetch(`${GW}/health`, { signal: AbortSignal.timeout(3000) })')).toEqual([]);
+    expect(callsWithoutDeadline('await fetch(`${req.nextUrl.origin}/api/auth/refresh`, {})')).toEqual([]);
   });
 
   it('src/ has none', () => {
     const offenders = files(join(process.cwd(), 'src'))
       .filter((f) => !f.endsWith('lib/gateway-fetch.ts'))
-      .flatMap((f) => (readFileSync(f, 'utf8').match(GATEWAY_FETCH) ?? []).map(() => f.replace(process.cwd() + '/', '')));
+      .flatMap((f) => callsWithoutDeadline(readFileSync(f, 'utf8')).map((c) => `${f.replace(process.cwd() + '/', '')}: ${c.slice(0, 60)}`));
     expect(offenders).toEqual([]);
   });
 });

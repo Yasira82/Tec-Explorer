@@ -108,7 +108,7 @@ async function writeCall(
 ): Promise<ListingWriteResult> {
   if (!GW) return { ok: false, status: 503, error: 'Gateway not configured' };
   try {
-    const res = await fetch(`${GW}${path}`, {
+    const res = await gatewayFetch(`${GW}${path}`, {
       method, headers: authHeaders(token), body: JSON.stringify(body), cache: 'no-store',
     });
     const data = await res.json().catch(() => ({}));
