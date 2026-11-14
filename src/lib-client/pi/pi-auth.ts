@@ -1,5 +1,4 @@
 import { PiAuthResult, TecAuthResponse, PiPaymentData, PiPaymentCallbacks } from '@/types/pi.types';
-import sdk from '@/lib/sdk';
 import { PiRuntime } from '@/lib/pi/PiRuntime';
 
 declare global {
@@ -65,7 +64,7 @@ export const getStoredUser = () => {
 export const logout = async () => {
   try {
     await fetch('/api/auth/logout', { method: 'POST' });
-    sdk.clearAuthToken();
+    // The session is the HttpOnly cookies; the server clears them. Nothing to clear here.
   } catch (err) {
     console.error('[Pi Auth] Logout failed:', err);
   }
@@ -129,8 +128,16 @@ export const resolvePendingPayment = async (
   piPaymentId: string
 ): Promise<{ action: string } | null> => {
   try {
-    await sdk.payment.resolveIncomplete(piPaymentId);
-    return { action: 'resolved' };
+    // Through this app's own route — the gateway address exists on the server only.
+    const res = await fetch('/api/payment/resolve-incomplete', {
+      method:      'POST',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+      body:        JSON.stringify({ pi_payment_id: piPaymentId }),
+    });
+    if (!res.ok) throw new Error(`resolve-incomplete ${res.status}`);
+    const data = await res.json().catch(() => ({})) as { action?: string };
+    return { action: data.action ?? 'resolved' };
   } catch (err) {
     _captureError('resolvePendingPayment failed', { piPaymentId, error: String(err) });
     return null;
@@ -226,14 +233,9 @@ const resolveIncompleteAfterLogin = async (piPaymentId: string): Promise<void> =
     _captureError('resolve-incomplete network error', { piPaymentId, error: String(err) });
   }
 
-  // ── Step 2: SDK ───────────────────────────────────────────
-  try {
-    const result = await sdk.payment.resolveIncomplete(piPaymentId);
-    _reportResolved(piPaymentId, 'sdk', result?.status);
-    return;
-  } catch (sdkErr) {
-    _captureError('SDK resolve failed', { piPaymentId, error: String(sdkErr) });
-  }
+  // (There was a step here that asked the server SDK from the browser. The browser has
+  // no gateway address, so it could not succeed; it also pulled server-only code into
+  // the page bundle — TEC-AUDIT-0045. The route above IS the server path.)
 
   // ── Step 3: Cancel ────────────────────────────────────────
   try {
