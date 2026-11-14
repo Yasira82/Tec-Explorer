@@ -15,7 +15,7 @@ const GW = process.env.API_GATEWAY_URL ?? '';
 const CreateSchema = z.object({
   amount:   z.coerce.number().positive(),
   memo:     z.string().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const getUserId = (req: NextRequest): string => {
