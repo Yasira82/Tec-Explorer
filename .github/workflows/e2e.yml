@@ -45,8 +45,16 @@ jobs:
       - name: Install
         run: npm install --legacy-peer-deps
 
+      # The browser's system libraries come from Ubuntu's mirrors. On 11 Nov 2026 those
+      # stopped resolving from GitHub's runners and every e2e run in the fleet failed
+      # (or hung) before a single test ran. The runner image already carries what
+      # Chromium needs, so a mirror that does not answer within 3 minutes is a
+      # warning, not a failure — the tests then show whether the browser really runs.
       - name: Install Playwright
-        run: npx playwright install --with-deps chromium
+        run: |
+          timeout 180 npx playwright install-deps chromium \
+            || echo "::warning::Ubuntu mirrors did not answer — running on the runner image's own libraries"
+          npx playwright install chromium
 
       - name: Build
         run: npm run build

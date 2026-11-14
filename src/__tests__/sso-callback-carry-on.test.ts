@@ -16,7 +16,8 @@ import { GET } from '../app/api/auth/sso-callback/route';
 
 const SECRET = 'sso-secret-for-tests-at-least-32-chars!!';
 const ORIGIN = readFileSync(join(process.cwd(), 'src/app/api/auth/sso-callback/route.ts'), 'utf8')
-  .match(/ALLOWED_AUDIENCES = \[\s*'([^']+)'/)?.[1] as string;
+  // The first https origin after the declaration — a comment may open the list (NBF's does).
+  .match(/ALLOWED_AUDIENCES = \[[\s\S]*?'(https:\/\/[^']+)'/)?.[1] as string;
 
 let saved: string | undefined;
 beforeEach(() => { saved = process.env.SSO_SECRET; process.env.SSO_SECRET = SECRET; });
@@ -51,6 +52,11 @@ describe('sso-callback with a token it cannot use', () => {
     const res = await land(await token());
     expect(res.status).toBe(200);
     expect(res.headers.get('set-cookie')).toContain('tec_access_token=');
+  });
+
+  it('the landing records that this tab came through a signed handoff (read at the payment tap)', async () => {
+    const res = await land(await token());
+    expect(await res.text()).toContain("sessionStorage.setItem('__tec_handoff_entry', '1')");
   });
 
   it('the SAME token a second time → the page, not replay_detected', async () => {

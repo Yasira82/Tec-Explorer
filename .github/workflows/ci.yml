@@ -78,8 +78,10 @@ jobs:
       - name: Lint
         run: npm run lint
         continue-on-error: true
-      - name: Test
-        run: npm test
+      # TEC-AUDIT-0037: vitest.config.ts declares a coverage floor; `npm test` never measured it,
+      # so the floor existed in 21 repositories and ran in one. This runs the same tests with it.
+      - name: Test (with the coverage floor — vitest.config.ts)
+        run: npm run test:coverage
       - name: Build
         run: npm run build
         env:

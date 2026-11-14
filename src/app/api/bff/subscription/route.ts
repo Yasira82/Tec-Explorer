@@ -1,67 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { resolveProState } from '@/lib/subscription/pro-status';
 import { isTestnetHost } from '@/lib/pi-network';
-import { APP_SOURCE } from '@/lib/app-source';
 
-// GET /api/bff/subscription — the caller's subscription (plan + status) from
-// commerce-service (the Subscription owner, C-47). Session-scoped (P6), read-only.
-// Same gateway-forward shape as the payment BFF (token + x-internal-key).
-const GW = process.env.API_GATEWAY_URL ?? '';
-
-/**
- * The FREE answer, in the exact envelope commerce returns, so every reader —
- * `resolveProStatus`, the Pro card, the renewal reminder — parses it the same
- * way it parses a real one. A different shape here would be a second contract.
- */
-const FREE_ON_TESTNET = {
-  success: true,
-  data: {
-    subscription: {
-      plan:               'FREE',
-      status:             'ACTIVE',
-      isActive:           false,
-      isExpired:          false,
-      current_period_end: null,
-      daysRemaining:      null,
-      testnet:            true,
-    },
-  },
-};
-
+// GET /api/bff/subscription — the caller's OWN Pro entitlement + renewal signal.
+// Subscription is COMMERCE-OWNED (C-47); this only reflects it (P5). Identity is
+// the session token, resolved by the gateway — never a client field (P6). Fails
+// closed to FREE. Use `pro` to gate a feature; use `daysRemaining` / `isExpired`
+// to show a renewal reminder (Pi Pro is one-time, no auto-renewal).
 export async function GET(req: NextRequest) {
-  if (!GW) return NextResponse.json({ error: 'Gateway not configured' }, { status: 503 });
-
   // A Testnet host activates NOTHING: commerce refuses to grant PRO from a
-  // payment marked `testnet` (Test-Pi never buys anything real). So this host
-  // must not DISPLAY an entitlement either — otherwise the owner's real
-  // Mainnet subscription shows through on the test network and the screen says
-  // "You're on Pro" about a plan that nothing here can grant, renew or expire.
-  //
-  // Read from THIS ROUTE'S OWN Host header, server-side. Never from the client,
-  // and never from a build-time constant: one build serves both hosts, which is
-  // the whole reason this class of bug exists.
-  //
-  // This is display-only. The authority is still commerce: it refuses the
-  // activation. This route never grants anything — it only declines to show
-  // what the other network owns.
+  // payment marked `testnet`. So it must not DISPLAY an entitlement either —
+  // otherwise a real Mainnet subscription shows through on the test network.
+  // Read from THIS ROUTE'S OWN Host header, server-side; one build serves both
+  // hosts, so a build constant cannot answer this.
   if (isTestnetHost(req.headers.get('host'))) {
-    return NextResponse.json(FREE_ON_TESTNET, { status: 200 });
+    return NextResponse.json(
+      { pro: false, plan: 'FREE', isExpired: false, daysRemaining: null, testnet: true },
+      { headers: { 'Cache-Control': 'private, max-age=30' } },
+    );
   }
 
-  const token = req.cookies.get('tec_access_token')?.value;
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    Authorization:  `Bearer ${token}`,
-    'x-request-id': crypto.randomUUID(),
-  };
-  if (process.env.INTERNAL_SECRET) headers['x-internal-key'] = process.env.INTERNAL_SECRET;
-
-  try {
-    const res  = await fetch(`${GW}/api/commerce/subscriptions/status?app=${encodeURIComponent(APP_SOURCE)}`, { method: 'GET', headers, cache: 'no-store' });
-    const data = await res.json().catch(() => ({}));
-    return NextResponse.json(data, { status: res.status });
-  } catch {
-    return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
-  }
+  const token = req.cookies.get('tec_access_token')?.value ?? '';
+  const state = await resolveProState(token);
+  return NextResponse.json(state, { headers: { 'Cache-Control': 'private, max-age=30' } });
 }

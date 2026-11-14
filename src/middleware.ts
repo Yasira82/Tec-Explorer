@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { cookieDomainFor } from '@/lib/cookie-domain';
+import {
+  ACCESS_COOKIE, REFRESH_COOKIE, refreshesOn, needsRefresh, refreshAtGateway, writeRotated, dropRefresh,
+} from '@/lib/session-refresh';
 
 // ── Per-app config — adjust for the new app ──────────────────────────
 const CSRF_SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
@@ -57,7 +61,38 @@ function isTrustedCsrf(req: NextRequest): boolean {
   return false;
 }
 
-export function middleware(req: NextRequest) {
+// ── Session refresh (C-123 §4) — refreshSessionIfNeeded ───────────────────
+// Before a BFF call or the session check, an access token that has expired (or is
+// about to) is renewed with the refresh token, on the server, once per token. The
+// route then runs with the NEW token, and the rotated cookies ride this response.
+// Any failure leaves the request exactly as it came (§4: never a logout).
+async function refreshSessionIfNeeded(req: NextRequest): Promise<NextResponse> {
+  const refresh = req.cookies.get(REFRESH_COOKIE)?.value;
+  const secret  = process.env.JWT_SECRET;
+  const gateway = process.env.API_GATEWAY_URL;
+  if (!refresh || !secret || !gateway || !refreshesOn(req.nextUrl.pathname)) return NextResponse.next();
+  if (!(await needsRefresh(req.cookies.get(ACCESS_COOKIE)?.value, secret))) return NextResponse.next();
+
+  const out = await refreshAtGateway(refresh, gateway);
+  if (out === 'unavailable') return NextResponse.next();
+  if (out === 'rejected') {
+    const res = NextResponse.next();
+    dropRefresh(res.cookies);
+    return res;
+  }
+  // The route reads the token from the request cookies: hand it the new one.
+  req.cookies.set(ACCESS_COOKIE, out.token);
+  if (out.refreshToken) req.cookies.set(REFRESH_COOKIE, out.refreshToken);
+  const res = NextResponse.next({ request: { headers: req.headers } });
+  const domain = cookieDomainFor(
+    req.nextUrl.hostname,
+    process.env.COOKIE_DOMAIN ?? process.env.NEXT_PUBLIC_SSO_DOMAIN ?? undefined,
+  );
+  writeRotated(res.cookies, out, domain, (name) => req.cookies.get(name)?.value);
+  return res;
+}
+
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const method       = req.method.toUpperCase();
 
@@ -79,11 +114,11 @@ export function middleware(req: NextRequest) {
         { status: 403 },
       );
     }
-    return NextResponse.next();
+    return refreshSessionIfNeeded(req);
   }
 
   // ── Safe method → ensure a tec_csrf cookie exists ────────
-  const res = NextResponse.next();
+  const res = await refreshSessionIfNeeded(req);
   if (!req.cookies.get('tec_csrf')?.value) {
     res.cookies.set('tec_csrf', crypto.randomUUID(), CSRF_COOKIE_OPTS);
   }

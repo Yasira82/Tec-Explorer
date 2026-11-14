@@ -277,6 +277,9 @@ describe('no component paints a raw colour', () => {
    *     scheme, which is the whole point.
    */
   const EXEMPT_FILES = [
+    // The installable manifest's background and theme colour: a web manifest is read by
+    // the phone before any stylesheet, so it takes a literal — this app's dark --tec-bg.
+    'lib/app-meta.ts',
     'app/api/auth/sso-callback/route.ts',
     'app/layout.tsx',
   ];

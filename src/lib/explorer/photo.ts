@@ -1,5 +1,6 @@
 import 'server-only';
 import { reportError } from '@/lib/observability/reportError';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // Shop photos (C-108), server side.
 //
@@ -41,7 +42,7 @@ export interface PhotoBytes { body: ArrayBuffer; contentType: string }
 export async function resolvePhotoBytes(handle: string): Promise<PhotoBytes | null> {
   if (!GW || !handle) return null;
   try {
-    const bizRes = await fetch(
+    const bizRes = await gatewayFetch(
       `${GW}/api/identity/explorer/business/${encodeURIComponent(handle)}`,
       { headers: internalHeaders(), cache: 'no-store' },
     );
@@ -49,7 +50,7 @@ export async function resolvePhotoBytes(handle: string): Promise<PhotoBytes | nu
     const key = (await bizRes.json().catch(() => ({})))?.data?.business?.photo_key;
     if (typeof key !== 'string' || !key) return null;
 
-    const res = await fetch(`${GW}/api/storage/internal/public-object`, {
+    const res = await gatewayFetch(`${GW}/api/storage/internal/public-object`, {
       method: 'POST', headers: internalHeaders(),
       body: JSON.stringify({ key }), cache: 'no-store',
     });
