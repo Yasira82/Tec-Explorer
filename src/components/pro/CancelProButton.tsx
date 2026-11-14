@@ -28,8 +28,13 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
       .then((j: Record<string, unknown>) => {
         const d = ((j?.data ?? j) ?? {}) as Record<string, unknown>;
         const s = ((d.subscription ?? d) ?? {}) as Record<string, unknown>;
-        const plan = String(s.plan ?? '').toUpperCase();
-        setShow(s.isActive === true && plan !== 'FREE' && s.legacy !== true && s.testnet !== true);
+        // Two shapes reach this button: the template's route answers the resolver's
+        // ProState (`pro`, flat); an app whose route forwards commerce answers the
+        // raw envelope (`isActive`, nested). Reading only `isActive` hid the button
+        // for EVERY app built from the template (TEC-AUDIT-0044: carried here by hand).
+        const plan   = String(s.plan ?? '').toUpperCase();
+        const active = s.isActive === true || s.pro === true;
+        setShow(active && plan !== 'FREE' && s.legacy !== true && s.testnet !== true);
       })
       .catch(() => {});
   }, []);
