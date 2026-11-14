@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { C, errorA } from '@/lib-client/palette';
+import { readProState } from '@/lib/subscription/read-pro-state';
 
 /**
  * Cancel THIS app's Pro — and only this app's (owner decision, 2026-10-02: each
@@ -24,17 +25,11 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
 
   useEffect(() => {
     fetch('/api/bff/subscription', { credentials: 'include', cache: 'no-store' })
-      .then((r) => r.json()).catch(() => ({}))
-      .then((j: Record<string, unknown>) => {
-        const d = ((j?.data ?? j) ?? {}) as Record<string, unknown>;
-        const s = ((d.subscription ?? d) ?? {}) as Record<string, unknown>;
-        // Two shapes reach this button: the template's route answers the resolver's
-        // ProState (`pro`, flat); an app whose route forwards commerce answers the
-        // raw envelope (`isActive`, nested). Reading only `isActive` hid the button
-        // for EVERY app built from the template (TEC-AUDIT-0044: carried here by hand).
-        const plan   = String(s.plan ?? '').toUpperCase();
-        const active = s.isActive === true || s.pro === true;
-        setShow(active && plan !== 'FREE' && s.legacy !== true && s.testnet !== true);
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      .then((j: unknown) => {
+        // One reading, fail-closed — the template's (TEC-AUDIT-0044).
+        const st = readProState(j);
+        setShow(st.pro && !st.legacy && !st.testnet);
       })
       .catch(() => {});
   }, []);
