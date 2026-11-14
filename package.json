@@ -47,7 +47,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "15.5.12",
     "eslint-config-prettier": "^10.1.8",
-    "happy-dom": "^18.0.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.8.1",
     "typescript": "^5.9.3",
     "vitest": "^4.0.18"
