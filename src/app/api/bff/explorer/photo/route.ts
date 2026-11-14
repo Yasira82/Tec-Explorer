@@ -3,6 +3,10 @@ import { PHOTO_FOLDER, PHOTO_MAX_BYTES, isAllowedPhoto } from '@/lib/explorer/ph
 import { listOwnListings, updateListingBackend } from '@/lib/explorer/server';
 import { gatewayFetch } from '@/lib/gateway-fetch';
 
+// The upload goes to object storage, not the gateway; it still needs a deadline,
+// or a stalled PUT holds the function until the platform kills it (TEC-AUDIT-0033).
+const UPLOAD_TIMEOUT_MS = 60_000;
+
 // POST /api/bff/explorer/photo — upload a shop photo, whole thing server-side.
 //
 // ── Why the bytes come through here instead of browser→R2 ────────────────────
@@ -94,6 +98,7 @@ export async function POST(req: NextRequest) {
     // 2. PUT the bytes. Content-Type must match what the URL was signed for or
     //    R2 rejects the signature.
     const put = await fetch(uploadUrl, {
+      signal: AbortSignal.timeout(UPLOAD_TIMEOUT_MS),
       method: 'PUT', body: bytes, headers: { 'Content-Type': mimeType },
     });
     if (!put.ok) return NextResponse.json({ error: 'UPLOAD_FAILED', step: 'put' }, { status: 502 });
