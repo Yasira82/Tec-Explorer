@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { APP_SOURCE } from '@/lib/app-source';
 import { networkMetadata } from '@/lib/pi-network';
 import { gatewayFetch } from '@/lib/gateway-fetch';
 
@@ -10,9 +11,6 @@ import { gatewayFetch } from '@/lib/gateway-fetch';
 // CSRF is enforced ONCE in middleware (double-submit OR first-party Origin).
 // ⚠️ DO NOT add a CSRF check here — it 403's legit Mode-2 payments in Pi Browser. (KB C-12 §11)
 const GW = process.env.API_GATEWAY_URL ?? '';
-
-// TODO(new app): set your app slug — tags the payment in tec-payment-service.
-const APP_SOURCE = 'explorer';
 
 const CreateSchema = z.object({
   amount:   z.coerce.number().positive(),
@@ -44,9 +42,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { amount, memo } = parsed.data;
-  // The client's own `testnet` is REMOVED before the spread below, not
-  // merely overwritten by it: a later edit that reorders that object must
-  // not quietly hand the network back to the caller.
+  // Dropped before the spread, not just overwritten by it: a later edit that
+  // reorders the object must not quietly hand the network back to the caller.
   const { testnet: _clientTestnet, ...metadata } = parsed.data.metadata ?? {};
 
   const gwHeaders: Record<string, string> = {
@@ -67,11 +64,11 @@ export async function POST(req: NextRequest) {
         payment_method: 'pi',
         memo,
         // `source` and `testnet` are set HERE and overwrite whatever the body
-        // carried. Both decide how payment-service approves this payment, and a
-        // client that could name either could pay with Test-Pi and have a
-        // consumer grant it something real. The network comes from this
-        // request's own Host: the Mainnet app and its paired Testnet app are
-        // the same deployment on two hosts.
+        // carried. Both decide how payment-service approves this payment — which
+        // Pi API key, and which Pi network — and a client that could name either
+        // could pay with Test-Pi and have a consumer grant it something real.
+        // The network comes from this request's own Host: the Mainnet app and
+        // its paired Testnet app are the same deployment on two hosts.
         metadata:       { ...metadata, source: APP_SOURCE, ...networkMetadata(req.headers.get('host')) },
       }),
     });
