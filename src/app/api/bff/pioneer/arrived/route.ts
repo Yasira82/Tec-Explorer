@@ -3,6 +3,7 @@ import { jwtVerify, errors } from 'jose';
 import { createHandler } from '@/lib/bff/createHandler';
 import { APP_SOURCE }    from '@/lib/app-source';
 import { log }           from '@/lib/observability/logger';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 const GATEWAY = process.env.API_GATEWAY_URL ?? '';
 
@@ -61,7 +62,7 @@ export const POST = createHandler({
     }
 
     try {
-      const res = await fetch(`${GATEWAY}/api/identity/pioneer/arrived`, {
+      const res = await gatewayFetch(`${GATEWAY}/api/identity/pioneer/arrived`, {
         method: 'POST',
         headers: {
           Authorization:    `Bearer ${req.cookies.get('tec_access_token')?.value ?? ''}`,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reportError } from '@/lib/observability/reportError';
 import { CATEGORIES, type Category } from '@/lib/explorer/directory';
 import { listingFromBackend } from '@/lib/explorer/server';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // GET /api/bff/explorer/search?q=&category=&area= — discovery search (C-108 §5).
 // Server-only: calls the real Explorer backend (search module in identity-service)
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
       if (q.trim())          qs.set('q', q.trim());
       if (category !== 'all') qs.set('category', category);
       if (area.trim())       qs.set('area', area.trim());
-      const res = await fetch(`${GW}/api/identity/explorer/search?${qs.toString()}`, {
+      const res = await gatewayFetch(`${GW}/api/identity/explorer/search?${qs.toString()}`, {
         headers: gwHeaders(), cache: 'no-store',
       });
       if (res.ok) {

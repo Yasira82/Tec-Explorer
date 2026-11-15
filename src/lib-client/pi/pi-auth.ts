@@ -1,5 +1,5 @@
 import { PiAuthResult, TecAuthResponse, PiPaymentData, PiPaymentCallbacks } from '@/types/pi.types';
-import sdk from '@/lib/sdk';
+import { PiRuntime } from '@/lib/pi/PiRuntime';
 
 declare global {
   interface Window {
@@ -64,7 +64,7 @@ export const getStoredUser = () => {
 export const logout = async () => {
   try {
     await fetch('/api/auth/logout', { method: 'POST' });
-    sdk.clearAuthToken();
+    // The session is the HttpOnly cookies; the server clears them. Nothing to clear here.
   } catch (err) {
     console.error('[Pi Auth] Logout failed:', err);
   }
@@ -84,7 +84,8 @@ export const refreshAccessToken = async (): Promise<string | null> => {
       credentials: 'include',
     });
     if (!res.ok) {
-      await logout();
+      // C-123 §4: a failed refresh never logs out — that was a logout → re-SSO thrash
+      // loop. The session stays as it is; the next screen asks to sign in if it must.
       refreshQueue.forEach(cb => cb(null));
       refreshQueue = [];
       return null;
@@ -95,7 +96,6 @@ export const refreshAccessToken = async (): Promise<string | null> => {
     return data.token ?? null;
   } catch (err) {
     console.error('[Pi Auth] Refresh failed:', err);
-    await logout();
     refreshQueue.forEach(cb => cb(null));
     refreshQueue = [];
     return null;
@@ -128,8 +128,16 @@ export const resolvePendingPayment = async (
   piPaymentId: string
 ): Promise<{ action: string } | null> => {
   try {
-    await sdk.payment.resolveIncomplete(piPaymentId);
-    return { action: 'resolved' };
+    // Through this app's own route — the gateway address exists on the server only.
+    const res = await fetch('/api/payment/resolve-incomplete', {
+      method:      'POST',
+      credentials: 'include',
+      headers:     { 'Content-Type': 'application/json', 'x-csrf-token': getCsrfToken() },
+      body:        JSON.stringify({ pi_payment_id: piPaymentId }),
+    });
+    if (!res.ok) throw new Error(`resolve-incomplete ${res.status}`);
+    const data = await res.json().catch(() => ({})) as { action?: string };
+    return { action: data.action ?? 'resolved' };
   } catch (err) {
     _captureError('resolvePendingPayment failed', { piPaymentId, error: String(err) });
     return null;
@@ -146,7 +154,7 @@ const _captureError = (message: string, data: Record<string, unknown>): void => 
         tags:  { component: 'pi-auth', type: 'incomplete-payment' },
       });
     }).catch(() => {});
-  } catch {}
+  } catch { /* the reporter itself failed — there is nowhere left to report it */ }
 };
 
 const _reportResolved = (piPaymentId: string, via: string, action?: unknown): void => {
@@ -159,7 +167,7 @@ const _reportResolved = (piPaymentId: string, via: string, action?: unknown): vo
         data:     { piPaymentId, via, action },
       });
     }).catch(() => {});
-  } catch {}
+  } catch { /* the reporter itself failed — there is nowhere left to report it */ }
 };
 
 const _addBreadcrumb = (message: string, data: Record<string, unknown>): void => {
@@ -172,7 +180,7 @@ const _addBreadcrumb = (message: string, data: Record<string, unknown>): void =>
         data,
       });
     }).catch(() => {});
-  } catch {}
+  } catch { /* the reporter itself failed — there is nowhere left to report it */ }
 };
 
 // ── Helper — قراءة CSRF token من الـ cookie ───────────────
@@ -225,14 +233,9 @@ const resolveIncompleteAfterLogin = async (piPaymentId: string): Promise<void> =
     _captureError('resolve-incomplete network error', { piPaymentId, error: String(err) });
   }
 
-  // ── Step 2: SDK ───────────────────────────────────────────
-  try {
-    const result = await sdk.payment.resolveIncomplete(piPaymentId);
-    _reportResolved(piPaymentId, 'sdk', result?.status);
-    return;
-  } catch (sdkErr) {
-    _captureError('SDK resolve failed', { piPaymentId, error: String(sdkErr) });
-  }
+  // (There was a step here that asked the server SDK from the browser. The browser has
+  // no gateway address, so it could not succeed; it also pulled server-only code into
+  // the page bundle — TEC-AUDIT-0045. The route above IS the server path.)
 
   // ── Step 3: Cancel ────────────────────────────────────────
   try {
@@ -300,8 +303,10 @@ const authenticateWithTimeout = async (timeout?: number): Promise<PiAuthResult> 
     const timer = setTimeout(() => {
       reject(new Error(isPiBrowser() ? ERRORS.AUTH_TIMEOUT : ERRORS.NOT_PI_BROWSER));
     }, effectiveTimeout);
-    window.Pi.authenticate(['username', 'payments'], handleIncompletePayment)
-      .then(result => { clearTimeout(timer); resolve(result); })
+    // Through the PAL (R1): one place to adapt to a Pi SDK change, and the circuit
+    // breaker sees sign-in failures too (TEC-AUDIT-0011).
+    PiRuntime.authenticate(['username', 'payments'], handleIncompletePayment as (p: unknown) => void)
+      .then(result => { clearTimeout(timer); resolve(result as PiAuthResult); })
       .catch(err   => { clearTimeout(timer); reject(err);     });
   });
 };

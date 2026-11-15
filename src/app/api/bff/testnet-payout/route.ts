@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isTestnetHost } from '@/lib/pi-network';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 /**
  * One 0.01 Test-Pi payout to the person signed in — the Pi Portal's "5 unique wallets"
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!piToken) return NextResponse.json({ error: { message: 'Sign in with Pi first.' } }, { status: 400 });
 
   try {
-    const res = await fetch(`${GW}/api/payment/testnet-gate/claim`, {
+    const res = await gatewayFetch(`${GW}/api/payment/testnet-gate/claim`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body:    JSON.stringify({ source: 'explorer', pi_access_token: piToken }),

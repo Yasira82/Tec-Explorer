@@ -172,3 +172,66 @@ describe('isHubReferrer', () => {
     expect(HUB_HOSTS).toContain(new URL(testnetHubOrigin).hostname);
   });
 });
+
+// The two inline scripts (layout.tsx, sso-callback) run before any module and
+// cannot import — so they interpolate HUB_HOSTS. These pin that they use the
+// shared list instead of regrowing their own literal, which is how this bug
+// survived in three places at once.
+describe('the inline scripts read the SHARED host list', () => {
+  const read = (p: string) =>
+    require('node:fs').readFileSync(require('node:path').join(process.cwd(), p), 'utf8');
+
+  it('layout.tsx interpolates HUB_HOSTS and matches on hostname', () => {
+    const layout = read('src/app/layout.tsx');
+    expect(layout).toContain('JSON.stringify(HUB_HOSTS)');
+    expect(layout).toContain('new URL(document.referrer).hostname.toLowerCase()');
+    expect(layout).not.toContain("indexOf('hub.tecosystem.app')");
+  });
+
+  it('the SSO landing sets __tec_hub_entry for BOTH Hubs', () => {
+    const sso = read('src/app/api/auth/sso-callback/route.ts');
+    expect(sso).toContain('JSON.stringify(HUB_HOSTS)');
+    expect(sso).toContain('__tec_hub_entry');
+    expect(sso).not.toContain("indexOf('hub.tecosystem.app')");
+  });
+});
+
+// ── The Pi SDK must not load in a Hub-owned session ────────────────────────
+// The Hub's payment trace stopped at "warming the Pi session" and nothing
+// followed: the wait was inside Pi.authenticate on the HUB, after a Mode-1
+// bounce from this app. Skipping Pi.init() here was not enough — pi-sdk.js was
+// still being pulled on this origin, which opens Pi's bridge and contests the
+// app context the Hub holds, so the bounce back had to switch context first.
+//
+// ADR-007 says an app in a Hub-owned session must not touch Pi. Loading its
+// SDK is touching it.
+describe('the Pi SDK is loaded conditionally, not in the document head', () => {
+  const layout = require('node:fs').readFileSync(
+    require('node:path').join(process.cwd(), 'src/app/layout.tsx'), 'utf8');
+
+  it('has no static <script src="pi-sdk">', () => {
+    // A JSX <script src> in <head> loads on EVERY page, hub-entered included —
+    // which is the regression this pins.
+    expect(/<script\s+src=["']https:\/\/sdk\.minepi\.com/.test(layout)).toBe(false);
+  });
+
+  it('injects it only after the hub-entry branch has returned', () => {
+    const lines: string[] = layout.split('\n');
+    const hubReturn = lines.findIndex(l => l.includes("__tec_hub_entry"));
+    const inject    = lines.findIndex(l => l.includes('sdk.minepi.com'));
+    expect(hubReturn).toBeGreaterThan(-1);
+    expect(inject).toBeGreaterThan(hubReturn);
+  });
+
+  it('still signals readiness on the hub-entered path, so nothing hangs', () => {
+    // No SDK must never mean no signal: the page still gets tec-pi-ready with
+    // __TEC_PI_FOREIGN_SESSION set, and every buy handler bounces to the Hub.
+    expect(layout).toContain('window.__TEC_PI_FOREIGN_SESSION = true');
+    expect(layout).toContain("window.dispatchEvent(new Event('tec-pi-ready'))");
+  });
+
+  it('reports an SDK that fails to load instead of failing silently', () => {
+    expect(layout).toContain('__s.onerror');
+    expect(layout).toContain("new Event('tec-pi-error')");
+  });
+});

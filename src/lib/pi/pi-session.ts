@@ -26,6 +26,7 @@
 //   2. Never authenticate in a Hub-owned session (ADR-007). It never answers.
 
 import { PiRuntime } from './PiRuntime';
+import { writeTrace, SIGNIN_TRACE } from '@/lib/pioneer/arrival-trace';
 
 const getCookie = (name: string): string =>
   typeof document === 'undefined' ? '' :
@@ -116,8 +117,10 @@ export const piSession = {
    */
   ensureAuth(opts: { fresh?: boolean } = {}): Promise<boolean> {
     if (this.isAuthenticated) return Promise.resolve(true);
-    if (isForeignSession())   return Promise.resolve(false);
-    if (!PiRuntime.isAvailable()) return Promise.resolve(false);
+    // Each outcome is written for /pi-test (lib/pioneer/arrival-trace): when a
+    // campaign mission stays unticked, the phone shows which step stopped.
+    if (isForeignSession()) { writeTrace(SIGNIN_TRACE, { result: 'foreign-session' }); return Promise.resolve(false); }
+    if (!PiRuntime.isAvailable()) { writeTrace(SIGNIN_TRACE, { result: 'no-sdk' }); return Promise.resolve(false); }
 
     if (!inFlight || opts.fresh) {
       // A superseded handshake (the warm-up a fresh tap stepped past) may still
@@ -131,10 +134,12 @@ export const piSession = {
           const u = (result as { user?: { username?: unknown } } | null)?.user?.username;
           if (typeof u === 'string' && u) piUser = u;
           authenticated = true;      // any answer from Pi is a live session
+          writeTrace(SIGNIN_TRACE, { result: 'ok' });
           announceSignedIn();
           return true;
         })
-        .catch(() => {
+        .catch((e: unknown) => {
+          writeTrace(SIGNIN_TRACE, { result: 'error', error: String((e as Error)?.message ?? e).slice(0, 200) });
           if (gen === generation) { authenticated = false; piAccessToken = null; }
           return false;
         })

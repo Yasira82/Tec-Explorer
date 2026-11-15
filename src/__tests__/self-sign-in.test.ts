@@ -190,7 +190,7 @@ describe('selfSignIn()', () => {
 describe('middleware', () => {
   it('guards /api/auth/pi-login against a cross-site POST (login CSRF)', async () => {
     const { middleware } = await import('../middleware');
-    const res = middleware(new NextRequest('https://app.tecosystem.app/api/auth/pi-login', {
+    const res = await middleware(new NextRequest('https://app.tecosystem.app/api/auth/pi-login', {
       method: 'POST', headers: { origin: 'https://evil.example' },
     }));
     expect(res.status).toBe(403);

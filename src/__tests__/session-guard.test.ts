@@ -29,8 +29,8 @@ describe('no page guard — a session-less visit opens the page (C-123 §7, §9,
   const cases: Record<string, string>[] = [{}, { tec_access_token: 'tok' }, { tec_user: '{"piUsername":"a"}' },
     { tec_access_token: 'tok', tec_user: '{"piUsername":"a"}' }];
   for (const cookies of cases) {
-    it(`GET /app with ${Object.keys(cookies).join('+') || 'no cookies'} is not redirected`, () => {
-      const res = visit(cookies);
+    it(`GET /app with ${Object.keys(cookies).join('+') || 'no cookies'} is not redirected`, async () => {
+      const res = await visit(cookies);
       expect(redirectedTo(res)).toBeNull();
       expect(res.status).toBe(200);
     });

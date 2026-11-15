@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID }                from 'crypto';
 import { SignJWT }                   from 'jose';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // The app signs ITSELF in with Pi — C-123 §3, the same flow as the Hub's own login.
 //
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
 
   let backend: Response;
   try {
-    backend = await fetch(`${GATEWAY}/api/v1/auth/pi-login`, {
+    backend = await gatewayFetch(`${GATEWAY}/api/v1/auth/pi-login`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       // No `scopes`: auth records them only when sent, and this app asks Pi for

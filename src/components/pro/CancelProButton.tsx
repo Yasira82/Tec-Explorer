@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { C, errorA } from '@/lib-client/palette';
+import { readProState } from '@/lib/subscription/read-pro-state';
 
 /**
  * Cancel THIS app's Pro — and only this app's (owner decision, 2026-10-02: each
@@ -24,12 +25,11 @@ export function CancelProButton({ onCancelled }: { onCancelled?: () => void } = 
 
   useEffect(() => {
     fetch('/api/bff/subscription', { credentials: 'include', cache: 'no-store' })
-      .then((r) => r.json()).catch(() => ({}))
-      .then((j: Record<string, unknown>) => {
-        const d = ((j?.data ?? j) ?? {}) as Record<string, unknown>;
-        const s = ((d.subscription ?? d) ?? {}) as Record<string, unknown>;
-        const plan = String(s.plan ?? '').toUpperCase();
-        setShow(s.isActive === true && plan !== 'FREE' && s.legacy !== true && s.testnet !== true);
+      .then((r) => (r.ok ? r.json() : null)).catch(() => null)
+      .then((j: unknown) => {
+        // One reading, fail-closed — the template's (TEC-AUDIT-0044).
+        const st = readProState(j);
+        setShow(st.pro && !st.legacy && !st.testnet);
       })
       .catch(() => {});
   }, []);

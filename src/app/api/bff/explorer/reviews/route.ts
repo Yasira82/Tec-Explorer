@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // Reviews on a business listing (C-108), proxied through this app's own BFF.
 //
@@ -32,7 +33,7 @@ export async function GET(req: NextRequest) {
   const empty = { reviews: [], summary: { count: 0, average: null, verifiedCount: 0 } };
   if (!GW || !handle) return NextResponse.json(empty);
   try {
-    const res = await fetch(path(handle), { headers: headers(), cache: 'no-store' });
+    const res = await gatewayFetch(path(handle), { headers: headers(), cache: 'no-store' });
     if (!res.ok) return NextResponse.json(empty);
     const data = await res.json().catch(() => ({}));
     return NextResponse.json({
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   try {
-    const res = await fetch(path(handle), {
+    const res = await gatewayFetch(path(handle), {
       method: 'POST', headers: headers(token), cache: 'no-store',
       body: JSON.stringify({ rating: Number(body?.rating), body: String(body?.body ?? '') }),
     });
@@ -75,7 +76,7 @@ export async function DELETE(req: NextRequest) {
   const handle = handleOf(req);
   if (!handle) return NextResponse.json({ error: 'handle is required' }, { status: 400 });
   try {
-    const res = await fetch(path(handle), { method: 'DELETE', headers: headers(token), cache: 'no-store' });
+    const res = await gatewayFetch(path(handle), { method: 'DELETE', headers: headers(token), cache: 'no-store' });
     if (!res.ok) return NextResponse.json({ error: 'Could not remove your review.' }, { status: res.status });
     return NextResponse.json({ ok: true });
   } catch { return NextResponse.json({ error: 'Network error' }, { status: 502 }); }

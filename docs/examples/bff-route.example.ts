@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
-// Example domain BFF route — copy this pattern for your app's resources.
+// Example domain BFF route — copy this file to src/app/api/bff/<resource>/route.ts
+// and point it at YOUR service's gateway path. It lives here, outside src/app, so
+// it is not a live route: it used to ship in every app at /api/bff/items and call
+// /api/items, which no gateway route serves (TEC-AUDIT-0035).
+//
 // CSRF is enforced in middleware; identity comes from the cookie, NEVER the body.
 const GW = process.env.API_GATEWAY_URL ?? '';
 
@@ -27,7 +32,7 @@ export async function GET(req: NextRequest) {
   if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const res  = await fetch(`${GW}/api/items?limit=20`, { headers: gwHeaders(token, userId), cache: 'no-store' });
+    const res  = await gatewayFetch(`${GW}/api/items?limit=20`, { headers: gwHeaders(token, userId), cache: 'no-store' });
     const data = await res.json().catch(() => ({}));
     return NextResponse.json(data, { status: res.status });
   } catch {
@@ -52,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const res  = await fetch(`${GW}/api/items`, {
+    const res  = await gatewayFetch(`${GW}/api/items`, {
       method: 'POST', headers: gwHeaders(token, userId), body: JSON.stringify(parsed.data),
     });
     const data = await res.json().catch(() => ({}));

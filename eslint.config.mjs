@@ -9,6 +9,9 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
   ...compat.extends('next/core-web-vitals'),
+  // Accessibility (App Excellence Standard E10): every control a screen reader can
+  // name, every image described, nothing clickable that a keyboard cannot reach.
+  ...compat.extends('plugin:jsx-a11y/recommended'),
   {
     rules: {
       '@next/next/no-img-element':   'off',

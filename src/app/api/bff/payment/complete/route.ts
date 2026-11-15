@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // CSRF enforced ONCE in middleware (double-submit OR first-party Origin).
 // ⚠️ DO NOT add a route-level CSRF check here. (KB C-12 §11; CI guard blocks it.)
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
   if (process.env.INTERNAL_SECRET) gwHeaders['x-internal-key'] = process.env.INTERNAL_SECRET;
 
   try {
-    const res  = await fetch(`${GW}/api/payment/complete`, {
+    const res  = await gatewayFetch(`${GW}/api/payment/complete`, {
       method:  'POST',
       headers: gwHeaders,
       body:    JSON.stringify(parsed.data),

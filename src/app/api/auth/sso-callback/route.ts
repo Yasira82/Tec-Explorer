@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { REFRESH_COOKIE, REFRESH_MAX_AGE } from '@/lib/session-refresh';
 import { jwtVerify }                 from 'jose';
 import { cookieDomainFor }           from '@/lib/cookie-domain';
 import { HUB_HOSTS }                 from '@/lib/pi-network';
@@ -202,6 +203,19 @@ export async function GET(req: NextRequest) {
   res.cookies.set('tec_access_token', accessToken, cookieOpts);
   res.cookies.set('tec_user',         userValue,   cookieOpts);
   res.cookies.set('tec_csrf',         csrf,        cookieOpts);
+
+  // The refresh token, when this sign-in is the app's OWN (its pi-login puts one in the
+  // signed token). HttpOnly and HOST-ONLY (C-123 §2): it is spent only by the server-side
+  // refresh in middleware.ts. A Hub hand-off carries none, on purpose — the Hub's refresh
+  // token is single-use and stays the Hub's; sharing it would let whichever side refreshed
+  // first end the other's session (TEC-AUDIT-0029).
+  const refreshToken = typeof payload.refreshToken === 'string' ? payload.refreshToken : '';
+  if (refreshToken) {
+    res.cookies.set(REFRESH_COOKIE, refreshToken, {
+      httpOnly: true, secure: true, sameSite: 'none', partitioned: true, path: '/', maxAge: REFRESH_MAX_AGE,
+    });
+  }
+
 
   return res;
 }

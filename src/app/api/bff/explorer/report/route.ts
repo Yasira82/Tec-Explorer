@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { reportError } from '@/lib/observability/reportError';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // Report abusive content (C-108), proxied through this app's own BFF.
 //
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   const body = await req.json().catch(() => ({}));
   try {
-    const res = await fetch(`${GW}/api/identity/explorer/report`, {
+    const res = await gatewayFetch(`${GW}/api/identity/explorer/report`, {
       method: 'POST', cache: 'no-store',
       headers: {
         'Content-Type': 'application/json',

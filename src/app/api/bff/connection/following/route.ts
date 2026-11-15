@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { gatewayFetch } from '@/lib/gateway-fetch';
 
 // TEC Connect (C-107 §14.3) — following someone from inside Explorer.
 //
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
   // simply offers to sign in. An empty list is the honest answer.
   if (!GW || !tok) return NextResponse.json({ following: [] });
   try {
-    const res = await fetch(`${GW}/api/identity/connection/following`, {
+    const res = await gatewayFetch(`${GW}/api/identity/connection/following`, {
       headers: headers(tok), cache: 'no-store',
     });
     if (!res.ok) return NextResponse.json({ following: [] });
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest) {
 
   if (!GW) return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
   try {
-    const res = await fetch(`${GW}/api/identity/connection/follow`, {
+    const res = await gatewayFetch(`${GW}/api/identity/connection/follow`, {
       method: 'POST', headers: headers(tok), body: JSON.stringify({ username }), cache: 'no-store',
     });
     // 409 is "already following" — from where the caller stands that is a

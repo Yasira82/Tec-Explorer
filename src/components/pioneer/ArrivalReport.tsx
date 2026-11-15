@@ -23,12 +23,18 @@
 // Now the report waits for `piSession.onSignedIn`: the warm-up's handshake, a
 // tap's, or this app's login. No handshake, no arrival — the way Pi sees it.
 //
-// ── Once per session, not once per page ────────────────────────────────────
+// ── At most every 10 minutes per tab, not once per tab ─────────────────────
 //
-// The backend upserts, so repeats are harmless — but a POST on every render is
-// a cost with no answer attached. `sessionStorage` closes over exactly the right
-// window: a new visit is a new report, a second page within the same visit is
-// not, and nothing is remembered after the tab closes.
+// The backend upserts, so repeats are harmless — but a POST on every page is a
+// cost with no answer attached, so a recorded report is remembered per tab.
+//
+// It used to be remembered for the life of the tab, and a Pi Browser tab lives
+// for days. When the server lost an arrival (a re-sent Hub tap cleared it —
+// tec-core-backend #378), going back to this app in the same tab never sent it
+// again, and the Round 3 mission stayed on "sign in there with Pi" whatever
+// the pioneer did (owner, 2026-10-05). Ten minutes keeps the cost to one
+// upsert per visit and lets a lost arrival heal on the next one. A new key
+// name, so a tab holding the old forever-flag reports once more.
 //
 // ── Silent, always ─────────────────────────────────────────────────────────
 //
@@ -39,17 +45,29 @@
 
 import { useEffect } from 'react';
 import { piSession } from '@/lib/pi/pi-session';
+import { writeTrace, ARRIVAL_TRACE } from '@/lib/pioneer/arrival-trace';
 
-const ONCE_KEY = 'tec_arrival_reported';
+const ONCE_KEY  = 'tec_arrival_reported_at';
+const REPORT_EVERY_MS = 10 * 60 * 1000;
+
+/**
+ * A 401 is asked again after these waits. The report fires the moment Pi signs the
+ * visitor in, which can come before this app has a fresh TEC session (an expired one,
+ * or a visitor straight from Pi whom the app signs in a moment later): the first
+ * report met no session and nothing asked again (owner's phone, 15 Nov 2026). Two
+ * retries, then stop — a visitor who stays signed out is not chased.
+ */
+const RETRY_401_MS = [3_000, 10_000] as const;
 
 export function ArrivalReport() {
   useEffect(() => piSession.onSignedIn(report), []);
   return null;
 }
 
-function report(): void {
+function report(attempt = 0): void {
   try {
-    if (sessionStorage.getItem(ONCE_KEY)) return;
+    const last = Number(sessionStorage.getItem(ONCE_KEY));
+    if (last > 0 && Date.now() - last < REPORT_EVERY_MS) return;
   } catch { /* ignore */
     // Private window, or storage blocked. Report anyway — a duplicate costs
     // one upsert; skipping costs the visit.
@@ -80,11 +98,23 @@ function report(): void {
       // on purpose, so bookkeeping never fails a page. Reading only the
       // status, the reporter took every refusal as success and never asked
       // again for the rest of the visit.
+      const body = res.ok
+        ? await res.json().catch(() => null) as { recorded?: unknown; reason?: unknown } | null
+        : null;
+      // What the server said, for /pi-test (lib/pioneer/arrival-trace.ts).
+      writeTrace(ARRIVAL_TRACE, {
+        status:   res.status,
+        recorded: body?.recorded === true,
+        ...(typeof body?.reason === 'string' ? { reason: body.reason } : {}),
+      });
+      if (res.status === 401 && attempt < RETRY_401_MS.length) {
+        setTimeout(() => report(attempt + 1), RETRY_401_MS[attempt]);
+        return;
+      }
       if (!res.ok) return;
-      const body = await res.json().catch(() => null) as { recorded?: unknown } | null;
       if (body?.recorded === true) {
-        try { sessionStorage.setItem(ONCE_KEY, '1'); } catch { /* ignore */ }
+        try { sessionStorage.setItem(ONCE_KEY, String(Date.now())); } catch { /* ignore */ }
       }
     })
-    .catch(() => { /* ignore */ });
+    .catch((e: unknown) => { writeTrace(ARRIVAL_TRACE, { error: String(e).slice(0, 200) }); });
 }
