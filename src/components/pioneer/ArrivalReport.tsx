@@ -50,12 +50,21 @@ import { writeTrace, ARRIVAL_TRACE } from '@/lib/pioneer/arrival-trace';
 const ONCE_KEY  = 'tec_arrival_reported_at';
 const REPORT_EVERY_MS = 10 * 60 * 1000;
 
+/**
+ * A 401 is asked again after these waits. The report fires the moment Pi signs the
+ * visitor in, which can come before this app has a fresh TEC session (an expired one,
+ * or a visitor straight from Pi whom the app signs in a moment later): the first
+ * report met no session and nothing asked again (owner's phone, 15 Nov 2026). Two
+ * retries, then stop — a visitor who stays signed out is not chased.
+ */
+const RETRY_401_MS = [3_000, 10_000] as const;
+
 export function ArrivalReport() {
   useEffect(() => piSession.onSignedIn(report), []);
   return null;
 }
 
-function report(): void {
+function report(attempt = 0): void {
   try {
     const last = Number(sessionStorage.getItem(ONCE_KEY));
     if (last > 0 && Date.now() - last < REPORT_EVERY_MS) return;
@@ -98,6 +107,10 @@ function report(): void {
         recorded: body?.recorded === true,
         ...(typeof body?.reason === 'string' ? { reason: body.reason } : {}),
       });
+      if (res.status === 401 && attempt < RETRY_401_MS.length) {
+        setTimeout(() => report(attempt + 1), RETRY_401_MS[attempt]);
+        return;
+      }
       if (!res.ok) return;
       if (body?.recorded === true) {
         try { sessionStorage.setItem(ONCE_KEY, String(Date.now())); } catch { /* ignore */ }
