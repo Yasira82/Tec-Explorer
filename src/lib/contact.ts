@@ -3,9 +3,7 @@
  *
  * Until 16 Nov 2026 they gave privacy@tec.pi and support@tec.pi. `.pi` names resolve only
  * inside Pi Browser; no mail server answers them, so a person writing got nothing back.
- * The owner chose these two — the same ones the Hub's support menu publishes.
+ * The owner chose this address — the one the Hub's support menu publishes. No phone number
+ * on the legal pages (owner, 16 Nov 2026).
  */
 export const CONTACT_EMAIL = 'yasserrr.fox17@gmail.com';
-
-/** International form for `tel:`. */
-export const CONTACT_PHONE = '+201109742713';

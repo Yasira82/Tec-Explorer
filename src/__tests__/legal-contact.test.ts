@@ -8,7 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CONTACT_EMAIL, CONTACT_PHONE } from '../lib/contact';
+import { CONTACT_EMAIL } from '../lib/contact';
 
 const page = (p: string) => readFileSync(join(__dirname, '..', 'app', p, 'page.tsx'), 'utf8');
 
@@ -19,16 +19,15 @@ describe.each(['privacy', 'terms'])('/%s', (p) => {
   it('names TEC, not "The Elite Consortium"', () => {
     expect(page(p)).not.toMatch(/Consortium/);
   });
-  it('links the contact address and phone', () => {
+  it('links the contact address, and publishes no phone number (owner, 16 Nov 2026)', () => {
     expect(page(p)).toContain('mailto:${CONTACT_EMAIL}');
-    expect(page(p)).toContain('tel:${CONTACT_PHONE}');
+    expect(page(p)).not.toMatch(/tel:|\+20\d/);
   });
 });
 
 describe('contact', () => {
-  it('is a deliverable email and an international phone number', () => {
+  it('is a deliverable email', () => {
     expect(CONTACT_EMAIL).toMatch(/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/);
     expect(CONTACT_EMAIL.endsWith('.pi')).toBe(false);
-    expect(CONTACT_PHONE).toMatch(/^\+\d{8,15}$/);
   });
 });

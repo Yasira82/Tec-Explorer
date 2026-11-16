@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { C } from '@/lib-client/palette';
-import { CONTACT_EMAIL, CONTACT_PHONE } from '@/lib/contact';
+import { CONTACT_EMAIL } from '@/lib/contact';
 
 // TODO(new app): set these three for your app — required for Pi Portal submission.
 const APP     = 'TEC Explorer';
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
       <p>We may update this Privacy Policy from time to time. Material changes are reflected by the &quot;Last updated&quot; date above.</p>
 
       <h2 style={h2}>11. Contact</h2>
-      <p>For privacy inquiries, contact TEC at <a href={`mailto:${CONTACT_EMAIL}`} style={link}>{CONTACT_EMAIL}</a>. Phone / WhatsApp: <a href={`tel:${CONTACT_PHONE}`} style={link} dir="ltr">{CONTACT_PHONE}</a>.</p>
+      <p>For privacy inquiries, contact TEC at <a href={`mailto:${CONTACT_EMAIL}`} style={link}>{CONTACT_EMAIL}</a>.</p>
 
       <p style={{ marginTop: 40 }}>
         <Link href="/terms" style={link}>Terms of Service</Link>{'  ·  '}
