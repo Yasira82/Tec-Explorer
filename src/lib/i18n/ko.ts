@@ -1,7 +1,7 @@
 export const ko = {
   common: {
     appName: 'TEC',
-    tagline: '엘리트 컨소시엄',
+    tagline: 'TEC Ecosystem',
     login: 'Pi로 로그인',
     logout: '로그아웃',
     loading: '불러오는 중...',

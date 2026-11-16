@@ -1,7 +1,7 @@
 export const ur = {
   common: {
     appName: 'TEC',
-    tagline: 'ایلیٹ کنسورشیم',
+    tagline: 'TEC Ecosystem',
     login: 'Pi سے لاگ اِن کریں',
     logout: 'لاگ آؤٹ',
     loading: 'لوڈ ہو رہا ہے...',
