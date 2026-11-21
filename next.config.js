@@ -68,9 +68,11 @@ const nextConfig = {
             // the Pi SDK reaches a host nobody could name. Every host this WOULD block is logged by
             // /api/csp-report (host only). Enforce it — replace `'self' https: wss:` above — only after
             // a Pi Browser sign-in and payment report nothing, in this app.
+            // socialchain.app is Pi's own host: Life's first reports (21 Nov 2026, a sign-in and a
+            // payment in Pi Browser) named it and nothing else.
             key:   'Content-Security-Policy-Report-Only',
             value: [
-              "connect-src 'self' https://minepi.com https://*.minepi.com",
+              "connect-src 'self' https://minepi.com https://*.minepi.com https://socialchain.app https://*.socialchain.app",
               'report-uri /api/csp-report',
             ].join('; '),
           },
