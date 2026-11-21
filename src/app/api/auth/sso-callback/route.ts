@@ -3,6 +3,7 @@ import { jwtVerify }                 from 'jose';
 import { cookieDomainFor }           from '@/lib/cookie-domain';
 import { HUB_HOSTS }                 from '@/lib/pi-network';
 import { log }                       from '@/lib/observability/logger';
+import { firstUse }                  from '@/lib/sso-once';
 
 // Hub SSO landing — C-123 compliant (Pi Browser Session & Cookie Spec):
 //   LAW 2: Set-Cookie on 3xx responses is dropped by Pi Browser → cookies are
@@ -17,7 +18,8 @@ const ALLOWED_AUDIENCES = [
 ];
 const DEFAULT_REDIRECT = '/app';
 
-// One-time-use tokens (replay guard — parity with the Hub callback).
+// This instance's own memory of used tokens: a quick first check only. The answer that holds for every
+// instance is auth-service's (`firstUse`, src/lib/sso-once.ts).
 const usedJtis = new Map<string, number>();
 const isJtiUsed = (jti: string): boolean => {
   const now = Date.now();
@@ -73,15 +75,20 @@ export async function GET(req: NextRequest) {
 
   if (!payload) return carryOn('invalid_or_expired');
 
-  const jti = payload.jti as string | undefined;
-  if (jti) {
-    if (isJtiUsed(jti)) return carryOn('replayed');
-    markJtiUsed(jti);
-  }
+  // A token with no jti cannot be checked for a second use, so it is not used at all (the engineering
+  // audit, 21 Nov 2026: it skipped the check entirely). The Hub and this app's pi-login always set one.
+  const jti = payload.jti;
+  if (typeof jti !== 'string' || !jti) return carryOn('no_jti');
+  if (isJtiUsed(jti)) return carryOn('replayed');
 
   const accessToken = payload.accessToken as string;
   const user        = payload.user as Record<string, unknown>;
   if (!accessToken || !user) return carryOn('incomplete');
+
+  // Once across every instance of every app — or not at all (P6).
+  const once = await firstUse(jti, accessToken);
+  if (once !== 'first') return carryOn(once);
+  markJtiUsed(jti);
 
   const csrf = crypto.randomUUID();
 

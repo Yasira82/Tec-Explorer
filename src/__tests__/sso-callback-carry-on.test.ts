@@ -7,7 +7,9 @@
  * used to answer `{"error":"replay_detected"}` — a dead end on a phone. The
  * worst case must be the visit as it was before those links: the page, signed out.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+// The first use, as auth-service answers it (src/lib/sso-once.ts; sso-once.test.ts covers the rest).
+vi.mock('@/lib/sso-once', () => ({ firstUse: vi.fn(async () => 'first') }));
 import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
 import { readFileSync } from 'node:fs';

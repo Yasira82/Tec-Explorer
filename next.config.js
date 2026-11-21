@@ -62,6 +62,18 @@ const nextConfig = {
               "frame-ancestors 'self' *.minepi.com minepi.com",
             ].join('; '),
           },
+          {
+            // The named connect-src list, tried WITHOUT blocking anything (the engineering audit,
+            // 21 Nov 2026). A named list enforced untried broke Pi sign-in in the Hub (TEC-AUDIT-0051):
+            // the Pi SDK reaches a host nobody could name. Every host this WOULD block is logged by
+            // /api/csp-report (host only). Enforce it — replace `'self' https: wss:` above — only after
+            // a Pi Browser sign-in and payment report nothing, in this app.
+            key:   'Content-Security-Policy-Report-Only',
+            value: [
+              "connect-src 'self' https://minepi.com https://*.minepi.com",
+              'report-uri /api/csp-report',
+            ].join('; '),
+          },
         ],
       },
       {

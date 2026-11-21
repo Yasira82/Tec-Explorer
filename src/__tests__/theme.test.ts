@@ -1,4 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+// The first use, as auth-service answers it (src/lib/sso-once.ts; sso-once.test.ts covers the rest).
+vi.mock('@/lib/sso-once', () => ({ firstUse: vi.fn(async () => 'first') }));
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
