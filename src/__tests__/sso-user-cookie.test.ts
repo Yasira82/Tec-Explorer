@@ -14,7 +14,9 @@
  * the owner's browser still held an older copy written by the landing's
  * document.cookie fallback, which encodes once.
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+// The first use, as auth-service answers it (src/lib/sso-once.ts; sso-once.test.ts covers the rest).
+vi.mock('@/lib/sso-once', () => ({ firstUse: vi.fn(async () => 'first') }));
 import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
 import { readFileSync } from 'node:fs';
