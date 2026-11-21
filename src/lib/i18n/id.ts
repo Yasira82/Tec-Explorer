@@ -1,7 +1,7 @@
 export const id = {
   common: {
     appName: 'TEC',
-    tagline: 'Konsorsium Elite',
+    tagline: 'TEC Ecosystem',
     login: 'Masuk dengan Pi',
     logout: 'Keluar',
     loading: 'Memuat...',

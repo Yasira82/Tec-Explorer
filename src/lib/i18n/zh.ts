@@ -1,7 +1,7 @@
 export const zh = {
   common: {
     appName: 'TEC',
-    tagline: '精英联盟',
+    tagline: 'TEC Ecosystem',
     login: '使用 Pi 登录',
     logout: '退出',
     loading: '加载中...',

@@ -1,7 +1,7 @@
 export const vi = {
   common: {
     appName: 'TEC',
-    tagline: 'Liên minh Tinh hoa',
+    tagline: 'TEC Ecosystem',
     login: 'Đăng nhập bằng Pi',
     logout: 'Đăng xuất',
     loading: 'Đang tải...',

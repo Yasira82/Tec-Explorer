@@ -1,7 +1,7 @@
 export const en = {
   common: {
     appName:  'TEC',
-    tagline:  'The Elite Consortium',
+    tagline:  'TEC Ecosystem',
     login:    'Sign in with Pi',
     logout:   'Logout',
     loading:  'Loading...',

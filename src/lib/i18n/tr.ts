@@ -1,7 +1,7 @@
 export const tr = {
   common: {
     appName: 'TEC',
-    tagline: 'Seçkinler Birliği',
+    tagline: 'TEC Ecosystem',
     login: 'Pi ile giriş yap',
     logout: 'Çıkış',
     loading: 'Yükleniyor...',

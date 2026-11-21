@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { C } from '@/lib-client/palette';
+import { CONTACT_EMAIL } from '@/lib/contact';
 
 // TODO(new app): set these three for your app — required for Pi Portal submission.
 const APP     = 'TEC Explorer';
@@ -25,7 +26,7 @@ export default function TermsPage() {
       <p style={meta}>{APP} · {DOMAIN} · Last updated: {UPDATED}</p>
 
       <h2 style={h2}>1. Acceptance of Terms</h2>
-      <p>By accessing or using {APP} (the &quot;Service&quot;), operated by The Elite Consortium (&quot;TEC&quot;), you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
+      <p>By accessing or using {APP} (the &quot;Service&quot;), operated by TEC, you agree to these Terms of Service. If you do not agree, do not use the Service.</p>
 
       <h2 style={h2}>2. Eligibility</h2>
       <p>You must have a valid Pi Network account and meet Pi Network&apos;s minimum age requirement. You are responsible for the security of your account.</p>
@@ -62,10 +63,10 @@ export default function TermsPage() {
       <p>We may update these Terms from time to time. Continued use after changes constitutes acceptance.</p>
 
       <h2 style={h2}>12. Governing Law</h2>
-      <p>{/* TODO(new app): set governing-law jurisdiction. */}These Terms are governed by the laws of the applicable jurisdiction of The Elite Consortium.</p>
+      <p>{/* TODO(new app): set governing-law jurisdiction. */}These Terms are governed by the laws of the applicable jurisdiction of TEC.</p>
 
       <h2 style={h2}>13. Contact</h2>
-      <p>Questions about these Terms: <a href="mailto:support@tec.pi" style={link}>support@tec.pi</a>.</p>
+      <p>Questions about these Terms: <a href={`mailto:${CONTACT_EMAIL}`} style={link}>{CONTACT_EMAIL}</a>.</p>
 
       <p style={{ marginTop: 40 }}>
         <Link href="/privacy" style={link}>Privacy Policy</Link>{'  ·  '}

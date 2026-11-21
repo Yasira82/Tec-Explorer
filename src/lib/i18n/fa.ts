@@ -1,7 +1,7 @@
 export const fa = {
   common: {
     appName: 'TEC',
-    tagline: 'کنسرسیوم نخبگان',
+    tagline: 'TEC Ecosystem',
     login: 'ورود با Pi',
     logout: 'خروج',
     loading: 'در حال بارگذاری...',
