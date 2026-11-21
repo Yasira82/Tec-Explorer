@@ -34,6 +34,10 @@ describe('the two policies', () => {
     expect(ro['connect-src']).not.toContain('wss:');
     expect(ro['report-uri']).toEqual(['/api/csp-report']);
   });
+  it("names Pi's own host the SDK reaches — Life's reports, 21 Nov 2026 (sign-in and a payment)", async () => {
+    const ro = await policy('Content-Security-Policy-Report-Only');
+    expect(ro['connect-src']).toEqual(expect.arrayContaining(['https://socialchain.app', 'https://*.socialchain.app']));
+  });
 });
 
 const report = (body: unknown, type = 'application/csp-report') =>
