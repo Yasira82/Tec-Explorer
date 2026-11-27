@@ -25,6 +25,8 @@ describe('PiWarmup counts a visitor once', () => {
     window.localStorage.clear();
     session.warm.mockReset(); session.announceCountedVisit.mockReset(); session.onSignedIn.mockReset();
     (window as unknown as { __TEC_PI_READY?: boolean }).__TEC_PI_READY = true;
+    // These visits happen in Pi Browser — the only place the warm-up runs (pinet-no-auto-signin.test.tsx).
+    vi.spyOn(window.navigator, 'userAgent', 'get').mockReturnValue('Mozilla/5.0 (Linux; Android 14; wv) AppleWebKit/537.36 PiBrowser/2.4.1');
   });
   afterEach(() => { vi.unstubAllGlobals(); });
 
