@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { piSession } from '@/lib/pi/pi-session';
 import { selfSignIn } from '@/lib/pi/self-sign-in';
 import { wasCounted, rememberCounted, currentUsername } from '@/lib/pi/counted-once';
+import { looksLikePiBrowser } from '@/lib/pi/pi-browser';
 
 export function PiWarmup() {
   useEffect(() => {
@@ -28,6 +29,9 @@ export function PiWarmup() {
     const warm = () => { void warmOnce(); };
     const warmOnce = async () => {
       if (w.__TEC_PI_FOREIGN_SESSION === true) return;
+      // PiNet: outside Pi Browser, Pi.authenticate ends the visit (lib/pi/pi-browser.ts). The visitor
+      // looks around first; signing in waits for their tap.
+      if (!looksLikePiBrowser()) return;
       // Once per person, not per visit (lib/pi/counted-once.ts): after several
       // apps signed in from the Hub in one Pi Browser session, Pi stopped
       // opening the wallet for any app (owner, 10 Nov 2026). A person Pi already
