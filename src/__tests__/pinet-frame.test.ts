@@ -15,7 +15,7 @@ const directive = () => {
   // The directive itself, in its quoted string — not a mention of it in a comment.
   const all = [...src.matchAll(/"frame-ancestors ([^"]+)"/g)];
   expect(all).toHaveLength(1);
-  return all[0][1].trim().split(/\s+/);
+  return (all[0]?.[1] ?? '').trim().split(/\s+/);
 };
 
 describe('who may show this app in a frame', () => {
