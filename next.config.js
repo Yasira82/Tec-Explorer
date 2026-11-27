@@ -59,7 +59,7 @@ const nextConfig = {
               "font-src 'self' data:",
               "frame-src 'self' sdk.minepi.com *.minepi.com",
               "worker-src 'self' blob:",
-              "frame-ancestors 'self' *.minepi.com minepi.com",
+              "frame-ancestors 'self' *.minepi.com minepi.com *.pinet.com pinet.com",
             ].join('; '),
           },
           {
